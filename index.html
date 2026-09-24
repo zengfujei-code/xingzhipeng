@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<title>星智碰 · AI学习搭档</title>
+<style>
+  :root{
+    --blue:#00B0F0; --deep:#003A8C; --ink:#12244B; --sub:#5B6B8C;
+    --bg:#F2F8FF; --card:#FFFFFF; --line:#E2EEFB; --ok:#18C19B;
+    --radius:16px; --shadow:0 8px 24px rgba(0,90,180,.10);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
+    background:linear-gradient(180deg,#E8F5FF 0%,#F2F8FF 38%,#F2F8FF 100%);
+    color:var(--ink);overflow:hidden;
+  }
+  #app{max-width:480px;margin:0 auto;height:100%;display:flex;flex-direction:column;position:relative}
+  .screen{position:absolute;inset:0;display:flex;flex-direction:column;opacity:0;pointer-events:none;transition:opacity .25s ease}
+  .screen.active{opacity:1;pointer-events:auto;position:relative;flex:1;min-height:0}
+
+  /* ---------- 首页 ---------- */
+  .home-head{padding:calc(env(safe-area-inset-top) + 22px) 22px 10px;text-align:center}
+  .brand{display:flex;align-items:center;justify-content:center;gap:10px}
+  .logo{width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,var(--blue),var(--deep));
+    display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:20px;box-shadow:var(--shadow)}
+  .brand-title{font-size:21px;letter-spacing:.5px;white-space:nowrap;text-align:center;margin:10px 0 0}
+  @media (min-width:420px){ .brand-title{font-size:23px;letter-spacing:1px} }
+  .slogan{margin-top:8px;color:var(--sub);font-size:13px;letter-spacing:2px}
+  .nfc-hint{margin:14px auto 4px;width:88%;border:1px dashed #9BD4F7;background:#fff;border-radius:var(--radius);
+    padding:12px 14px;display:flex;align-items:center;gap:12px}
+  .nfc-ripple{width:40px;height:40px;border-radius:50%;background:radial-gradient(circle,#fff 30%,#BFE9FF 32%,#BFE9FF 100%);
+    position:relative;flex:none;display:flex;align-items:center;justify-content:center;font-size:20px}
+  .nfc-ripple::before,.nfc-ripple::after{content:"";position:absolute;inset:0;border-radius:50%;border:2px solid var(--blue);animation:ripple 1.8s infinite}
+  .nfc-ripple::after{animation-delay:.9s}
+  @keyframes ripple{0%{transform:scale(.7);opacity:.9}100%{transform:scale(1.5);opacity:0}}
+  .nfc-hint b{font-size:14px}.nfc-hint span{display:block;font-size:12px;color:var(--sub);margin-top:2px}
+  .scene-list{padding:14px 18px 6px;display:flex;flex-direction:column;gap:12px;overflow-y:auto;flex:1;min-height:0}
+  .scene-card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px;display:flex;align-items:center;gap:14px;
+    border:1px solid var(--line);cursor:pointer;transition:transform .12s}
+  .scene-card:active{transform:scale(.98)}
+  .scene-ico{width:48px;height:48px;border-radius:14px;flex:none;display:flex;align-items:center;justify-content:center;font-size:24px;color:#fff}
+  .s1 .scene-ico{background:linear-gradient(135deg,#36CFFB,#0078D4)}
+  .s2 .scene-ico{background:linear-gradient(135deg,#5AD8A6,#0E9F6E)}
+  .s3 .scene-ico{background:linear-gradient(135deg,#FFB454,#F97316)}
+  .scene-card h2{font-size:16px}.scene-card p{font-size:12px;color:var(--sub);margin-top:3px;line-height:1.5}
+  .scene-card .go{margin-left:auto;color:#9DB4D6;font-size:20px}
+  .home-foot{padding:8px 18px calc(env(safe-area-inset-bottom) + 14px);text-align:center;color:#9DB4D6;font-size:11px;line-height:1.7}
+  .demo-badge{display:inline-block;background:#FFF4E0;color:#C77A1A;border-radius:999px;padding:2px 10px;font-size:11px;margin-bottom:6px}
+
+  /* ---------- 对话页 ---------- */
+  .chat-head{background:#fff;border-bottom:1px solid var(--line);padding:calc(env(safe-area-inset-top) + 12px) 14px 12px;display:flex;align-items:center;gap:10px}
+  .back{width:34px;height:34px;border-radius:50%;border:none;background:#EEF6FF;font-size:18px;color:var(--deep);cursor:pointer;flex:none}
+  .chat-head h2{font-size:16px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.chat-head .lib-btn{border:1px solid var(--line);background:#fff;border-radius:999px;font-size:11px;color:var(--deep);padding:5px 10px;cursor:pointer;flex:none;white-space:nowrap}
+  .msg-wrap{flex:1;overflow-y:auto;padding:16px 14px;display:flex;flex-direction:column;gap:14px}
+  .msg{max-width:82%;padding:11px 14px;border-radius:14px;font-size:14px;line-height:1.65;white-space:pre-wrap;word-break:break-word}
+  .msg.ai{background:#fff;border:1px solid var(--line);border-top-left-radius:4px;box-shadow:0 2px 8px rgba(0,90,180,.05);align-self:flex-start}
+  .msg.me{background:linear-gradient(135deg,var(--blue),#1888d8);color:#fff;border-top-right-radius:4px;align-self:flex-end}
+  .msg .save-btn{display:inline-block;margin-top:8px;font-size:12px;color:var(--deep);background:#EAF5FF;border:1px solid #BFE0FB;border-radius:999px;padding:3px 12px;cursor:pointer}
+  .typing{display:inline-flex;gap:4px;align-items:center}.typing i{width:6px;height:6px;border-radius:50%;background:#9DB4D6;animation:blink 1.2s infinite}
+  .typing i:nth-child(2){animation-delay:.2s}.typing i:nth-child(3){animation-delay:.4s}
+  @keyframes blink{0%,60%,100%{opacity:.25}30%{opacity:1}}
+  .quick{padding:0 14px 8px;display:flex;gap:8px;overflow-x:auto;white-space:nowrap}
+  .quick span{background:#fff;border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-size:12px;color:var(--deep);cursor:pointer;flex:none}
+  .input-bar{background:#fff;border-top:1px solid var(--line);padding:10px 12px calc(env(safe-area-inset-bottom) + 10px);display:flex;gap:8px;align-items:center}
+  .input-bar input{flex:1;border:none;background:#F0F6FE;border-radius:999px;padding:11px 16px;font-size:14px;outline:none}
+  .mic,.send{border:none;width:42px;height:42px;border-radius:50%;font-size:18px;cursor:pointer;flex:none}
+  .mic{background:#EEF6FF;color:var(--deep)}.send{background:linear-gradient(135deg,var(--blue),var(--deep));color:#fff}
+  .mic.rec{background:#FFE9E9;color:#E5484D;animation:pulse 1s infinite}
+  @keyframes pulse{50%{box-shadow:0 0 0 6px rgba(229,72,77,.15)}}
+
+  /* ---------- 学习库 ---------- */
+  .lib-list{flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+  .lib-item{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-size:13px;line-height:1.6;position:relative}
+  .lib-item .tag{display:inline-block;font-size:11px;color:var(--deep);background:#EAF5FF;border-radius:6px;padding:1px 8px;margin-bottom:6px}
+  .lib-item time{display:block;color:#A7B6CE;font-size:11px;margin-top:6px}
+  .lib-item .del{position:absolute;top:10px;right:12px;border:none;background:none;color:#C2CDDF;font-size:16px;cursor:pointer}
+  .empty{text-align:center;color:#9DB4D6;font-size:13px;margin-top:80px;line-height:2}
+  .toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:rgba(18,36,75,.92);color:#fff;font-size:13px;
+    padding:9px 18px;border-radius:999px;opacity:0;transition:opacity .25s;pointer-events:none;z-index:99;max-width:80%}
+  .toast.show{opacity:1}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- 首页 -->
+  <section class="screen active" id="screen-home">
+    <div class="home-head">
+      <div class="logo" style="margin:0 auto">星</div>
+      <h1 class="brand-title">星智碰 · AI学习搭档</h1>
+      <div class="slogan">触碰唤醒星火　阅览AI智慧</div>
+    </div>
+    <div class="nfc-hint">
+      <div class="nfc-ripple">📡</div>
+      <div><b>碰一碰鼠标垫右上角</b><span>免安装直达，或扫描垫面二维码进入</span></div>
+    </div>
+    <div class="scene-list" id="sceneList">
+      <div class="scene-card s1" data-scene="plan">
+        <div class="scene-ico">📅</div>
+        <div><h2>学习计划</h2><p>说出专业与目标，生成一周学习计划与每日任务</p></div>
+        <div class="go">›</div>
+      </div>
+      <div class="scene-card s2" data-scene="homework">
+        <div class="scene-ico">✅</div>
+        <div><h2>作业管家</h2><p>口述作业要求，AI 拆解任务、排优先级与提醒</p></div>
+        <div class="go">›</div>
+      </div>
+      <div class="scene-card s3" data-scene="ask">
+        <div class="scene-ico">💬</div>
+        <div><h2>随问随答</h2><p>知识点讲解、中英互译，语音提问张口就答</p></div>
+        <div class="go">›</div>
+      </div>
+    </div>
+    <div class="home-foot">
+      <span class="demo-badge" id="modeBadge">演示模式 · 配置代理后接入讯飞星火</span><br/>
+      广州应用科技学院 · 科大讯飞AI产业学院　X+AI 文创共创计划
+    </div>
+  </section>
+
+  <!-- 对话页 -->
+  <section class="screen" id="screen-chat">
+    <div class="chat-head">
+      <button class="back" onclick="goHome()">‹</button>
+      <h2 id="chatTitle">AI学习搭档</h2>
+      <button class="lib-btn" onclick="showLib()">我的学习库</button>
+    </div>
+    <div class="msg-wrap" id="msgWrap"></div>
+    <div class="quick" id="quickBar"></div>
+    <div class="input-bar">
+      <button class="mic" id="micBtn" onclick="toggleVoice()">🎤</button>
+      <input id="chatInput" placeholder="说一句或输入你的需求…" onkeydown="if(event.key==='Enter')send()"/>
+      <button class="send" onclick="send()">➤</button>
+    </div>
+  </section>
+
+  <!-- 学习库 -->
+  <section class="screen" id="screen-lib">
+    <div class="chat-head">
+      <button class="back" onclick="goHome()">‹</button>
+      <h2>我的 AI 学习库</h2>
+      <button class="lib-btn" onclick="showLib()">刷新</button>
+    </div>
+    <div class="lib-list" id="libList"></div>
+  </section>
+
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+ * 星智碰 H5 —— 配置区
+ * 网页本体放在静态托管（GitHub/Gitee Pages）里浏览器才能正常显示；
+ * 星火智能体由云函数代理，这里填云函数地址即可。API Key/Secret 只
+ * 存在云函数后台，绝不写进本文件。
+ * ============================================================ */
+const CONFIG = {
+  apiProxy: "https://1491306416-dv2u0ynvjn.ap-guangzhou.tencentscf.com/api/chat",  // 星火助手 API 后端代理（云函数）
+  sceneParam: "s"        // NFC 标签可写入 https://域名/?s=plan 直达场景
+};
+
+const SCENES = {
+  plan:     {name:"学习计划", hello:"你好，我是学习计划搭档。请告诉我你的专业、本周课程目标或备考科目，我来帮你排一周计划。",
+             quick:["我是人工智能专业，本周想学好Python循环","期末高数还有两周，帮我安排复习","每天晚上7到10点可自习，做英语四级计划"]},
+  homework: {name:"作业管家", hello:"把作业要求念给我听（科目、内容、截止时间），我帮你拆成任务清单并排优先级。",
+             quick:["高数习题册第3章12道题，周五交","英语作文一篇200词，下周三前","数据结构实验报告，周日晚上截止"]},
+  ask:      {name:"随问随答", hello:"随时问我知识点，或说一句中文/英文，我帮你讲解和翻译。",
+             quick:["用通俗的话讲一下什么是递归","把“人工智能正在改变学习方式”翻译成英文","解释NFC为什么碰一下就能打开网页"]}
+};
+
+/* ---------- 演示模式本地回复（不联网，用于评审演示与原型验证） ---------- */
+function demoReply(scene, text){
+  const t = text||"";
+  if(scene==="plan"){
+    return `已为你生成一周学习计划（示例）：\n\n周一至周五\n07:30-08:00 晨读/背单词 20 个\n19:00-19:45 听课/看教材对应章节\n19:55-21:00 练习 + 错题整理\n21:10-21:40 复盘当日内容\n\n周六：专题强化 90 分钟 + 一套小测\n周日：查漏补缺 + 预习下周内容\n\n建议：把“${t.slice(0,14)||'本周目标'}”拆成每天一个可完成的小任务，完成后回到这里打卡。\n（正式接入星火大模型后，将按你的专业、课表与目标动态生成）`;
+  }
+  if(scene==="homework"){
+    return `作业已拆解为 3 个任务：\n\n任务1（高优先级）：梳理要求与资料，预计 20 分钟，建议今天完成\n任务2（中优先级）：完成主体内容，预计 60-90 分钟，截止前 2 天完成\n任务3（中优先级）：检查、排版与提交，预计 20 分钟，截止前 1 天完成\n\n已记录你的描述：“${t.slice(0,30)||'未识别到作业内容'}”。\n点击下方“存入学习库”可保存本清单。`;
+  }
+  if(/翻译|english|英文/i.test(t)){
+    return `翻译（示例）：\n"Artificial intelligence is transforming the way we learn."\n\n关键词：transform 改变；the way we learn 学习方式。\n正式版将调用星火大模型给出更贴合语境的译文与讲解。`;
+  }
+  return `关于“${t||'这个问题'}”的讲解（示例）：\n\n1. 先用一句话说清核心概念；\n2. 再举一个生活中的例子帮助理解；\n3. 最后给一个可以马上动手的小练习。\n\n当前为离线演示回复。正式接入讯飞星火后，这里会返回大模型的实时解答，支持语音连续提问与中英互译。`;
+}
+
+/* ---------- 学术诚信前端拦截（确定性约束，不依赖模型自觉） ---------- */
+function guard(text){
+  const t = text.replace(/\s+/g,'');
+  const verb = /(帮我写|替我写|给我写|帮我做|帮我弄|帮我整|写一篇|写个|写一份|写段|生成一篇|生成一份|生成个|凑字数|凑一篇|直接给我|给我一份|来一篇|来份|帮我搞定|帮我完成)/;
+  const essay = /(论文|报告|总结|心得|读后感|观后感|演讲稿|发言稿|主持稿|新闻稿|实践报告|实验报告|策划案|策划书|申请书|检讨书|思想汇报|入党申请|征文|作文|体会|感悟|汇报材料)/;
+  const homework = /(帮我写作业|帮我写代码|帮我做题|帮我写程序|给我答案|把.*答案.*给我|代写)/;
+  if((verb.test(t) && essay.test(t)) || homework.test(t)){
+    return "成篇代写我不能做，但能帮你把这件事真正做好。我可以给你：\n① 一份提纲或框架；\n② 三到四个可展开的角度或要点；\n③ 相关的检索关键词。\n\n你想先从哪一部分开始？";
+  }
+  return null;
+}
+
+/* ---------- 状态与存储 ---------- */
+let curScene = null;
+const $ = id => document.getElementById(id);
+const store = {
+  get(k,d){ try{return JSON.parse(localStorage.getItem(k))??d}catch(e){return d} },
+  set(k,v){ localStorage.setItem(k,JSON.stringify(v)) }
+};
+function toast(msg){ const t=$("toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove("show"),1800); }
+function esc(s){ return s.replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+
+function show(id){ document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active")); $(id).classList.add("active"); }
+function goHome(){ show("screen-home"); }
+function openChat(scene){
+  curScene=scene;
+  $("chatTitle").textContent="AI学习搭档 · "+SCENES[scene].name;
+  $("msgWrap").innerHTML="";
+  $("quickBar").innerHTML = SCENES[scene].quick.map(q=>`<span onclick="quickAsk('${q}')">${q}</span>`).join("");
+  addMsg("ai", SCENES[scene].hello);
+  show("screen-chat");
+}
+function quickAsk(q){ $("chatInput").value=q; send(); }
+
+function addMsg(role, text, savable, raw){
+  const wrap=$("msgWrap");
+  const div=document.createElement("div");
+  div.className="msg "+role;
+  div.innerHTML = (raw?text:esc(text)) + (savable?`<br/><span class="save-btn" onclick="saveLib(this)">⭐ 存入学习库</span>`:"");
+  wrap.appendChild(div); wrap.scrollTop=wrap.scrollHeight;
+  return div;
+}
+function addTyping(){ const d=addMsg("ai",'<span class="typing"><i></i><i></i><i></i></span>',false,true); return d; }
+
+async function send(){
+  const inp=$("chatInput"), text=inp.value.trim();
+  if(!text) return;
+  const blocked=guard(text);
+  if(blocked){ inp.value=""; addMsg("me",text); addMsg("ai",blocked); return; }
+  inp.value=""; addMsg("me",text);
+  const wait=addTyping();
+  let reply;
+  if(CONFIG.apiProxy){
+    try{
+      const r=await fetch(CONFIG.apiProxy,{method:"POST",headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({scene:curScene,query:text,history:store.get("hist_"+curScene,[]).slice(-6)})});
+      if(!r.ok) throw new Error("HTTP "+r.status);
+      const data=await r.json();
+      reply=data.reply||data.answer||"（代理返回格式异常，请检查云函数）";
+    }catch(e){ reply="网络或代理服务暂时不可用，已切换为本地演示回复。\n\n"+demoReply(curScene,text); toast("代理不可用，已用演示模式"); }
+  }else{
+    await new Promise(r=>setTimeout(r,600));
+    reply=demoReply(curScene,text);
+  }
+  wait.remove();
+  addMsg("ai",reply,true);
+  const h=store.get("hist_"+curScene,[]); h.push({q:text,a:reply}); store.set("hist_"+curScene,h);
+}
+
+function saveLib(btn){
+  const msgEl=btn.closest(".msg");
+  const content=msgEl.childNodes[0].textContent.trim();
+  const lib=store.get("library",[]);
+  lib.unshift({scene:SCENES[curScene].name,content,time:new Date().toLocaleString("zh-CN")});
+  store.set("library",lib); btn.textContent="✓ 已保存"; btn.style.pointerEvents="none"; toast("已存入我的 AI 学习库");
+}
+function showLib(){
+  show("screen-lib");
+  const lib=store.get("library",[]);
+  $("libList").innerHTML = lib.length ? lib.map((x,i)=>
+    `<div class="lib-item"><button class="del" onclick="delLib(${i})">×</button><span class="tag">${esc(x.scene)}</span><br/>${esc(x.content)}<time>${esc(x.time)}</time></div>`).join("")
+    : `<div class="empty">📭<br/>学习库还是空的<br/>在对话中把 AI 生成的计划、任务清单保存到这里</div>`;
+}
+function delLib(i){ const lib=store.get("library",[]); lib.splice(i,1); store.set("library",lib); showLib(); }
+
+/* ---------- 语音输入（浏览器 Web Speech，不支持时优雅降级为文字） ---------- */
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+let rec=null, recOn=false;
+if(SR){
+  rec=new SR(); rec.lang="zh-CN"; rec.interimResults=false;
+  rec.onresult=e=>{ $("chatInput").value=e.results[0][0].transcript; };
+  rec.onend=()=>{ recOn=false; $("micBtn").classList.remove("rec"); };
+  rec.onerror=()=>{ recOn=false; $("micBtn").classList.remove("rec"); toast("没有听到声音，请再试一次"); };
+}
+function toggleVoice(){
+  if(!SR){ toast("当前浏览器不支持网页语音，请用文字输入，或使用讯飞语音SDK版本"); return; }
+  if(!recOn){ rec.start(); recOn=true; $("micBtn").classList.add("rec"); toast("正在聆听…"); }
+  else { rec.stop(); recOn=false; $("micBtn").classList.remove("rec"); }
+}
+
+/* ---------- 启动：首页卡片 / NFC 与二维码可带 ?s= 场景参数直达 ---------- */
+document.getElementById("sceneList").addEventListener("click",e=>{
+  const card=e.target.closest(".scene-card"); if(card) openChat(card.dataset.scene);
+});
+(function init(){
+  if(CONFIG.apiProxy) $("modeBadge").textContent="已接入讯飞星火智能体";
+  const s=new URLSearchParams(location.search).get(CONFIG.sceneParam);
+  if(SCENES[s]) openChat(s);
+})();
+</script>
+</body>
+</html>
