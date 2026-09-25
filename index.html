@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-<title>星智碰 · AI学习搭档</title>
+<title>星智碰 · AI 学习搭档</title>
 <style>
   :root{
     --blue:#00B0F0; --deep:#003A8C; --ink:#12244B; --sub:#5B6B8C;
@@ -90,8 +90,8 @@
   <section class="screen active" id="screen-home">
     <div class="home-head">
       <div class="logo" style="margin:0 auto">星</div>
-      <h1 class="brand-title">星智碰 · AI学习搭档</h1>
-      <div class="slogan">触碰唤醒星火　阅览AI智慧</div>
+      <h1 class="brand-title">星智碰 · AI 学习搭档</h1>
+      <div class="slogan">触碰唤醒星火　阅览 AI 智慧</div>
     </div>
     <div class="nfc-hint">
       <div class="nfc-ripple">📡</div>
@@ -124,7 +124,7 @@
   <section class="screen" id="screen-chat">
     <div class="chat-head">
       <button class="back" onclick="goHome()">‹</button>
-      <h2 id="chatTitle">AI学习搭档</h2>
+      <h2 id="chatTitle">AI 学习搭档</h2>
       <button class="lib-btn" onclick="showLib()">我的学习库</button>
     </div>
     <div class="msg-wrap" id="msgWrap"></div>
@@ -211,7 +211,7 @@ function show(id){ document.querySelectorAll(".screen").forEach(s=>s.classList.r
 function goHome(){ show("screen-home"); }
 function openChat(scene){
   curScene=scene;
-  $("chatTitle").textContent="AI学习搭档 · "+SCENES[scene].name;
+  $("chatTitle").textContent="AI 学习搭档 · "+SCENES[scene].name;
   $("msgWrap").innerHTML="";
   $("quickBar").innerHTML = SCENES[scene].quick.map(q=>`<span onclick="quickAsk('${q}')">${q}</span>`).join("");
   addMsg("ai", SCENES[scene].hello);
