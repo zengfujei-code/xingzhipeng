@@ -6,25 +6,33 @@
 <title>星智碰 · AI 学习搭档</title>
 <style>
   /* ============================================================
-     设计令牌
+     设计令牌 · 深蓝夜航（深色玻璃）
      品牌色（--blue / --deep）与 PPT、垫面视觉稿、主效果图是同一套，
      **不要在这里改**——页面一旦换蓝，就和已交付的物料分成两个视觉体系。
-     高级感来自结构、留白、层次与克制，不来自换一个更好看的蓝。
+     深色底上品牌蓝反而更好用：压在 #061428 上是 7.4:1（白底上只有 ~2.7:1），
+     可以直接当强调色写字，不必再借道深一档的蓝。
      ============================================================ */
   :root{
+    color-scheme:dark;              /* 让输入框、滚动条等原生控件跟着变暗，否则会有白缝 */
     --blue:#00B0F0; --blue-dk:#0A6FBE; --deep:#003A8C;
-    --gold:#D9A94A;                 /* 只用来画发丝线：白底上只有 ~2.2:1，不能写字 */
-    --ink:#0E1F40; --sub:#4E5F85; --faint:#5E6B88;
-    --bg:#F4F8FD; --card:#FFFFFF;
-    --line:rgba(0,58,140,.09); --line-2:rgba(0,58,140,.16);
+    --gold:#D9A94A;                 /* 发丝线专用。深底上本身有 8.5:1，但设计上仍只用它画线 */
+    --ink:#EAF2FF; --sub:#9FB2D4; --faint:#7C8CAE;
+    --bg:#061428; --bg-2:#0A1E3A;
+    /* 玻璃面：不是一块不透明色，而是一层薄白叠在夜蓝上——
+       body 的径向辉光能从下面透上来，这才是"玻璃"读起来像玻璃的原因 */
+    --card:rgba(255,255,255,.055); --card-2:rgba(255,255,255,.085);
+    --line:rgba(255,255,255,.09); --line-2:rgba(255,255,255,.17);
+    --hair:rgba(255,255,255,.14);   /* 玻璃上沿的受光高光 */
 
     /* 圆角分三级：外壳大、内件小、胶囊全圆。全局统一一个半径是最典型的模板感 */
     --r-lg:22px; --r-md:15px; --r-sm:11px; --r-pill:999px;
 
-    /* 阴影全部带蓝调、统一从正上方打光，三层叠加出厚度，而不是一层糊上去 */
-    --sh-1:0 1px 2px rgba(0,45,105,.05);
-    --sh-2:0 10px 24px -14px rgba(0,45,105,.26);
-    --sh-3:0 22px 48px -26px rgba(0,45,105,.40);
+    /* 深底上投影几乎不承载层次，撑起厚度的是"上沿高光 + 蓝色辉光"这一对，
+       投影只留一点，负责把卡片从底上"抬"起来 */
+    --sh-1:0 1px 2px rgba(0,0,0,.34);
+    --sh-2:0 14px 32px -18px rgba(0,0,0,.74);
+    --sh-3:0 26px 54px -28px rgba(0,0,0,.86);
+    --glow:0 0 34px -8px rgba(0,176,240,.42);
 
     /* 动效曲线：不用 ease / ease-in-out —— 那是"默认感"的来源 */
     --ease:cubic-bezier(.32,.72,0,1);
@@ -36,19 +44,22 @@
     font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","HarmonyOS Sans SC","MiSans",
       "Source Han Sans SC","Noto Sans CJK SC","Microsoft YaHei",sans-serif;
     color:var(--ink);
-    /* 不是一条均匀的线性渐变：两层错位的径向光斑压在浅底上，才有"有光源"的感觉 */
+    /* 不是一条均匀的线性渐变：右上角一团品牌蓝辉光当"星"，左上一团深蓝压住画面重心，
+       底部再补一层极淡的回光，夜色才有纵深，而不是一块平涂的深蓝 */
     background:
-      radial-gradient(92% 54% at 88% -4%, rgba(0,176,240,.20) 0%, rgba(0,176,240,0) 58%),
-      radial-gradient(70% 44% at 4% 14%, rgba(0,58,140,.10) 0%, rgba(0,58,140,0) 55%),
-      linear-gradient(179deg,#EAF4FE 0%,#F4F8FD 42%,#F4F8FD 100%);
+      radial-gradient(78% 46% at 88% -6%, rgba(0,176,240,.24) 0%, rgba(0,176,240,0) 60%),
+      radial-gradient(66% 42% at 2% 8%, rgba(0,58,140,.55) 0%, rgba(0,58,140,0) 58%),
+      radial-gradient(92% 52% at 50% 108%, rgba(0,176,240,.10) 0%, rgba(0,176,240,0) 62%),
+      linear-gradient(179deg,#08182F 0%,#061428 46%,#04101F 100%);
     overflow:hidden;
     -webkit-font-smoothing:antialiased;
     -moz-osx-font-smoothing:grayscale;
   }
   /* 极细颗粒：压掉纯数字平面的塑料感。fixed + pointer-events:none，
-     只铺一层、不参与滚动，开销接近零（值很小，肉眼几乎看不出，但去掉就发"平"） */
+     只铺一层、不参与滚动，开销接近零。深底上比浅底更"吃"颗粒，
+     值给到 .045 才压得住，再高就开始显得脏 */
   body::after{
-    content:"";position:fixed;inset:0;z-index:60;pointer-events:none;opacity:.026;
+    content:"";position:fixed;inset:0;z-index:60;pointer-events:none;opacity:.045;
     background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23g)'/%3E%3C/svg%3E");
   }
   /* overflow:hidden 是必需的：非活动屏是 position:absolute + translateY(8px)，
@@ -67,21 +78,41 @@
   .brand{display:flex;align-items:center;justify-content:center;gap:10px}
   /* 方角图标做成一枚"机加工过的金属牌"：深蓝渐变 + 上沿高光 + 一圈金发丝线。
      渐变浅端取了品牌蓝压深一档的 #0A93CC —— 直接用 #00B0F0 时白字只有
-     2.48:1，连大字要求的 3:1 都不到（这是改动前就有的问题） */
+     2.48:1，连大字要求的 3:1 都不到（这是改动前就有的问题）。
+     深色底上再加一圈蓝色外辉光，把"牌"和夜色分开 */
   .logo{width:46px;height:46px;border-radius:15px;
     background:linear-gradient(152deg,#0A93CC 0%,#003A8C 100%);
     display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:21px;
-    border:1px solid rgba(217,169,74,.32);
-    box-shadow:0 14px 26px -14px rgba(0,45,105,.62),inset 0 1px 0 rgba(255,255,255,.30),inset 0 -1px 0 rgba(0,0,0,.16)}
+    border:1px solid rgba(217,169,74,.34);
+    box-shadow:0 16px 30px -14px rgba(0,45,105,.85),0 0 26px -6px rgba(0,176,240,.45),
+      inset 0 1px 0 rgba(255,255,255,.30),inset 0 -1px 0 rgba(0,0,0,.16)}
   .brand-title{font-size:21px;font-weight:800;letter-spacing:-.01em;white-space:nowrap;text-align:center;margin:12px 0 0;text-wrap:balance}
+  /* 标题走"白到蓝"的纵向渐变，像被上面的辉光打亮。背景裁切一旦不被支持，
+     color:transparent 会让标题整条消失——所以用 @supports 兜住了才敢这么写 */
+  @supports ((-webkit-background-clip:text) or (background-clip:text)){
+    .brand-title{background:linear-gradient(180deg,#FFFFFF 12%,#C7DEFB 100%);
+      -webkit-background-clip:text;background-clip:text;color:transparent}
+  }
   @media (min-width:420px){ .brand-title{font-size:23px;letter-spacing:0} }
   .slogan{margin-top:9px;color:var(--sub);font-size:12px;letter-spacing:.18em;font-weight:500}
-  /* 原先是 1px 虚线框。虚线是"草稿/待填"的视觉语言，跟"成品"正好相反 */
-  .nfc-hint{margin:18px auto 6px;width:86%;background:linear-gradient(180deg,#FFFFFF,#F6FAFF);
-    border:1px solid var(--line);border-radius:20px;padding:14px 16px;display:flex;align-items:center;gap:13px;
-    box-shadow:var(--sh-2),inset 0 1px 0 #fff}
+  /* 玻璃卡片的公共面。不是"白底+边框+阴影"三件套，而是嵌在夜色里的一层薄玻璃：
+     上沿一道受光高光、外沿一圈发丝线、内部一层极淡的受光渐变。
+     这里刻意**不用 backdrop-filter**——这些卡片在滚动容器里，逐帧重算背景模糊
+     会让手机掉帧；body 的辉光本来就透得上来，观感一样，代价是零。 */
+  .nfc-hint,.scene-card,.lib-item,.msg.ai{
+    background:linear-gradient(180deg,rgba(255,255,255,.085) 0%,rgba(255,255,255,.032) 100%);
+    border:1px solid var(--line);
+    box-shadow:var(--sh-2),inset 0 1px 0 var(--hair)}
+  /* 金色发丝线：只画在玻璃上沿，中间实、两头散开。三张卡片重复同一道线，
+     就成了这一版的签名，而不至于变成三条晃眼的金边 */
+  .nfc-hint::after,.scene-card::after,.lib-item::after{content:"";position:absolute;left:14%;right:14%;top:0;
+    height:1px;pointer-events:none;
+    background:linear-gradient(90deg,rgba(217,169,74,0) 0%,rgba(217,169,74,.52) 50%,rgba(217,169,74,0) 100%)}
+  /* 原先 .nfc-hint 是 1px 虚线框。虚线是"草稿/待填"的视觉语言，跟"成品"正好相反 */
+  .nfc-hint{margin:18px auto 6px;width:86%;position:relative;overflow:hidden;
+    border-radius:20px;padding:14px 16px;display:flex;align-items:center;gap:13px}
   .nfc-ripple{width:42px;height:42px;border-radius:50%;
-    background:radial-gradient(circle,#fff 32%,#CDEBFF 34%,#EAF5FF 100%);
+    background:radial-gradient(circle,rgba(0,176,240,.30) 0%,rgba(0,176,240,.12) 52%,rgba(0,176,240,0) 78%);
     position:relative;flex:none;display:flex;align-items:center;justify-content:center;font-size:20px}
   .nfc-ripple::before,.nfc-ripple::after{content:"";position:absolute;inset:0;border-radius:50%;
     border:1.5px solid rgba(0,176,240,.55);animation:ripple 2.2s var(--ease-soft) infinite}
@@ -91,145 +122,150 @@
   .nfc-hint span{display:block;font-size:12px;color:var(--sub);margin-top:3px;line-height:1.5}
   .scene-list{padding:16px 18px 8px;display:flex;flex-direction:column;gap:13px;overflow-y:auto;flex:1;min-height:0;
     overscroll-behavior:contain}
-  /* 卡片不是"白底+边框+阴影"三件套，而是嵌进去的一层：发丝外沿 + 上沿高光 + 内部极淡的受光渐变 */
-  .scene-card{position:relative;overflow:hidden;background:linear-gradient(180deg,#FFFFFF 0%,#FBFDFF 100%);
-    border-radius:var(--r-lg);border:1px solid var(--line);padding:17px 18px;display:flex;align-items:center;gap:15px;
-    box-shadow:var(--sh-1),var(--sh-2),inset 0 1px 0 #fff;cursor:pointer;
+  .scene-card{position:relative;overflow:hidden;
+    border-radius:var(--r-lg);padding:17px 18px;display:flex;align-items:center;gap:15px;
+    box-shadow:var(--sh-1),var(--sh-2),inset 0 1px 0 var(--hair);cursor:pointer;
     transition:transform .18s var(--ease),box-shadow .28s var(--ease),border-color .28s var(--ease)}
   .scene-card::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
-    background:radial-gradient(130% 90% at 6% -10%,rgba(0,176,240,.07) 0%,rgba(0,176,240,0) 62%)}
-  .scene-card:active{transform:scale(.984);box-shadow:var(--sh-1),0 6px 14px -12px rgba(0,45,105,.3),inset 0 1px 0 #fff}
-  @media (hover:hover){ .scene-card:hover{border-color:var(--line-2);box-shadow:var(--sh-1),var(--sh-3),inset 0 1px 0 #fff} }
+    background:radial-gradient(130% 90% at 6% -10%,rgba(0,176,240,.16) 0%,rgba(0,176,240,0) 62%)}
+  .scene-card:active{transform:scale(.984);box-shadow:var(--sh-1),0 6px 14px -12px rgba(0,0,0,.5),inset 0 1px 0 var(--hair)}
+  @media (hover:hover){ .scene-card:hover{border-color:var(--line-2);box-shadow:var(--sh-1),var(--sh-3),var(--glow),inset 0 1px 0 var(--hair)} }
   /* 三个场景保留可辨识的色相（蓝/青/金），但整体降饱和、统一打光方向，
      不再像三个糖果色按钮；垫面与 PPT 里的三场景也是一一对应的 */
   .scene-ico{width:48px;height:48px;border-radius:var(--r-md);flex:none;display:flex;align-items:center;justify-content:center;
     font-size:23px;color:#fff;position:relative;
-    box-shadow:0 10px 20px -12px rgba(0,45,105,.6),inset 0 1px 0 rgba(255,255,255,.26),inset 0 -1px 0 rgba(0,0,0,.13)}
+    box-shadow:0 10px 20px -12px rgba(0,0,0,.7),inset 0 1px 0 rgba(255,255,255,.26),inset 0 -1px 0 rgba(0,0,0,.13)}
   .s1 .scene-ico{background:linear-gradient(152deg,#2C8FE0,#0B3E86)}
   .s2 .scene-ico{background:linear-gradient(152deg,#17A3A8,#0A5A6E)}
   .s3 .scene-ico{background:linear-gradient(152deg,#CE8F2E,#8A4E12)}
   .scene-card h2{font-size:16px;font-weight:700;letter-spacing:-.005em}
   .scene-card p{font-size:12px;color:var(--sub);margin-top:4px;line-height:1.55;text-wrap:pretty}
-  .scene-card .go{margin-left:auto;color:#7E8899;font-size:19px;transition:transform .28s var(--ease),color .28s var(--ease)}
-  @media (hover:hover){ .scene-card:hover .go{transform:translateX(2px);color:var(--blue-dk)} }
+  .scene-card .go{margin-left:auto;color:#7C8CAE;font-size:19px;transition:transform .28s var(--ease),color .28s var(--ease)}
+  @media (hover:hover){ .scene-card:hover .go{transform:translateX(2px);color:var(--blue)} }
   .home-foot{padding:10px 18px calc(env(safe-area-inset-bottom) + 16px);text-align:center;color:var(--faint);
     font-size:11px;line-height:1.75;letter-spacing:.02em;font-variant-numeric:tabular-nums}
   /* 连接状态徽章：只反映「有没有真的连上 AI」，本页面不存在演示/离线兜底内容。
-     前面加一颗同色小圆点——状态类信息用点比用整块底色更克制也更易读 */
-  .status-badge{display:inline-flex;align-items:center;gap:6px;background:#FFF6E6;color:#8A5310;
-    border:1px solid rgba(200,120,20,.18);border-radius:var(--r-pill);padding:3px 11px;font-size:11px;
+     前面加一颗同色小圆点——状态类信息用点比用整块底色更克制也更易读。
+     深色底上不能用浅底那套"淡黄底+深黄字"，反过来：薄琥珀底 + 亮琥珀字 */
+  .status-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(217,169,74,.12);color:#EBC97F;
+    border:1px solid rgba(217,169,74,.28);border-radius:var(--r-pill);padding:3px 11px;font-size:11px;
     font-weight:600;margin-bottom:8px}
   .status-badge::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor;flex:none;
-    box-shadow:0 0 0 3px rgba(200,120,20,.14)}
-  .status-badge.ok{background:#E9F8F2;color:#0B7A55;border-color:rgba(11,122,85,.18)}
-  .status-badge.ok::before{box-shadow:0 0 0 3px rgba(11,122,85,.14)}
-  .status-badge.err{background:#FDEDEC;color:#A32B22;border-color:rgba(163,43,34,.18)}
-  .status-badge.err::before{box-shadow:0 0 0 3px rgba(163,43,34,.14)}
+    box-shadow:0 0 0 3px rgba(217,169,74,.14)}
+  .status-badge.ok{background:rgba(23,166,121,.13);color:#5FD3A8;border-color:rgba(23,166,121,.30)}
+  .status-badge.ok::before{box-shadow:0 0 0 3px rgba(23,166,121,.14)}
+  .status-badge.err{background:rgba(224,74,80,.14);color:#FF9A9E;border-color:rgba(224,74,80,.32)}
+  .status-badge.err::before{box-shadow:0 0 0 3px rgba(224,74,80,.14)}
 
   /* ---------- 对话页 ---------- */
-  .chat-head{background:rgba(255,255,255,.82);
+  /* 顶栏与输入栏是**固定/常驻**元素，这里用 backdrop-filter 是安全的：
+     它们自己不滚动，模糊的是身后滚过去的消息，不会逐帧重算 */
+  .chat-head{background:rgba(8,22,44,.78);
     backdrop-filter:blur(20px) saturate(160%);-webkit-backdrop-filter:blur(20px) saturate(160%);
     border-bottom:1px solid var(--line);padding:calc(env(safe-area-inset-top) + 13px) 14px 13px;
     display:flex;align-items:center;gap:10px}
-  .back{width:38px;height:38px;border-radius:50%;border:1px solid var(--line);background:#fff;font-size:18px;
-    color:var(--deep);cursor:pointer;flex:none;line-height:1;box-shadow:var(--sh-1);
+  .back{width:38px;height:38px;border-radius:50%;border:1px solid var(--line);background:var(--card);font-size:18px;
+    color:#BFD9F7;cursor:pointer;flex:none;line-height:1;box-shadow:var(--sh-1);
     transition:transform .18s var(--ease),background .2s var(--ease)}
-  .back:active{transform:scale(.94);background:#F1F6FC}
+  .back:active{transform:scale(.94);background:rgba(255,255,255,.12)}
   .chat-head h2{font-size:16px;font-weight:700;letter-spacing:-.005em;flex:1;min-width:0;
     overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .chat-head .lib-btn{border:1px solid var(--line);background:#fff;border-radius:var(--r-pill);font-size:11px;
-    font-weight:600;color:var(--deep);padding:7px 12px;cursor:pointer;flex:none;white-space:nowrap;box-shadow:var(--sh-1);
+  .chat-head .lib-btn{border:1px solid var(--line);background:var(--card);border-radius:var(--r-pill);font-size:11px;
+    font-weight:600;color:#BFD9F7;padding:7px 12px;cursor:pointer;flex:none;white-space:nowrap;box-shadow:var(--sh-1);
     transition:transform .18s var(--ease),background .2s var(--ease)}
-  .chat-head .lib-btn:active{transform:scale(.96);background:#F1F6FC}
-  .chat-head .mini{width:38px;height:38px;border-radius:50%;border:1px solid var(--line);background:#fff;font-size:15px;
-    color:var(--deep);cursor:pointer;flex:none;line-height:1;box-shadow:var(--sh-1);
+  .chat-head .lib-btn:active{transform:scale(.96);background:rgba(255,255,255,.12)}
+  .chat-head .mini{width:38px;height:38px;border-radius:50%;border:1px solid var(--line);background:var(--card);font-size:15px;
+    color:#BFD9F7;cursor:pointer;flex:none;line-height:1;box-shadow:var(--sh-1);
     transition:transform .18s var(--ease),background .2s var(--ease)}
-  .chat-head .mini:active{transform:scale(.94);background:#F1F6FC}
+  .chat-head .mini:active{transform:scale(.94);background:rgba(255,255,255,.12)}
   .msg-wrap{flex:1;min-height:0;overflow-y:auto;padding:18px 14px 6px;display:flex;flex-direction:column;gap:14px;
     overscroll-behavior:contain}
   /* 气泡的"尾巴"用一个只圆 6px 的角表示，比画三角形干净 */
   .msg{max-width:82%;padding:12px 15px;border-radius:18px;font-size:14px;line-height:1.68;
     white-space:pre-wrap;word-break:break-word;text-wrap:pretty}
-  .msg.ai{background:#fff;border:1px solid var(--line);border-top-left-radius:6px;
-    box-shadow:var(--sh-1),var(--sh-2);align-self:flex-start;color:var(--ink)}
-  /* 用户气泡走"海军蓝"：一是和白色 AI 卡片形成明确的两极，二是
-     #00B0F0 上压白字只有 ~2.6:1（不达 AA），这个渐变最浅处仍 >4.5:1 */
+  .msg.ai{border-top-left-radius:6px;
+    align-self:flex-start;color:var(--ink)}
+  /* 用户气泡走"海军蓝"：一是和玻璃质感的 AI 卡片形成明确的两极，二是
+     #00B0F0 上压白字只有 ~2.6:1（不达 AA），这个渐变最浅处仍 >4.5:1。
+     深色底上它的亮度明显高于夜色，所以照样跳得出来 */
   .msg.me{background:linear-gradient(158deg,#0A6FBE 0%,#003A8C 100%);color:#fff;border-top-right-radius:6px;
-    align-self:flex-end;box-shadow:0 12px 26px -14px rgba(0,58,140,.6),inset 0 1px 0 rgba(255,255,255,.20)}
-  .msg .save-btn{display:inline-block;margin-top:9px;font-size:12px;font-weight:600;color:var(--deep);background:#EDF6FF;
-    border:1px solid rgba(0,90,180,.16);border-radius:var(--r-pill);padding:4px 13px;cursor:pointer;
+    align-self:flex-end;box-shadow:0 12px 26px -14px rgba(0,0,0,.7),0 0 26px -12px rgba(0,176,240,.5),
+      inset 0 1px 0 rgba(255,255,255,.20)}
+  .msg .save-btn{display:inline-block;margin-top:9px;font-size:12px;font-weight:600;color:#9FD8F7;background:rgba(0,176,240,.13);
+    border:1px solid rgba(0,176,240,.30);border-radius:var(--r-pill);padding:4px 13px;cursor:pointer;
     transition:transform .18s var(--ease),background .2s var(--ease)}
-  .msg .save-btn:active{transform:scale(.96);background:#E0EFFD}
+  .msg .save-btn:active{transform:scale(.96);background:rgba(0,176,240,.24)}
   /* 系统提示条：用于「服务返回了错误」这类不是模型回答的内容，样式刻意区别于对话气泡 */
-  .msg.sys{align-self:center;max-width:92%;background:#FFFBF2;border:1px solid rgba(190,140,50,.22);color:#7A5210;
+  .msg.sys{align-self:center;max-width:92%;background:rgba(217,169,74,.10);border:1px solid rgba(217,169,74,.26);color:#E8C77E;
     font-size:12.5px;line-height:1.65;text-align:center;border-radius:14px;box-shadow:var(--sh-1)}
   /* 连接失败提示条里的「重试」按钮 */
-  .msg .retry-btn{display:inline-block;margin-top:9px;font-size:12px;font-weight:600;color:#6E4A0C;background:#FDF0D6;
-    border:1px solid rgba(190,140,50,.3);border-radius:var(--r-pill);padding:4px 15px;cursor:pointer;
+  .msg .retry-btn{display:inline-block;margin-top:9px;font-size:12px;font-weight:600;color:#F0D79B;background:rgba(217,169,74,.14);
+    border:1px solid rgba(217,169,74,.32);border-radius:var(--r-pill);padding:4px 15px;cursor:pointer;
     transition:transform .18s var(--ease),background .2s var(--ease)}
-  .msg .retry-btn:active{transform:scale(.96);background:#F9E6BE}
+  .msg .retry-btn:active{transform:scale(.96);background:rgba(217,169,74,.26)}
   .typing{display:inline-flex;gap:4px;align-items:center;padding:2px 0}
-  .typing i{width:6px;height:6px;border-radius:50%;background:#A9BAD6;animation:blink 1.3s var(--ease-soft) infinite}
+  .typing i{width:6px;height:6px;border-radius:50%;background:rgba(159,178,212,.55);animation:blink 1.3s var(--ease-soft) infinite}
   .typing i:nth-child(2){animation-delay:.18s}.typing i:nth-child(3){animation-delay:.36s}
   @keyframes blink{0%,62%,100%{opacity:.22;transform:translateY(0)}32%{opacity:1;transform:translateY(-2px)}}
   .quick{padding:2px 14px 10px;display:flex;gap:8px;overflow-x:auto;white-space:nowrap;
     overscroll-behavior-x:contain;scrollbar-width:none}
   .quick::-webkit-scrollbar{display:none}
-  .quick span{background:#fff;border:1px solid var(--line);border-radius:var(--r-pill);padding:7px 13px;font-size:12px;
-    color:var(--deep);cursor:pointer;flex:none;box-shadow:var(--sh-1);
+  .quick span{background:var(--card);border:1px solid var(--line);border-radius:var(--r-pill);padding:7px 13px;font-size:12px;
+    color:#BFD9F7;cursor:pointer;flex:none;box-shadow:var(--sh-1);
     transition:transform .18s var(--ease),background .2s var(--ease),border-color .2s var(--ease)}
-  .quick span:active{transform:scale(.96);background:#F1F6FC}
-  .input-bar{background:rgba(255,255,255,.86);
+  .quick span:active{transform:scale(.96);background:rgba(255,255,255,.12)}
+  .input-bar{background:rgba(8,22,44,.82);
     backdrop-filter:blur(20px) saturate(160%);-webkit-backdrop-filter:blur(20px) saturate(160%);
     border-top:1px solid var(--line);padding:11px 12px calc(env(safe-area-inset-bottom) + 11px);
     display:flex;gap:9px;align-items:center}
-  .input-bar input{flex:1;min-width:0;border:1px solid rgba(0,58,140,.08);background:#F1F6FC;border-radius:var(--r-pill);
+  .input-bar input{flex:1;min-width:0;border:1px solid var(--line);background:rgba(255,255,255,.055);border-radius:var(--r-pill);
     padding:12px 17px;font-size:14.5px;color:var(--ink);outline:none;
-    box-shadow:inset 0 1px 2px rgba(0,45,105,.05);
+    box-shadow:inset 0 1px 2px rgba(0,0,0,.35);
     transition:background .22s var(--ease),border-color .22s var(--ease),box-shadow .22s var(--ease)}
-  .input-bar input::placeholder{color:#5F6B80}
+  .input-bar input::placeholder{color:#7C8CAE}
   /* 原来这里是裸的 outline:none（键盘用户看不到焦点）。改成"描边 + 光晕"，
      比系统默认轮廓更贴合本页，也仍然是明确的焦点指示 */
-  .input-bar input:focus{background:#fff;border-color:rgba(0,176,240,.45);box-shadow:0 0 0 4px rgba(0,176,240,.13)}
+  .input-bar input:focus{background:rgba(255,255,255,.09);border-color:rgba(0,176,240,.55);box-shadow:0 0 0 4px rgba(0,176,240,.16)}
   .mic,.send{border:none;width:44px;height:44px;border-radius:50%;font-size:17px;cursor:pointer;flex:none;line-height:1;
     transition:transform .18s var(--ease),box-shadow .25s var(--ease),background .22s var(--ease)}
-  .mic{background:#EEF6FF;color:var(--deep);border:1px solid var(--line);box-shadow:var(--sh-1)}
+  .mic{background:rgba(0,176,240,.12);color:#9FD8F7;border:1px solid rgba(0,176,240,.26);box-shadow:var(--sh-1)}
   .send{background:linear-gradient(152deg,#0A93CC,#003A8C);color:#fff;
-    box-shadow:0 12px 24px -12px rgba(0,58,140,.65),inset 0 1px 0 rgba(255,255,255,.22)}
+    box-shadow:0 12px 24px -12px rgba(0,0,0,.7),0 0 30px -10px rgba(0,176,240,.75),inset 0 1px 0 rgba(255,255,255,.22)}
   .mic:active,.send:active{transform:scale(.93)}
-  .mic.rec{background:#FFEDED;color:#D93A3F;border-color:rgba(217,58,63,.25);animation:pulse 1.4s var(--ease-soft) infinite}
+  .mic.rec{background:rgba(224,74,80,.18);color:#FF8E93;border-color:rgba(224,74,80,.40);animation:pulse 1.4s var(--ease-soft) infinite}
   .mic:disabled,.send:disabled{opacity:.4;cursor:not-allowed;animation:none;box-shadow:none}
-  @keyframes pulse{50%{box-shadow:0 0 0 7px rgba(217,58,63,.13)}}
+  @keyframes pulse{50%{box-shadow:0 0 0 7px rgba(224,74,80,.16)}}
 
   /* ---------- 学习库 ---------- */
   .lib-list{flex:1;min-height:0;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:11px;
     overscroll-behavior:contain}
-  .lib-item{background:linear-gradient(180deg,#FFFFFF,#FCFDFF);border:1px solid var(--line);border-radius:var(--r-md);
-    padding:13px 15px;font-size:13px;line-height:1.65;position:relative;color:var(--ink);
-    box-shadow:var(--sh-1),0 10px 22px -18px rgba(0,45,105,.35),inset 0 1px 0 #fff;text-wrap:pretty}
-  .lib-item .tag{display:inline-block;font-size:11px;font-weight:600;color:var(--deep);background:#EDF6FF;
-    border:1px solid rgba(0,90,180,.14);border-radius:7px;padding:1.5px 9px;margin-bottom:7px}
+  .lib-item{position:relative;overflow:hidden;border-radius:var(--r-md);
+    padding:13px 15px;font-size:13px;line-height:1.65;color:var(--ink);
+    box-shadow:var(--sh-1),0 10px 22px -18px rgba(0,0,0,.6),inset 0 1px 0 var(--hair);text-wrap:pretty}
+  .lib-item .tag{display:inline-block;font-size:11px;font-weight:600;color:#8FD6F6;background:rgba(0,176,240,.13);
+    border:1px solid rgba(0,176,240,.28);border-radius:7px;padding:1.5px 9px;margin-bottom:7px}
   .lib-item time{display:block;color:var(--faint);font-size:11px;margin-top:7px;
     font-variant-numeric:tabular-nums;letter-spacing:.01em}
-  .lib-item .del{position:absolute;top:11px;right:12px;border:none;background:none;color:#7E8899;font-size:16px;
+  .lib-item .del{position:absolute;top:11px;right:12px;border:none;background:none;color:#8C9EBC;font-size:16px;
     line-height:1;cursor:pointer;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;
     justify-content:center;transition:background .2s var(--ease),color .2s var(--ease)}
-  .lib-item .del:active{background:#F1F6FC;color:#8C9EBC}
+  .lib-item .del:active{background:rgba(255,255,255,.10);color:#C6D6EF}
   .empty{text-align:center;color:var(--faint);font-size:13px;margin-top:84px;line-height:2.1}
   .toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 92px);
     transform:translate(-50%,10px) scale(.96);
-    background:rgba(9,23,50,.86);
+    background:rgba(16,34,62,.86);
     backdrop-filter:blur(18px) saturate(170%);-webkit-backdrop-filter:blur(18px) saturate(170%);
     color:#F3F8FF;font-size:13px;font-weight:500;letter-spacing:.01em;padding:10px 19px;border-radius:var(--r-pill);
-    border:1px solid rgba(255,255,255,.14);
-    box-shadow:0 18px 40px -16px rgba(0,16,48,.55),inset 0 1px 0 rgba(255,255,255,.13);
+    border:1px solid rgba(255,255,255,.16);
+    box-shadow:0 18px 40px -16px rgba(0,0,0,.8),0 0 30px -12px rgba(0,176,240,.5),
+      inset 0 1px 0 rgba(255,255,255,.13);
     opacity:0;pointer-events:none;z-index:99;max-width:80%;
     transition:opacity .28s var(--ease),transform .28s var(--ease)}
   .toast.show{opacity:1;transform:translate(-50%,0) scale(1)}
 
   /* 键盘可达性：焦点环是必需项，不是装饰。下面这条只作用于键盘聚焦，
      不会在触摸点击后冒出来（输入框的焦点环在上面单独给了） */
-  :focus-visible{outline:2px solid rgba(0,176,240,.6);outline-offset:2px}
+  :focus-visible{outline:2px solid rgba(0,176,240,.75);outline-offset:2px}
   @media (prefers-reduced-motion: reduce){
     *,*::before,*::after{animation-duration:.001ms !important;animation-iteration-count:1 !important;
       transition-duration:.001ms !important}
