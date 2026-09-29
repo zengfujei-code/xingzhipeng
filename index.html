@@ -1130,7 +1130,11 @@ function renderRecent(){
   const last = loadLib()[0];
   if(!last){
     if(tag){ tag.className = "tag"; tag.textContent = "学习库"; }
-    if(txt) txt.textContent = "还没有存过内容 · 在对话里点「存入学习库」";
+    /* 这句只在 375 宽下有 234px 可放：实测原文案「…在对话里点「存入学习库」」宽 258px，
+       会被省略号切成「…在对话里点「存入学…」」——正好断在词中间，交付截图上一眼就看见。
+       改短到 219px 后完整显示。按钮的完整名字是「存入学习库」，这里写「存入」是因为
+       这一行本身就叫「学习库」，指代不会混。 */
+    if(txt) txt.textContent = "还没有存过内容 · 在对话里点「存入」";
     return;
   }
   const k = SCENE_BY_NAME[last.scene];
