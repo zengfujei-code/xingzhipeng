@@ -204,8 +204,15 @@ function guard(text){
 
 /* ---------- 状态与存储 ---------- */
 let curScene = null;
-let sending = false;
+let sending = false;   // 「当前场景」有没有在途请求：按钮禁用与回车拦截都看它
+let viewGen = 0;       // openChat 每重建一次视图就 +1，用来识别「回复到达时视图已被换过」
 const $ = id => document.getElementById(id);
+// 一个场景保留、重放、上送的轮数上限。三处必须是同一个数：写进存储的（pushHist）、
+// 重进场景时显示的（openChat）、发给模型的（requestReply 的 history）——只要有一处
+// 更大，就会出现「界面说聊过、模型没看到」。
+const HIST_MAX = 12;
+// 学习库保留与渲染的条数上限。saveLib 从尾部丢、showLib 取头部渲染，两处同源。
+const LIB_MAX = 200;
 const store = {
   get(k,d){ try{ const v=JSON.parse(localStorage.getItem(k)); return v===null?d:v; }catch(e){ return d; } },
   // set 返回是否成功：写满配额 / 隐私模式下 setItem 会抛异常，调用方需要知道
@@ -213,30 +220,62 @@ const store = {
 };
 function toast(msg){ const t=$("toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove("show"),1800); }
 function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+function sceneName(s){ return (SCENES[s] && SCENES[s].name) ? SCENES[s].name : "该场景"; }
+
+/* hist_* 只应该存 {q,a} 数组，但同源下可能残留旧版本或手工写过的脏值。
+   以前这里直接 store.get(...).slice(-12)，脏值会让 .slice 抛 TypeError——而它
+   正好落在「取回答」的 try 里，会被 catch 当成网络异常，报成一句永远不会自愈的
+   「请检查网络」。这里和 pushHist / showLib 一样先归一。 */
+function loadHist(scene){
+  const h = store.get("hist_"+scene, []);
+  return Array.isArray(h) ? h.filter(t=>t && typeof t==="object") : [];
+}
 
 function show(id){ document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active")); $(id).classList.add("active"); }
 function goHome(){ show("screen-home"); if(history.state && history.state.chat){ try{ history.back(); }catch(e){} } }
 
 /* 首页徽章只反映「有没有真的连上 AI」：只有真收到模型回答才显示「已接入」。
-   本页面不产生任何本地回答，所以没有「演示模式」这种状态。 */
+   本页面不产生任何本地回答，所以没有「演示模式」这种状态。
+
+   busy / denied 用于「服务是通的，只是这次请求没成」：429 限流、400 参数错误都
+   说明网络没问题，写成「未连接到 AI 服务 · 请检查网络」会把用户引去排查一个
+   根本不存在的网络故障。徽章是本页唯一的连接状态指示，误报等于给出错误结论。 */
 function setMode(state){
   const b=$("modeBadge"); if(!b) return;
   if(state==="online"){ b.textContent="已接入讯飞星火智能体"; b.className="status-badge ok"; }
+  else if(state==="busy"){ b.textContent="AI 服务繁忙 · 请稍后再试"; b.className="status-badge err"; }
+  else if(state==="empty"){ b.textContent="AI 未返回内容 · 请重试"; b.className="status-badge err"; }
+  else if(state==="denied"){ b.textContent="请求未被受理 · 请看下方提示"; b.className="status-badge err"; }
   else if(state==="offline"){ b.textContent="未连接到 AI 服务 · 请检查网络"; b.className="status-badge err"; }
   else if(state==="noconfig"){ b.textContent="未配置 AI 服务地址"; b.className="status-badge err"; }
   else { b.textContent="尚未对话 · 首次提问时连接讯飞星火"; b.className="status-badge"; }
 }
-function setSending(on){
-  sending = !!on;
+/* 在途请求按场景记账。以前是一个全局 sending 布尔：在 A 提问后切到 B，B 的按钮
+   会被锁到 A 的请求结束（最长 70 秒），而 A 那一轮的结果注定被丢弃——这段等待
+   没有任何收益，用户只看到一个没有理由的禁用按钮。 */
+/* 把「这次请求为什么没成」映射成徽章状态。徽章是本页唯一的连接状态指示，
+   不能一律报成「未连接到 AI 服务 · 请检查网络」——429 限流、400 参数错误都
+   说明网络是好的，那样写会把用户引去排查一个不存在的网络故障。 */
+function modeForStatus(status, ok){
+  if(ok) return "empty";                              // 200 却没内容：服务通了，这次没答出东西
+  if(status === 429 || status === 503) return "busy"; // 服务通了但忙
+  if(status >= 500) return "offline";                 // 5xx：服务端故障，按连不上处理
+  return "denied";                                    // 400/403/405：请求本身没被受理
+}
+const pending = new Map();
+function syncSending(){
+  sending = pending.has(curScene);      // 只反映「当前场景」有没有在途请求
   const b=$("sendBtn"), m=$("micBtn");
   if(b) b.disabled = sending;
   if(m) m.disabled = sending;
+  return sending;
 }
 
 function openChat(scene, noPush){
   // 用 hasOwnProperty 判断：SCENES 是普通对象，SCENES["constructor"] 之类会是真值
   if(!Object.prototype.hasOwnProperty.call(SCENES, scene)) return goHome();
   curScene = scene;
+  viewGen++;                                  // 本次重建的代号（见 requestReply 末尾）
   const sc = SCENES[scene];
   $("chatTitle").textContent = "AI 学习搭档 · " + sc.name;
   $("msgWrap").innerHTML = "";
@@ -250,22 +289,31 @@ function openChat(scene, noPush){
   });
   // 开场提示走提示条，不走 AI 气泡：模型这一轮根本没说话，用气泡就是在伪造它说过
   addNotice(sc.hint);
-  const hist = store.get("hist_"+scene, []);
-  if(Array.isArray(hist) && hist.length){
+  // 只重放与上送同一段（最近 HIST_MAX 轮）：屏幕上的上下文必须和模型看到的一致，
+  // 否则用户以为「我们聊过」而模型根本没看到。顺带挡住 localStorage 里残留的超长
+  // 历史（本页自己不会产生）——那会在一次同步循环里建出上万个节点、手机直接卡住。
+  const hist = loadHist(scene).slice(-HIST_MAX);
+  if(hist.length){
     // 重进场景时把历史重放出来：模型一直「记得」这些轮，界面不能装作没聊过
     hist.forEach(function(t){
-      if(!t) return;
       if(t.q) addMsg("me", t.q);
       if(t.a) addMsg("ai", t.a, {savable:true});
     });
   }
   show("screen-chat");
+  syncSending();   // 在途的是别的场景就不该锁住这里
   if(!noPush){ try{ history.pushState({chat:scene}, "", "?"+CONFIG.sceneParam+"="+encodeURIComponent(scene)); }catch(e){} }
 }
 function clearChat(){
   if(!curScene) return;
+  // 在途请求必须先等完。清空会重建视图（viewGen++），而迟到的回答是**无条件**写回
+  // 历史并整体重放的：用户看到的是「清空 → 内容自己回来了」，toast 还说着「已清空」。
+  // 与其让一次迟到的回调把清空推翻，不如明确让用户等一下。
+  if(pending.has(curScene)){ toast("本条还在等回复，回答到达后再清空"); return; }
   if(!window.confirm("清空本场景的对话记录？清空后无法恢复。")) return;
-  store.set("hist_"+curScene, []);
+  // 写失败就不要往下走：openChat 会从 localStorage 读回**没被清掉**的历史，屏幕上
+  // 内容原样回来、toast 却说「已清空」——那是谎报。
+  if(!store.set("hist_"+curScene, [])){ toast("本机存储异常，未能清空对话记录"); return; }
   openChat(curScene, true);
   toast("已清空本场景对话");
 }
@@ -298,7 +346,7 @@ function addNotice(text, retry){
     btn.className = "retry-btn";
     btn.textContent = "重试";
     btn.onclick = function(){
-      if(sending) return;
+      if(pending.has(retry.scene)) return;                       // 该场景已有在途请求
       btn.remove();                                              // 防止连点留下多个按钮
       if(retry.scene !== curScene) openChat(retry.scene, true);   // 用户已经切走，先切回去
       requestReply(retry.scene, retry.text);
@@ -312,9 +360,21 @@ function addNotice(text, retry){
 // fetch 本身没有超时：手机切网、隧道里连接被吞时，可能长时间既不成功也不失败，
 // 打字动画就会一直转、用户以为「AI 不理我」，所以自己加一道兜底。
 function fetchWithTimeout(url, opts, ms){
-  if(typeof AbortController === "undefined") return fetch(url, opts);
+  const limit = ms || CONFIG.timeoutMs;
+  if(typeof AbortController === "undefined"){
+    // 老浏览器没有 AbortController。以前这里直接返回裸 fetch，等于把超时兜底整条
+    // 去掉：连接被中间设备吞掉（既不 resolve 也不 reject）时 await 永不返回，
+    // 发送键会被永久禁用，用户只能刷新页面。用 Promise.race 至少保证会退出。
+    let tid;
+    const guard = new Promise(function(_, reject){
+      tid = setTimeout(function(){
+        const e = new Error("timeout"); e.name = "TimeoutError"; reject(e);
+      }, limit);
+    });
+    return Promise.race([fetch(url, opts), guard]).finally(function(){ clearTimeout(tid); });
+  }
   const ctl = new AbortController();
-  const tid = setTimeout(function(){ ctl.abort(); }, ms || CONFIG.timeoutMs);
+  const tid = setTimeout(function(){ ctl.abort(); }, limit);
   return fetch(url, Object.assign({}, opts, {signal: ctl.signal}))
     .finally(function(){ clearTimeout(tid); });
 }
@@ -327,18 +387,22 @@ function asciiJSON(o){
     c=>"\\u"+c.charCodeAt(0).toString(16).padStart(4,"0"));
 }
 
+// 返回是否真的写进了本机存储。调用方必须据此决定怎么跟用户说话：写失败时
+// 「切回去就能看到」是句假话——那一轮只在内存里，切回去重放的是存储里的旧内容。
 function pushHist(scene, q, a){
   const k = "hist_"+scene;
   let h = store.get(k, []); if(!Array.isArray(h)) h = [];
+  // 单条上限与云函数的 HISTORY_Q_MAX / HISTORY_A_MAX（2000 / 4000）必须一致。
+  // 两边一旦不一致，超长的那一轮会被云端整条丢弃——界面重放得到、模型看不到。
   h.push({q: String(q).slice(0,2000), a: String(a).slice(0,4000)});
-  while(h.length > 12) h.shift();          // 只留最近 12 轮，不让 localStorage 无限膨胀
-  if(!store.set(k, h)) toast("本机存储空间不足，对话历史未能保存");
+  while(h.length > HIST_MAX) h.shift();    // 只留最近 HIST_MAX 轮，不让 localStorage 无限膨胀
+  return store.set(k, h);
 }
 
 async function send(){
   const inp = $("chatInput"), text = inp.value.trim();
   if(!text) return;
-  if(sending){ toast("上一条还在等回复，请稍候"); return; }
+  if(pending.has(curScene)){ toast("上一条还在等回复，请稍候"); return; }
   const blocked = guard(text);
   // 拦截文案是前端规则写的，不是模型答的——所以显示成系统提示条，
   // 不能塞进 AI 气泡里冒充满分回答（这是本页唯一的「不经过模型就出字」的地方）
@@ -357,8 +421,9 @@ async function requestReply(scene, text){
     addNotice("未配置 AI 服务地址，无法连接讯飞星火。请在 CONFIG.apiProxy 填入云函数地址。");
     return;
   }
-  if(sending){ toast("上一条还在等回复，请稍候"); return; }
-  setSending(true);
+  if(pending.has(scene)){ toast("上一条还在等回复，请稍候"); return; }
+  pending.set(scene, text); syncSending();
+  const gen = viewGen;                     // 记下发起时的视图代号
   const wait = addTyping();
 
   let reply = null, notice = null;
@@ -366,7 +431,7 @@ async function requestReply(scene, text){
     const r = await fetchWithTimeout(CONFIG.apiProxy, {
       method: "POST",
       headers: {"Content-Type": "application/json"},
-      body: asciiJSON({scene: scene, query: text, history: store.get("hist_"+scene, []).slice(-12)})
+      body: asciiJSON({scene: scene, query: text, history: loadHist(scene).slice(-HIST_MAX)})
     }, CONFIG.timeoutMs);
     // 接口约定：响应体永远是 JSON。无论 HTTP 状态码都先尝试解析并取 reply——
     // 否则云函数为 400/429/503 写好的那些「给用户看的话」一句都到不了用户眼前。
@@ -374,10 +439,17 @@ async function requestReply(scene, text){
     try{ data = await r.json(); }catch(e){ data = null; }
     const msg = (data && typeof data.reply === "string") ? data.reply.trim() : "";
     if(r.ok && msg){ reply = msg; setMode("online"); }
-    else { notice = msg || ("服务暂时不可用（HTTP "+r.status+"），请稍后重试。"); setMode("offline"); }
+    else {
+      notice = msg || (r.ok
+        // 200 却没内容：说成「服务暂时不可用（HTTP 200）」自相矛盾，也不该
+        // 归到「没连上」里去——服务明明连上了，只是这次没答出东西。
+        ? "服务返回异常（HTTP 200），这次没有拿到回答，请重试。"
+        : "服务暂时不可用（HTTP " + r.status + "），请稍后重试。");
+      setMode(modeForStatus(r.status, r.ok));
+    }
   }catch(e){
     // 网络失败 / 超时 / 跨域被拦：如实告诉用户这次没连上，不编内容
-    if(e && e.name === "AbortError")
+    if(e && (e.name === "AbortError" || e.name === "TimeoutError"))
       notice = "等待讯飞星火回复超时（超过 " + Math.round(CONFIG.timeoutMs/1000) + " 秒），本次没有收到回答。";
     else
       notice = "没能连上 AI 服务，请检查网络后重试。";
@@ -385,36 +457,80 @@ async function requestReply(scene, text){
   }
 
   if(wait) wait.remove();
-  setSending(false);
-  if(scene !== curScene) return;           // 用户已切走，丢弃这次结果
+  pending.delete(scene); syncSending();
 
-  if(notice) addNotice(notice, {scene: scene, text: text});
+  // 用户已切走、或视图被「重进场景」重建过时，不能把结果直接 append 到当前 DOM：
+  // 那会落到别的场景里，或出现一条「没有对应提问的回答」。但也不能一丢了之——
+  // 这一轮已经花掉了星火额度，而提问气泡本来就只在内存里，丢了等于用户什么都没问过。
+  // 所以：先无条件落历史，再按「视图还是不是原来那一个」决定怎么显示。
   if(reply){
     // 能走到这里就一定是模型答的：可存学习库、也写进历史。
     // 历史必须记——模型靠它保持上下文，重进场景也会重放这段对话。
-    addMsg("ai", reply, {savable: true});
-    pushHist(scene, text, reply);
+    // saved=false 表示本机存储写不进去（配额满 / 存储被禁）。这一轮只在内存里，
+    // 所以凡是「切回去就能看到」的说法都不成立；能显示的路径要先把回答显示出来，
+    // 不让它无声消失。
+    const saved = pushHist(scene, text, reply);
+    if(scene === curScene && gen === viewGen){
+      addMsg("ai", reply, {savable:true});
+      if(!saved) toast("本机存储异常，这条回答没能保存");
+      return;
+    }
+    // 视图换过了：按历史整体重放，保证「提问在前、回答在后」的顺序
+    if(scene === curScene){
+      if(saved){ openChat(scene, true); toast("回答已到达"); }
+      // 存不下就别重放（重放里没有这一轮，回答会无声消失），直接补一条上去
+      else { addMsg("ai", reply, {savable:true}); toast("本机存储异常，这条回答没能保存"); }
+      return;
+    }
+    toast(saved
+      ? ("「" + sceneName(scene) + "」的回答已到达，切回去就能看到")
+      : ("「" + sceneName(scene) + "」的回答到了，但本机存不下，切回去看不到"));
+    return;
+  }
+  if(notice){
+    if(scene !== curScene){ toast("「" + sceneName(scene) + "」这一次没有拿到回答"); return; }
+    if(gen !== viewGen) openChat(scene, true);
+    addNotice(notice, {scene: scene, text: text});
   }
 }
 
+/* library 与 hist_* 同理：同源下可能残留脏值。条目里混进 null 时 x.scene 会抛
+   TypeError，而 showLib 是由内联 onclick 调用的，抛出去就是未捕获异常、列表渲染
+   不出来。saveLib / showLib / delLib 共用同一套归一，索引才对得上。 */
+function loadLib(){
+  const lib = store.get("library", []);
+  return Array.isArray(lib) ? lib.filter(x=>x && typeof x==="object") : [];
+}
 function saveLib(btn){
   const msgEl = btn.closest(".msg");
   const content = (msgEl && msgEl._text ? msgEl._text : "").trim();
   if(!content){ toast("这条内容无法保存"); return; }
-  let lib = store.get("library", []); if(!Array.isArray(lib)) lib = [];
+  const lib = loadLib();
   lib.unshift({scene:(curScene && SCENES[curScene] ? SCENES[curScene].name : ""), content: content, time: new Date().toLocaleString("zh-CN")});
-  while(lib.length > 200) lib.pop();
+  while(lib.length > LIB_MAX) lib.pop();
   if(!store.set("library", lib)){ toast("本机存储空间不足，保存失败"); return; }
   btn.textContent = "✓ 已保存"; btn.style.pointerEvents = "none"; toast("已存入我的 AI 学习库");
 }
 function showLib(){
   show("screen-lib");
-  const lib = store.get("library", []);
-  $("libList").innerHTML = (Array.isArray(lib) && lib.length) ? lib.map((x,i)=>
+  // 只渲染 LIB_MAX 条以内、且排在最前的那批：最新的在最前，saveLib 从尾部丢，
+  // 所以要截头部而不是尾部。截头部才能让 delLib(i) 的索引与 loadLib() 对齐
+  // ——索引一旦错位就会删错条。读取侧的渲染上限也必须与写入侧同源，否则
+  // localStorage 里残留的超长数组会在一次 innerHTML 里拼出上万个节点。
+  const lib = loadLib().slice(0, LIB_MAX);
+  $("libList").innerHTML = lib.length ? lib.map((x,i)=>
     `<div class="lib-item"><button class="del" onclick="delLib(${i})">×</button><span class="tag">${esc(x.scene)}</span><br/>${esc(x.content)}<time>${esc(x.time)}</time></div>`).join("")
     : `<div class="empty">📭<br/>学习库还是空的<br/>在对话中把 AI 生成的计划、任务清单保存到这里</div>`;
 }
-function delLib(i){ let lib = store.get("library", []); if(!Array.isArray(lib)) return; lib.splice(i,1); store.set("library", lib); showLib(); }
+function delLib(i){
+  const lib = loadLib();                 // 必须与 showLib 用同一套归一，否则索引错位删错条
+  if(!(i >= 0 && i < lib.length)) return;
+  lib.splice(i,1);
+  // 写失败就不要再 showLib()：它会从 localStorage 读回**没删掉**的那条，条目
+  // 原样留在列表里、还一声不吭，用户会以为按钮坏了而反复点。
+  if(!store.set("library", lib)){ toast("本机存储异常，删除失败"); return; }
+  showLib();
+}
 
 /* ---------- 语音输入（浏览器 Web Speech，不支持时优雅降级为文字） ---------- */
 const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -461,8 +577,14 @@ document.getElementById("chatInput").addEventListener("keydown",e=>{
   if(e.isComposing || e.keyCode === 229) return;
   e.preventDefault(); send();
 });
-// 浏览器返回键/侧滑：回到首页，而不是直接退出页面
-window.addEventListener("popstate",function(){ show("screen-home"); });
+// 浏览器返回/前进：按历史项恢复界面，而不是直接退出页面。
+// 以前这里无条件 show("screen-home")：后退回首页后再按「前进」，浏览器把地址
+// 恢复成 ?s=plan 而界面仍停在首页，地址栏和界面对不上。
+window.addEventListener("popstate",function(e){
+  const st = e && e.state;
+  if(st && st.chat && Object.prototype.hasOwnProperty.call(SCENES, st.chat)) openChat(st.chat, true);
+  else show("screen-home");
+});
 (function init(){
   try{
     setMode(CONFIG.apiProxy ? "unknown" : "noconfig");
