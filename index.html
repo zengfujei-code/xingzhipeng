@@ -5,93 +5,235 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
 <title>星智碰 · AI 学习搭档</title>
 <style>
+  /* ============================================================
+     设计令牌
+     品牌色（--blue / --deep）与 PPT、垫面视觉稿、主效果图是同一套，
+     **不要在这里改**——页面一旦换蓝，就和已交付的物料分成两个视觉体系。
+     高级感来自结构、留白、层次与克制，不来自换一个更好看的蓝。
+     ============================================================ */
   :root{
-    --blue:#00B0F0; --deep:#003A8C; --ink:#12244B; --sub:#5B6B8C;
-    --bg:#F2F8FF; --card:#FFFFFF; --line:#E2EEFB; --ok:#18C19B;
-    --radius:16px; --shadow:0 8px 24px rgba(0,90,180,.10);
+    --blue:#00B0F0; --blue-dk:#0A6FBE; --deep:#003A8C;
+    --gold:#D9A94A;                 /* 只用来画发丝线：白底上只有 ~2.2:1，不能写字 */
+    --ink:#0E1F40; --sub:#4E5F85; --faint:#5E6B88;
+    --bg:#F4F8FD; --card:#FFFFFF;
+    --line:rgba(0,58,140,.09); --line-2:rgba(0,58,140,.16);
+
+    /* 圆角分三级：外壳大、内件小、胶囊全圆。全局统一一个半径是最典型的模板感 */
+    --r-lg:22px; --r-md:15px; --r-sm:11px; --r-pill:999px;
+
+    /* 阴影全部带蓝调、统一从正上方打光，三层叠加出厚度，而不是一层糊上去 */
+    --sh-1:0 1px 2px rgba(0,45,105,.05);
+    --sh-2:0 10px 24px -14px rgba(0,45,105,.26);
+    --sh-3:0 22px 48px -26px rgba(0,45,105,.40);
+
+    /* 动效曲线：不用 ease / ease-in-out —— 那是"默认感"的来源 */
+    --ease:cubic-bezier(.32,.72,0,1);
+    --ease-soft:cubic-bezier(.4,0,.2,1);
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0}
   html,body{height:100%}
   body{
-    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
-    background:linear-gradient(180deg,#E8F5FF 0%,#F2F8FF 38%,#F2F8FF 100%);
-    color:var(--ink);overflow:hidden;
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","HarmonyOS Sans SC","MiSans",
+      "Source Han Sans SC","Noto Sans CJK SC","Microsoft YaHei",sans-serif;
+    color:var(--ink);
+    /* 不是一条均匀的线性渐变：两层错位的径向光斑压在浅底上，才有"有光源"的感觉 */
+    background:
+      radial-gradient(92% 54% at 88% -4%, rgba(0,176,240,.20) 0%, rgba(0,176,240,0) 58%),
+      radial-gradient(70% 44% at 4% 14%, rgba(0,58,140,.10) 0%, rgba(0,58,140,0) 55%),
+      linear-gradient(179deg,#EAF4FE 0%,#F4F8FD 42%,#F4F8FD 100%);
+    overflow:hidden;
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
   }
-  #app{max-width:480px;margin:0 auto;height:100%;display:flex;flex-direction:column;position:relative}
-  .screen{position:absolute;inset:0;display:flex;flex-direction:column;opacity:0;pointer-events:none;transition:opacity .25s ease}
-  .screen.active{opacity:1;pointer-events:auto;position:relative;flex:1;min-height:0}
+  /* 极细颗粒：压掉纯数字平面的塑料感。fixed + pointer-events:none，
+     只铺一层、不参与滚动，开销接近零（值很小，肉眼几乎看不出，但去掉就发"平"） */
+  body::after{
+    content:"";position:fixed;inset:0;z-index:60;pointer-events:none;opacity:.026;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23g)'/%3E%3C/svg%3E");
+  }
+  /* overflow:hidden 是必需的：非活动屏是 position:absolute + translateY(8px)，
+     会把文档撑高 8px（实测 852 > 视口 844）。body 虽然也是 overflow:hidden，
+     但只在 iOS 上不保证不橡皮筋，这里直接把越界部分裁掉。
+     注意 .toast 是 #app 的兄弟节点、又是 position:fixed，不会被裁到。 */
+  #app{max-width:480px;margin:0 auto;height:100%;display:flex;flex-direction:column;position:relative;overflow:hidden}
+  @supports (height:100dvh){ #app{height:100dvh} }   /* iOS Safari 地址栏收放时不再跳一下 */
+
+  .screen{position:absolute;inset:0;display:flex;flex-direction:column;opacity:0;pointer-events:none;
+    transform:translateY(8px);transition:opacity .3s var(--ease),transform .3s var(--ease)}
+  .screen.active{opacity:1;pointer-events:auto;transform:none;position:relative;flex:1;min-height:0}
 
   /* ---------- 首页 ---------- */
-  .home-head{padding:calc(env(safe-area-inset-top) + 22px) 22px 10px;text-align:center}
+  .home-head{padding:calc(env(safe-area-inset-top) + 26px) 22px 12px;text-align:center}
   .brand{display:flex;align-items:center;justify-content:center;gap:10px}
-  .logo{width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,var(--blue),var(--deep));
-    display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:20px;box-shadow:var(--shadow)}
-  .brand-title{font-size:21px;letter-spacing:.5px;white-space:nowrap;text-align:center;margin:10px 0 0}
-  @media (min-width:420px){ .brand-title{font-size:23px;letter-spacing:1px} }
-  .slogan{margin-top:8px;color:var(--sub);font-size:13px;letter-spacing:2px}
-  .nfc-hint{margin:14px auto 4px;width:88%;border:1px dashed #9BD4F7;background:#fff;border-radius:var(--radius);
-    padding:12px 14px;display:flex;align-items:center;gap:12px}
-  .nfc-ripple{width:40px;height:40px;border-radius:50%;background:radial-gradient(circle,#fff 30%,#BFE9FF 32%,#BFE9FF 100%);
+  /* 方角图标做成一枚"机加工过的金属牌"：深蓝渐变 + 上沿高光 + 一圈金发丝线。
+     渐变浅端取了品牌蓝压深一档的 #0A93CC —— 直接用 #00B0F0 时白字只有
+     2.48:1，连大字要求的 3:1 都不到（这是改动前就有的问题） */
+  .logo{width:46px;height:46px;border-radius:15px;
+    background:linear-gradient(152deg,#0A93CC 0%,#003A8C 100%);
+    display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:21px;
+    border:1px solid rgba(217,169,74,.32);
+    box-shadow:0 14px 26px -14px rgba(0,45,105,.62),inset 0 1px 0 rgba(255,255,255,.30),inset 0 -1px 0 rgba(0,0,0,.16)}
+  .brand-title{font-size:21px;font-weight:800;letter-spacing:-.01em;white-space:nowrap;text-align:center;margin:12px 0 0;text-wrap:balance}
+  @media (min-width:420px){ .brand-title{font-size:23px;letter-spacing:0} }
+  .slogan{margin-top:9px;color:var(--sub);font-size:12px;letter-spacing:.18em;font-weight:500}
+  /* 原先是 1px 虚线框。虚线是"草稿/待填"的视觉语言，跟"成品"正好相反 */
+  .nfc-hint{margin:18px auto 6px;width:86%;background:linear-gradient(180deg,#FFFFFF,#F6FAFF);
+    border:1px solid var(--line);border-radius:20px;padding:14px 16px;display:flex;align-items:center;gap:13px;
+    box-shadow:var(--sh-2),inset 0 1px 0 #fff}
+  .nfc-ripple{width:42px;height:42px;border-radius:50%;
+    background:radial-gradient(circle,#fff 32%,#CDEBFF 34%,#EAF5FF 100%);
     position:relative;flex:none;display:flex;align-items:center;justify-content:center;font-size:20px}
-  .nfc-ripple::before,.nfc-ripple::after{content:"";position:absolute;inset:0;border-radius:50%;border:2px solid var(--blue);animation:ripple 1.8s infinite}
-  .nfc-ripple::after{animation-delay:.9s}
-  @keyframes ripple{0%{transform:scale(.7);opacity:.9}100%{transform:scale(1.5);opacity:0}}
-  .nfc-hint b{font-size:14px}.nfc-hint span{display:block;font-size:12px;color:var(--sub);margin-top:2px}
-  .scene-list{padding:14px 18px 6px;display:flex;flex-direction:column;gap:12px;overflow-y:auto;flex:1;min-height:0}
-  .scene-card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px;display:flex;align-items:center;gap:14px;
-    border:1px solid var(--line);cursor:pointer;transition:transform .12s}
-  .scene-card:active{transform:scale(.98)}
-  .scene-ico{width:48px;height:48px;border-radius:14px;flex:none;display:flex;align-items:center;justify-content:center;font-size:24px;color:#fff}
-  .s1 .scene-ico{background:linear-gradient(135deg,#36CFFB,#0078D4)}
-  .s2 .scene-ico{background:linear-gradient(135deg,#5AD8A6,#0E9F6E)}
-  .s3 .scene-ico{background:linear-gradient(135deg,#FFB454,#F97316)}
-  .scene-card h2{font-size:16px}.scene-card p{font-size:12px;color:var(--sub);margin-top:3px;line-height:1.5}
-  .scene-card .go{margin-left:auto;color:#9DB4D6;font-size:20px}
-  .home-foot{padding:8px 18px calc(env(safe-area-inset-bottom) + 14px);text-align:center;color:#9DB4D6;font-size:11px;line-height:1.7}
-  /* 连接状态徽章：只反映「有没有真的连上 AI」，本页面不存在演示/离线兜底内容 */
-  .status-badge{display:inline-block;background:#FFF4E0;color:#C77A1A;border-radius:999px;padding:2px 10px;font-size:11px;margin-bottom:6px}
-  .status-badge.ok{background:#E7F8F2;color:#0E9F6E}
-  .status-badge.err{background:#FDECEC;color:#C0392B}
+  .nfc-ripple::before,.nfc-ripple::after{content:"";position:absolute;inset:0;border-radius:50%;
+    border:1.5px solid rgba(0,176,240,.55);animation:ripple 2.2s var(--ease-soft) infinite}
+  .nfc-ripple::after{animation-delay:1.1s}
+  @keyframes ripple{0%{transform:scale(.72);opacity:.85}100%{transform:scale(1.55);opacity:0}}
+  .nfc-hint b{font-size:14px;font-weight:600;letter-spacing:.01em}
+  .nfc-hint span{display:block;font-size:12px;color:var(--sub);margin-top:3px;line-height:1.5}
+  .scene-list{padding:16px 18px 8px;display:flex;flex-direction:column;gap:13px;overflow-y:auto;flex:1;min-height:0;
+    overscroll-behavior:contain}
+  /* 卡片不是"白底+边框+阴影"三件套，而是嵌进去的一层：发丝外沿 + 上沿高光 + 内部极淡的受光渐变 */
+  .scene-card{position:relative;overflow:hidden;background:linear-gradient(180deg,#FFFFFF 0%,#FBFDFF 100%);
+    border-radius:var(--r-lg);border:1px solid var(--line);padding:17px 18px;display:flex;align-items:center;gap:15px;
+    box-shadow:var(--sh-1),var(--sh-2),inset 0 1px 0 #fff;cursor:pointer;
+    transition:transform .18s var(--ease),box-shadow .28s var(--ease),border-color .28s var(--ease)}
+  .scene-card::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+    background:radial-gradient(130% 90% at 6% -10%,rgba(0,176,240,.07) 0%,rgba(0,176,240,0) 62%)}
+  .scene-card:active{transform:scale(.984);box-shadow:var(--sh-1),0 6px 14px -12px rgba(0,45,105,.3),inset 0 1px 0 #fff}
+  @media (hover:hover){ .scene-card:hover{border-color:var(--line-2);box-shadow:var(--sh-1),var(--sh-3),inset 0 1px 0 #fff} }
+  /* 三个场景保留可辨识的色相（蓝/青/金），但整体降饱和、统一打光方向，
+     不再像三个糖果色按钮；垫面与 PPT 里的三场景也是一一对应的 */
+  .scene-ico{width:48px;height:48px;border-radius:var(--r-md);flex:none;display:flex;align-items:center;justify-content:center;
+    font-size:23px;color:#fff;position:relative;
+    box-shadow:0 10px 20px -12px rgba(0,45,105,.6),inset 0 1px 0 rgba(255,255,255,.26),inset 0 -1px 0 rgba(0,0,0,.13)}
+  .s1 .scene-ico{background:linear-gradient(152deg,#2C8FE0,#0B3E86)}
+  .s2 .scene-ico{background:linear-gradient(152deg,#17A3A8,#0A5A6E)}
+  .s3 .scene-ico{background:linear-gradient(152deg,#CE8F2E,#8A4E12)}
+  .scene-card h2{font-size:16px;font-weight:700;letter-spacing:-.005em}
+  .scene-card p{font-size:12px;color:var(--sub);margin-top:4px;line-height:1.55;text-wrap:pretty}
+  .scene-card .go{margin-left:auto;color:#7E8899;font-size:19px;transition:transform .28s var(--ease),color .28s var(--ease)}
+  @media (hover:hover){ .scene-card:hover .go{transform:translateX(2px);color:var(--blue-dk)} }
+  .home-foot{padding:10px 18px calc(env(safe-area-inset-bottom) + 16px);text-align:center;color:var(--faint);
+    font-size:11px;line-height:1.75;letter-spacing:.02em;font-variant-numeric:tabular-nums}
+  /* 连接状态徽章：只反映「有没有真的连上 AI」，本页面不存在演示/离线兜底内容。
+     前面加一颗同色小圆点——状态类信息用点比用整块底色更克制也更易读 */
+  .status-badge{display:inline-flex;align-items:center;gap:6px;background:#FFF6E6;color:#8A5310;
+    border:1px solid rgba(200,120,20,.18);border-radius:var(--r-pill);padding:3px 11px;font-size:11px;
+    font-weight:600;margin-bottom:8px}
+  .status-badge::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor;flex:none;
+    box-shadow:0 0 0 3px rgba(200,120,20,.14)}
+  .status-badge.ok{background:#E9F8F2;color:#0B7A55;border-color:rgba(11,122,85,.18)}
+  .status-badge.ok::before{box-shadow:0 0 0 3px rgba(11,122,85,.14)}
+  .status-badge.err{background:#FDEDEC;color:#A32B22;border-color:rgba(163,43,34,.18)}
+  .status-badge.err::before{box-shadow:0 0 0 3px rgba(163,43,34,.14)}
 
   /* ---------- 对话页 ---------- */
-  .chat-head{background:#fff;border-bottom:1px solid var(--line);padding:calc(env(safe-area-inset-top) + 12px) 14px 12px;display:flex;align-items:center;gap:10px}
-  .back{width:34px;height:34px;border-radius:50%;border:none;background:#EEF6FF;font-size:18px;color:var(--deep);cursor:pointer;flex:none}
-  .chat-head h2{font-size:16px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.chat-head .lib-btn{border:1px solid var(--line);background:#fff;border-radius:999px;font-size:11px;color:var(--deep);padding:5px 10px;cursor:pointer;flex:none;white-space:nowrap}
-  .chat-head .mini{width:34px;height:34px;border-radius:50%;border:none;background:#EEF6FF;font-size:15px;color:var(--deep);cursor:pointer;flex:none}
-  .msg-wrap{flex:1;overflow-y:auto;padding:16px 14px;display:flex;flex-direction:column;gap:14px}
-  .msg{max-width:82%;padding:11px 14px;border-radius:14px;font-size:14px;line-height:1.65;white-space:pre-wrap;word-break:break-word}
-  .msg.ai{background:#fff;border:1px solid var(--line);border-top-left-radius:4px;box-shadow:0 2px 8px rgba(0,90,180,.05);align-self:flex-start}
-  .msg.me{background:linear-gradient(135deg,var(--blue),#1888d8);color:#fff;border-top-right-radius:4px;align-self:flex-end}
-  .msg .save-btn{display:inline-block;margin-top:8px;font-size:12px;color:var(--deep);background:#EAF5FF;border:1px solid #BFE0FB;border-radius:999px;padding:3px 12px;cursor:pointer}
+  .chat-head{background:rgba(255,255,255,.82);
+    backdrop-filter:blur(20px) saturate(160%);-webkit-backdrop-filter:blur(20px) saturate(160%);
+    border-bottom:1px solid var(--line);padding:calc(env(safe-area-inset-top) + 13px) 14px 13px;
+    display:flex;align-items:center;gap:10px}
+  .back{width:38px;height:38px;border-radius:50%;border:1px solid var(--line);background:#fff;font-size:18px;
+    color:var(--deep);cursor:pointer;flex:none;line-height:1;box-shadow:var(--sh-1);
+    transition:transform .18s var(--ease),background .2s var(--ease)}
+  .back:active{transform:scale(.94);background:#F1F6FC}
+  .chat-head h2{font-size:16px;font-weight:700;letter-spacing:-.005em;flex:1;min-width:0;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .chat-head .lib-btn{border:1px solid var(--line);background:#fff;border-radius:var(--r-pill);font-size:11px;
+    font-weight:600;color:var(--deep);padding:7px 12px;cursor:pointer;flex:none;white-space:nowrap;box-shadow:var(--sh-1);
+    transition:transform .18s var(--ease),background .2s var(--ease)}
+  .chat-head .lib-btn:active{transform:scale(.96);background:#F1F6FC}
+  .chat-head .mini{width:38px;height:38px;border-radius:50%;border:1px solid var(--line);background:#fff;font-size:15px;
+    color:var(--deep);cursor:pointer;flex:none;line-height:1;box-shadow:var(--sh-1);
+    transition:transform .18s var(--ease),background .2s var(--ease)}
+  .chat-head .mini:active{transform:scale(.94);background:#F1F6FC}
+  .msg-wrap{flex:1;min-height:0;overflow-y:auto;padding:18px 14px 6px;display:flex;flex-direction:column;gap:14px;
+    overscroll-behavior:contain}
+  /* 气泡的"尾巴"用一个只圆 6px 的角表示，比画三角形干净 */
+  .msg{max-width:82%;padding:12px 15px;border-radius:18px;font-size:14px;line-height:1.68;
+    white-space:pre-wrap;word-break:break-word;text-wrap:pretty}
+  .msg.ai{background:#fff;border:1px solid var(--line);border-top-left-radius:6px;
+    box-shadow:var(--sh-1),var(--sh-2);align-self:flex-start;color:var(--ink)}
+  /* 用户气泡走"海军蓝"：一是和白色 AI 卡片形成明确的两极，二是
+     #00B0F0 上压白字只有 ~2.6:1（不达 AA），这个渐变最浅处仍 >4.5:1 */
+  .msg.me{background:linear-gradient(158deg,#0A6FBE 0%,#003A8C 100%);color:#fff;border-top-right-radius:6px;
+    align-self:flex-end;box-shadow:0 12px 26px -14px rgba(0,58,140,.6),inset 0 1px 0 rgba(255,255,255,.20)}
+  .msg .save-btn{display:inline-block;margin-top:9px;font-size:12px;font-weight:600;color:var(--deep);background:#EDF6FF;
+    border:1px solid rgba(0,90,180,.16);border-radius:var(--r-pill);padding:4px 13px;cursor:pointer;
+    transition:transform .18s var(--ease),background .2s var(--ease)}
+  .msg .save-btn:active{transform:scale(.96);background:#E0EFFD}
   /* 系统提示条：用于「服务返回了错误」这类不是模型回答的内容，样式刻意区别于对话气泡 */
-  .msg.sys{align-self:center;max-width:92%;background:#FFF7E6;border:1px solid #FBE2B0;color:#8A5A00;
-    font-size:12.5px;line-height:1.6;text-align:center;border-radius:10px}
+  .msg.sys{align-self:center;max-width:92%;background:#FFFBF2;border:1px solid rgba(190,140,50,.22);color:#7A5210;
+    font-size:12.5px;line-height:1.65;text-align:center;border-radius:14px;box-shadow:var(--sh-1)}
   /* 连接失败提示条里的「重试」按钮 */
-  .msg .retry-btn{display:inline-block;margin-top:8px;font-size:12px;color:#8A5A00;background:#FFF0CC;
-    border:1px solid #F0CE85;border-radius:999px;padding:3px 14px;cursor:pointer}
-  .typing{display:inline-flex;gap:4px;align-items:center}.typing i{width:6px;height:6px;border-radius:50%;background:#9DB4D6;animation:blink 1.2s infinite}
-  .typing i:nth-child(2){animation-delay:.2s}.typing i:nth-child(3){animation-delay:.4s}
-  @keyframes blink{0%,60%,100%{opacity:.25}30%{opacity:1}}
-  .quick{padding:0 14px 8px;display:flex;gap:8px;overflow-x:auto;white-space:nowrap}
-  .quick span{background:#fff;border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-size:12px;color:var(--deep);cursor:pointer;flex:none}
-  .input-bar{background:#fff;border-top:1px solid var(--line);padding:10px 12px calc(env(safe-area-inset-bottom) + 10px);display:flex;gap:8px;align-items:center}
-  .input-bar input{flex:1;border:none;background:#F0F6FE;border-radius:999px;padding:11px 16px;font-size:14px;outline:none}
-  .mic,.send{border:none;width:42px;height:42px;border-radius:50%;font-size:18px;cursor:pointer;flex:none}
-  .mic{background:#EEF6FF;color:var(--deep)}.send{background:linear-gradient(135deg,var(--blue),var(--deep));color:#fff}
-  .mic.rec{background:#FFE9E9;color:#E5484D;animation:pulse 1s infinite}
-  .mic:disabled,.send:disabled{opacity:.45;cursor:not-allowed;animation:none}
-  @keyframes pulse{50%{box-shadow:0 0 0 6px rgba(229,72,77,.15)}}
+  .msg .retry-btn{display:inline-block;margin-top:9px;font-size:12px;font-weight:600;color:#6E4A0C;background:#FDF0D6;
+    border:1px solid rgba(190,140,50,.3);border-radius:var(--r-pill);padding:4px 15px;cursor:pointer;
+    transition:transform .18s var(--ease),background .2s var(--ease)}
+  .msg .retry-btn:active{transform:scale(.96);background:#F9E6BE}
+  .typing{display:inline-flex;gap:4px;align-items:center;padding:2px 0}
+  .typing i{width:6px;height:6px;border-radius:50%;background:#A9BAD6;animation:blink 1.3s var(--ease-soft) infinite}
+  .typing i:nth-child(2){animation-delay:.18s}.typing i:nth-child(3){animation-delay:.36s}
+  @keyframes blink{0%,62%,100%{opacity:.22;transform:translateY(0)}32%{opacity:1;transform:translateY(-2px)}}
+  .quick{padding:2px 14px 10px;display:flex;gap:8px;overflow-x:auto;white-space:nowrap;
+    overscroll-behavior-x:contain;scrollbar-width:none}
+  .quick::-webkit-scrollbar{display:none}
+  .quick span{background:#fff;border:1px solid var(--line);border-radius:var(--r-pill);padding:7px 13px;font-size:12px;
+    color:var(--deep);cursor:pointer;flex:none;box-shadow:var(--sh-1);
+    transition:transform .18s var(--ease),background .2s var(--ease),border-color .2s var(--ease)}
+  .quick span:active{transform:scale(.96);background:#F1F6FC}
+  .input-bar{background:rgba(255,255,255,.86);
+    backdrop-filter:blur(20px) saturate(160%);-webkit-backdrop-filter:blur(20px) saturate(160%);
+    border-top:1px solid var(--line);padding:11px 12px calc(env(safe-area-inset-bottom) + 11px);
+    display:flex;gap:9px;align-items:center}
+  .input-bar input{flex:1;min-width:0;border:1px solid rgba(0,58,140,.08);background:#F1F6FC;border-radius:var(--r-pill);
+    padding:12px 17px;font-size:14.5px;color:var(--ink);outline:none;
+    box-shadow:inset 0 1px 2px rgba(0,45,105,.05);
+    transition:background .22s var(--ease),border-color .22s var(--ease),box-shadow .22s var(--ease)}
+  .input-bar input::placeholder{color:#5F6B80}
+  /* 原来这里是裸的 outline:none（键盘用户看不到焦点）。改成"描边 + 光晕"，
+     比系统默认轮廓更贴合本页，也仍然是明确的焦点指示 */
+  .input-bar input:focus{background:#fff;border-color:rgba(0,176,240,.45);box-shadow:0 0 0 4px rgba(0,176,240,.13)}
+  .mic,.send{border:none;width:44px;height:44px;border-radius:50%;font-size:17px;cursor:pointer;flex:none;line-height:1;
+    transition:transform .18s var(--ease),box-shadow .25s var(--ease),background .22s var(--ease)}
+  .mic{background:#EEF6FF;color:var(--deep);border:1px solid var(--line);box-shadow:var(--sh-1)}
+  .send{background:linear-gradient(152deg,#0A93CC,#003A8C);color:#fff;
+    box-shadow:0 12px 24px -12px rgba(0,58,140,.65),inset 0 1px 0 rgba(255,255,255,.22)}
+  .mic:active,.send:active{transform:scale(.93)}
+  .mic.rec{background:#FFEDED;color:#D93A3F;border-color:rgba(217,58,63,.25);animation:pulse 1.4s var(--ease-soft) infinite}
+  .mic:disabled,.send:disabled{opacity:.4;cursor:not-allowed;animation:none;box-shadow:none}
+  @keyframes pulse{50%{box-shadow:0 0 0 7px rgba(217,58,63,.13)}}
 
   /* ---------- 学习库 ---------- */
-  .lib-list{flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:10px}
-  .lib-item{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-size:13px;line-height:1.6;position:relative}
-  .lib-item .tag{display:inline-block;font-size:11px;color:var(--deep);background:#EAF5FF;border-radius:6px;padding:1px 8px;margin-bottom:6px}
-  .lib-item time{display:block;color:#A7B6CE;font-size:11px;margin-top:6px}
-  .lib-item .del{position:absolute;top:10px;right:12px;border:none;background:none;color:#C2CDDF;font-size:16px;cursor:pointer}
-  .empty{text-align:center;color:#9DB4D6;font-size:13px;margin-top:80px;line-height:2}
-  .toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:rgba(18,36,75,.92);color:#fff;font-size:13px;
-    padding:9px 18px;border-radius:999px;opacity:0;transition:opacity .25s;pointer-events:none;z-index:99;max-width:80%}
-  .toast.show{opacity:1}
+  .lib-list{flex:1;min-height:0;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:11px;
+    overscroll-behavior:contain}
+  .lib-item{background:linear-gradient(180deg,#FFFFFF,#FCFDFF);border:1px solid var(--line);border-radius:var(--r-md);
+    padding:13px 15px;font-size:13px;line-height:1.65;position:relative;color:var(--ink);
+    box-shadow:var(--sh-1),0 10px 22px -18px rgba(0,45,105,.35),inset 0 1px 0 #fff;text-wrap:pretty}
+  .lib-item .tag{display:inline-block;font-size:11px;font-weight:600;color:var(--deep);background:#EDF6FF;
+    border:1px solid rgba(0,90,180,.14);border-radius:7px;padding:1.5px 9px;margin-bottom:7px}
+  .lib-item time{display:block;color:var(--faint);font-size:11px;margin-top:7px;
+    font-variant-numeric:tabular-nums;letter-spacing:.01em}
+  .lib-item .del{position:absolute;top:11px;right:12px;border:none;background:none;color:#7E8899;font-size:16px;
+    line-height:1;cursor:pointer;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;
+    justify-content:center;transition:background .2s var(--ease),color .2s var(--ease)}
+  .lib-item .del:active{background:#F1F6FC;color:#8C9EBC}
+  .empty{text-align:center;color:var(--faint);font-size:13px;margin-top:84px;line-height:2.1}
+  .toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 92px);
+    transform:translate(-50%,10px) scale(.96);
+    background:rgba(9,23,50,.86);
+    backdrop-filter:blur(18px) saturate(170%);-webkit-backdrop-filter:blur(18px) saturate(170%);
+    color:#F3F8FF;font-size:13px;font-weight:500;letter-spacing:.01em;padding:10px 19px;border-radius:var(--r-pill);
+    border:1px solid rgba(255,255,255,.14);
+    box-shadow:0 18px 40px -16px rgba(0,16,48,.55),inset 0 1px 0 rgba(255,255,255,.13);
+    opacity:0;pointer-events:none;z-index:99;max-width:80%;
+    transition:opacity .28s var(--ease),transform .28s var(--ease)}
+  .toast.show{opacity:1;transform:translate(-50%,0) scale(1)}
+
+  /* 键盘可达性：焦点环是必需项，不是装饰。下面这条只作用于键盘聚焦，
+     不会在触摸点击后冒出来（输入框的焦点环在上面单独给了） */
+  :focus-visible{outline:2px solid rgba(0,176,240,.6);outline-offset:2px}
+  @media (prefers-reduced-motion: reduce){
+    *,*::before,*::after{animation-duration:.001ms !important;animation-iteration-count:1 !important;
+      transition-duration:.001ms !important}
+  }
 </style>
 </head>
 <body>
