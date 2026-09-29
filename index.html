@@ -60,6 +60,24 @@
     /* 动效曲线：不用 ease / ease-in-out —— 那是"默认感"的来源 */
     --ease:cubic-bezier(.32,.72,0,1);
     --ease-soft:cubic-bezier(.4,0,.2,1);
+
+    /* 安全区：先给 0 兜底，再由下面那个 @supports 换成真值。
+       为什么不直接写 env()：不认识 env() 的内核会把**整条声明**判无效，
+       而这条声明若是 padding / margin 这类简写，丢掉的就不只是一个方向，
+       而是这一条规则的全部内边距——.msg-wrap 当初就是这么丢的，一丢连
+       左右 16px 一起没，首条消息会永久压在悬浮顶栏底下。
+       做成自定义属性之后，env() 只出现在被 @supports 护住的那一个块里，
+       别处一律 var()，最坏也只是丢成 0，不会波及同一行的其它方向。
+       只有上下两个，横向的刻意不写（也不留 --sal/--sar 这种用不上的代码）：
+       #app 是 max-width:480px 居中的，横向够不着刘海死区——实测 844×390 下
+       内容左缘离视口 182px、最紧的 568×320 也有 44px，而真正带刘海的机型
+       横屏至少 812px 宽，那会儿余量只会更大。 */
+    --sat:0px; --sab:0px;
+  }
+  /* env() 全文只出现在这一处。真正用得上安全区的只有上下：
+     竖屏的刘海/灵动岛上沿，和底部那条手势条。 */
+  @supports (padding:env(safe-area-inset-top)){
+    :root{ --sat:env(safe-area-inset-top); --sab:env(safe-area-inset-bottom); }
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0}
   html,body{height:100%}
@@ -112,7 +130,10 @@
      同一句话在一屏里说两遍，只会让人以为这两处要分别说明什么。
      留页脚那一处（那里是署名该在的位置），刊头只留标题与标语，
      标语也从 70px 缩进改成紧跟标题——缩进是给"另起一栏"用的，这里不是。 */
-  .home-head{padding:calc(env(safe-area-inset-top) + 22px) 20px 0;text-align:left}
+  /* 安全区一律走长写 + var()。简写里塞 calc(env(...)) 的写法在本文件已全部拆掉：
+     那一条声明一旦被内核判无效，赔上的是整条简写的四个方向，而这四个方向里
+     只有一个是安全区、另外三个是正常留白。 */
+  .home-head{padding:22px 20px 0;padding-top:calc(var(--sat) + 22px);text-align:left}
   .masthead{display:flex;align-items:center;gap:14px}
   /* 方角图标做成一枚"机加工过的金属牌"：深蓝渐变 + 上沿高光 + 一圈金发丝线。
      渐变浅端取了品牌蓝压深一档的 #0A93CC —— 直接用 #00B0F0 时白字只有
@@ -279,12 +300,21 @@
      它是首页唯一一块活数据——首页不只是三选一的菜单，还接着上一轮的成果，
      也顺带回答"存进学习库之后东西去哪了"。左侧同样走蓝金导轨，
      因为它和 AI 回答本来就是同一种东西。
-     这一行必须恒占一格（哪怕没内容）：.scene-list 的行模板是按四行写的，
-     藏掉第四行会让三张卡自己涨高、下次存完东西回来又缩回去。 */
+     这一行必须恒占一格（哪怕没内容）：.scene-list 用的是 grid-auto-rows:max-content
+     加 align-content:space-between（213–230），并没有写死的行模板。藏掉这一行不是
+     "三张卡自己涨高"，而是 space-between 把腾出来的空间摊进剩下两道行距——
+     卡片间距会跳一下，下次存完东西回来又缩回去。 */
   .recent{position:relative;overflow:hidden;border-radius:var(--r-md);cursor:pointer;
     display:flex;align-items:center;gap:10px;padding:11px 12px 11px 16px;
     background:linear-gradient(180deg,rgba(255,255,255,.055) 0%,rgba(255,255,255,.022) 100%);
-    border:1px solid var(--line);box-shadow:var(--sh-1),inset 0 1px 0 var(--hair)}
+    border:1px solid var(--line);box-shadow:var(--sh-1),inset 0 1px 0 var(--hair);
+    transition:transform .18s var(--ease),border-color .2s var(--ease)}
+  /* 这一行是首页新增的可点区域，也是全页**唯一**一个原本没有任何按下反馈的可点元素
+     （三张卡、快捷问法、保存/重试、三个顶栏钮、删除都有 :active）。而 82 行那条
+     -webkit-tap-highlight-color:transparent 又把系统自带的点按高亮全局关掉了——
+     于是"没写 :active"在这份文件里就等于"点下去什么都看不见"，
+     用户会以为没点到而重复点。反馈沿用场景卡的同一套语言：压一点点 + 边框提亮。 */
+  .recent:active{transform:scale(.99);border-color:var(--line-2)}
   .recent::before{content:"";position:absolute;left:0;top:11px;bottom:11px;width:2px;border-radius:0 2px 2px 0;
     background:linear-gradient(180deg,var(--blue) 0%,rgba(217,169,74,.78) 100%)}
   .recent-txt{flex:1;min-width:0;font-size:var(--t-body);color:var(--sub);
@@ -296,7 +326,7 @@
     color:#8FD6F6;background:rgba(0,176,240,.13);border:1px solid rgba(0,176,240,.28)}
   .tag.k-homework{color:#6FD3D6;background:rgba(23,163,168,.14);border-color:rgba(23,163,168,.30)}
   .tag.k-ask{color:#EFC178;background:rgba(206,143,46,.14);border-color:rgba(206,143,46,.30)}
-  .home-foot{margin-top:auto;padding:14px 18px calc(env(safe-area-inset-bottom) + 16px);text-align:center;
+  .home-foot{margin-top:auto;padding:14px 18px 16px;padding-bottom:calc(var(--sab) + 16px);text-align:center;
     color:var(--faint);font-size:var(--t-micro);line-height:1.7;letter-spacing:.02em;
     font-variant-numeric:tabular-nums}
   /* 署名与徽章分成两块而不是用 <br/> 挤在一起：徽章是状态、署名是出处，
@@ -334,7 +364,7 @@
      667×375 三个横屏尺寸上实测溢出都是 0、三张卡全部完整可见
      （55px 仍大于 44px 的拇指命中下限）。 */
   @media (max-height:560px){
-    .home-head{padding-top:calc(env(safe-area-inset-top) + 8px)}
+    .home-head{padding-top:calc(var(--sat) + 8px)}
     .logo{width:44px;height:44px;font-size:19px}
     .brand-title{font-size:19px}
     .slogan{display:none}                       /* 横屏下最该省的一行：它是气氛，不是信息 */
@@ -358,15 +388,44 @@
     .nfc-hint{margin:8px 18px 0;padding:7px 12px}
     .nfc-hint span{display:none}                 /* 留主句「碰一碰鼠标垫右上角」，副标题让位 */
     .nfc-ripple{width:26px;height:26px;font-size:14px}
-    .home-foot{padding:7px 18px calc(env(safe-area-inset-bottom) + 7px);line-height:1.45}
+    .home-foot{padding:7px 18px;padding-bottom:calc(var(--sab) + 7px);line-height:1.45}
     .home-foot .school{margin-top:4px}
+  }
+
+  /* ---------- 再矮一档：320px 高（iPhone SE 一代横屏 568×320 那类）----------
+     上面那档压完仍然不够。实测 568×320：列表盒只有 162px，而三张卡各 54.73px、
+     加两道 8px 行距与 16px 内边距共 196px——第三张「随问随答」落在折叠线以下 26px。
+     这不算"被裁掉"（grid-auto-rows:max-content 让 scrollHeight 把溢出行算得进去，
+     列表滚得到），但三个主入口之一默认看不见，横屏可用性这一条就没兑现。
+     这一档只留"图标 + 场景名"：说明那一行是进去之后自然会看到的东西，
+     在 320px 高的屏上让它先让位。压完三张各 44px，共 156px，容 162px。
+
+     ⚠ 门槛取 340，**不能取 400**：844×390 的高 390 也小于 400，
+     那样会把已经在 844×390 / 667×375 上验过的交付尺寸一起改掉。
+
+     ⚠ 图标那一行必须写成和上面 max-width:340px 档里 .scene-card.lead .scene-ico
+     **完全相同的特异性**（都是 0,3,0）。两档在 320×320 这种窗口会同时命中，
+     而源码顺序只在特异性相等时才决定胜负——要是这里写成 .scene-card .scene-ico
+     （0,2,0），就会被上面那档 44px 的图标原样盖掉，每张卡又被撑回 56px。 */
+  @media (max-height:340px){
+    .scene-list{padding:6px 18px;gap:6px}
+    .scene-card,.scene-card.lead{padding:6px 12px}
+    .scene-card p{display:none}
+    .scene-card .scene-ico{width:32px;height:32px;font-size:16px;border-radius:10px}
+    .scene-card.lead .scene-ico{width:32px;height:32px;font-size:16px;border-radius:10px}
   }
 
   /* ---------- 对话页 ---------- */
   /* 顶栏从"贴边通栏 + 下边框"改成浮在消息上方的一枚胶囊：它不再把屏幕切成两截，
      消息从它下面滚过去 —— 这才是整页最该有玻璃感的地方。
-     它是常驻元素、自己不滚动，所以这里用 backdrop-filter 是安全的。 */
-  .chat-head{position:absolute;top:calc(env(safe-area-inset-top) + 10px);left:12px;right:12px;z-index:5;
+     它是常驻元素、自己不滚动，所以这里用 backdrop-filter 是安全的。
+     这条 top 依赖 var(--sat)。这里**不需要**再补一行裸值 top:10px 兜底，两个理由：
+     ① --sat 在 :root 里是无条件给了 0px 的（75 行），var(--sat) 不存在"取不到"，
+        最坏是那句 @supports 不成立、--sat 保持 0，top 就是 10px；
+     ② 即便真在 computed-value 阶段失效，按 css-variables 规范该声明会整条按 unset 处理
+        （于是 top 取 initial 的 auto），**不会**回退到同一声明块里更靠前的那一行——
+        那种写法看着像兜底，其实一次都不会生效。 */
+  .chat-head{position:absolute;top:calc(var(--sat) + 10px);left:12px;right:12px;z-index:5;
     background:rgba(9,24,48,.74);
     backdrop-filter:blur(20px) saturate(165%);-webkit-backdrop-filter:blur(20px) saturate(165%);
     border:1px solid var(--line);border-radius:var(--r-pill);
@@ -394,6 +453,13 @@
   .chat-head h2.c-plan::before{background:var(--c-plan);box-shadow:0 0 8px rgba(44,143,224,.6)}
   .chat-head h2.c-homework::before{background:var(--c-homework);box-shadow:0 0 8px rgba(23,163,168,.6)}
   .chat-head h2.c-ask::before{background:var(--c-ask);box-shadow:0 0 8px rgba(206,143,46,.6)}
+  /* 学习库顶部那颗圆点要关掉：它不是场景，而圆点的语义（见上）正是"我在哪个场景里"。
+     实测过它确实在显示——#screen-lib 里那枚 h2 的 className 是空串，于是落回基类那条
+     ::before，取默认的 --blue #00B0F0，而「学习计划」那颗是 --c-plan #2C8FE0，
+     两个蓝几乎分不出来：等于在"不是场景"的屏幕上给出一个读不出差别的场景状态。
+     用 #screen-lib 限定，而不是 :not([class])——后者只要将来给这枚 h2 挂上任何 class
+     （哪怕纯粹是排版用的）就会把圆点重新长回来。 */
+  #screen-lib .chat-head h2::before{display:none}
   .chat-head .lib-btn{border:1px solid var(--line);background:var(--card);border-radius:var(--r-pill);font-size:var(--t-small);
     font-weight:600;color:#BFD9F7;padding:7px 12px;cursor:pointer;flex:none;white-space:nowrap;box-shadow:var(--sh-1);
     transition:transform .18s var(--ease),background .2s var(--ease)}
@@ -409,7 +475,7 @@
 
   /* 顶部要给悬浮顶栏让出空间（10 + 52 + 12 = 74），否则第一条消息会被压在栏下面 */
   .msg-wrap{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;
-    padding:calc(env(safe-area-inset-top) + 74px) 16px 10px;
+    padding:74px 16px 10px;padding-top:calc(var(--sat) + 74px);
     display:flex;flex-direction:column;gap:15px}
   /* 首条消息 auto 上边距：把整段对话压到输入条上方。
      原来内容顶着顶栏排，一段两轮的对话在 800px 屏上底下空出 140px
@@ -426,8 +492,17 @@
    于是长回答被 .msg-wrap 压扁、末尾的「存入学习库」按钮被整个裁掉，且消息区不再滚动。
    实测：550 字的回答内容高 679px 被压成 335px，按钮落在 y=884（视口只有 800）——肉眼
    看就是"回答凭空短了一截"。旧版没有 overflow:hidden，所以这个坑是新引入的。 */
+/* white-space 在这里**必须是 normal**，而且两条真正需要它的（.msg.me / .msg.sys）
+   各自显式声明——不再靠继承。原因有两个，都不是洁癖：
+   ① AI 正文现在是块级 <p>/<span class="md-li"> 拼出来的，而 mdLite 只去行尾空白、
+      行首空格原样留着。pre-wrap 一旦从 .msg 继承下去，模型那些"两空格缩进的子项 /
+      用空格对齐的清单"就会连缩进一起渲染，屏幕上出现一片并非设计的参差留白。
+   ② 继承本身就是这条链上最脆的一环：.msg.sys 之前一直靠从 .msg 继承才拿到换行，
+      而它自己一个字都没写——看代码的人只会看到"这里没有 white-space"，
+      于是得出"提示条的多行文案会被折成一整段"的结论（评审报告里就这么写过一次）。
+      显式写在用它的地方，这个误读就没有了。 */
 .msg{flex:0 0 auto;padding:12px 15px;border-radius:18px;font-size:var(--t-lead);line-height:1.68;
-    white-space:pre-wrap;word-break:break-word;text-wrap:pretty}
+    white-space:normal;word-break:break-word;text-wrap:pretty}
   .msg.ai{align-self:stretch;border-radius:var(--r-lg);padding:14px 16px 14px 22px;
     position:relative;overflow:hidden;color:var(--ink)}
   .msg.ai::before{top:14px;bottom:14px;border-radius:0 2px 2px 0}
@@ -437,7 +512,10 @@
      这样的字面记号。整屏里最不像成品的就是它——不是排版不够讲究，是没排版。
      渲染范围刻意只有四种（小标题 / 加粗 / 列表 / 分隔线）：认多了会把正文里
      正常的星号、井号也吃成奇怪的排版，而星火实际会用的就这几种。
-     这些是**块级**元素，所以行距由它们自己定，不再依赖 .msg 的 pre-wrap。 */
+     这些是**块级**元素，所以行距由它们自己定；换行也由元素边界承担，
+     与 .msg 的 white-space 无关——.msg 现在正是 normal（见上面那段注释）。
+     所以改这里的 margin 不会被祖先规则干扰，改 .msg 的 white-space 也不会
+     牵连到它们。 */
   .msg.ai .md-p{margin:0}
   .msg.ai .md-p.md-gap{margin-top:10px}     /* 原文里的空行，换算成段间距 */
   .msg.ai .md-h{margin:12px 0 0;font-size:var(--t-lead);font-weight:700;color:#FFFFFF;
@@ -456,7 +534,8 @@
   /* 用户气泡走"海军蓝"：一是和玻璃质感的通栏回答形成明确的两极，二是
      #00B0F0 上压白字只有 ~2.6:1（不达 AA），这个渐变最浅处仍 >4.5:1。
      深色底上它的亮度明显高于夜色，所以照样跳得出来 */
-  .msg.me{background:linear-gradient(158deg,#0A6FBE 0%,#003A8C 100%);color:#fff;
+  .msg.me{white-space:pre-wrap;   /* 用户自己敲的换行要原样保留 */
+    background:linear-gradient(158deg,#0A6FBE 0%,#003A8C 100%);color:#fff;
     border-radius:18px 18px 6px 18px;max-width:78%;
     align-self:flex-end;box-shadow:0 12px 26px -14px rgba(0,0,0,.7),0 0 26px -12px rgba(0,176,240,.5),
       inset 0 1px 0 rgba(255,255,255,.20)}
@@ -469,7 +548,8 @@
   /* 系统提示条：用于「服务返回了错误」这类不是模型回答的内容，样式刻意区别于对话气泡。
      addNotice 是先 textContent 再 appendChild，所以这里只能靠 flex 列排把
      文字和「重试」按钮分两行——加不了包裹层。 */
-  .msg.sys{align-self:center;max-width:94%;padding:11px 15px;
+  .msg.sys{white-space:pre-wrap;  /* guard() 的文案带 \n①②③，靠这一条分行 */
+    align-self:center;max-width:94%;padding:11px 15px;
     background:rgba(217,169,74,.10);border:1px solid rgba(217,169,74,.26);color:#E8C77E;
     font-size:var(--t-small);line-height:1.65;text-align:center;border-radius:var(--r-md);box-shadow:var(--sh-1);
     display:flex;flex-direction:column;align-items:center}
@@ -482,12 +562,19 @@
   .typing i{width:6px;height:6px;border-radius:50%;background:rgba(159,178,212,.55);animation:blink 1.3s var(--ease-soft) infinite}
   .typing i:nth-child(2){animation-delay:.18s}.typing i:nth-child(3){animation-delay:.36s}
   @keyframes blink{0%,62%,100%{opacity:.22;transform:translateY(0)}32%{opacity:1;transform:translateY(-2px)}}
-  /* 快捷问法：右侧留一道渐隐，暗示"还能往右划"。不溢出时右侧本来就是空白，
-     所以这道渐隐什么也遮不住，不会把最后一条吃掉 */
-  .quick{padding:2px 16px 10px;display:flex;gap:8px;overflow-x:auto;white-space:nowrap;
+  /* 快捷问法：右侧留一道渐隐，暗示"还能往右划"。
+     渐隐起点必须**正好落在右内边距的起头上**（calc(100% - 16px)）。原来写的是
+     calc(100% - 20px)，比右内边距多 4px——于是整行不溢出（划到底）时，最后那枚
+     胶囊的右边缘刚好压在这 4px 里，被自己的渐隐吃掉一角。
+     上内边距从 2px 提到 7px 是给下面那枚 ::after 腾地方（见"命中区"一段）：
+     竖直方向的扩展会被 .quick 自己的 overflow-x:auto 裁掉，撑出多高都得先有
+     同等高度的内边距接着，否则白撑。上 7 + 下 10 让这一行从 43px 长到 48px，
+     多出来的 5px 由 flex:1 的 .msg-wrap 让出来——输入岛是列尾的静态项，
+     位置不受影响（这一条实测过，不是推断）。 */
+  .quick{padding:7px 16px 10px;display:flex;gap:8px;overflow-x:auto;white-space:nowrap;
     overscroll-behavior-x:contain;scrollbar-width:none;
-    -webkit-mask-image:linear-gradient(90deg,#000 0,#000 calc(100% - 20px),transparent 100%);
-    mask-image:linear-gradient(90deg,#000 0,#000 calc(100% - 20px),transparent 100%)}
+    -webkit-mask-image:linear-gradient(90deg,#000 0,#000 calc(100% - 16px),transparent 100%);
+    mask-image:linear-gradient(90deg,#000 0,#000 calc(100% - 16px),transparent 100%)}
   .quick::-webkit-scrollbar{display:none}
   .quick span{background:var(--card);border:1px solid var(--line);border-radius:var(--r-pill);padding:7px 12px;font-size:var(--t-small);
     color:#BFD9F7;cursor:pointer;flex:none;box-shadow:var(--sh-1);
@@ -500,7 +587,7 @@
      而没有 position 时 z-index 对普通流元素**完全无效**——它现在能压住滚动的消息，
      只是因为 ① 它排在 .msg-wrap 之后 ② backdrop-filter 让它生成了 stacking context。
      层级靠副作用维持：哪天把岛挪到消息前面，它就会被滚动内容盖住，且不报任何错。 */
-  .input-bar{position:relative;margin:0 12px calc(env(safe-area-inset-bottom) + 10px);z-index:5;
+  .input-bar{position:relative;margin:0 12px 10px;margin-bottom:calc(var(--sab) + 10px);z-index:5;
     background:rgba(10,26,50,.76);
     backdrop-filter:blur(22px) saturate(170%);-webkit-backdrop-filter:blur(22px) saturate(170%);
     border:1px solid var(--line-2);border-radius:var(--r-xl);
@@ -534,7 +621,7 @@
   /* ---------- 学习库 ---------- */
   /* 和对话页共用悬浮顶栏，所以这里也要给顶栏让位 */
   .lib-list{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;
-    padding:calc(env(safe-area-inset-top) + 74px) 16px 16px;
+    padding:74px 16px 16px;padding-top:calc(var(--sat) + 74px);
     display:flex;flex-direction:column;gap:11px}
   /* 条目也走左侧导轨：它和 AI 回答是同一种东西——AI 产出、被用户收藏下来的内容。
      同一个来源用同一种形态，比给每块内容都设计一个花纹要有说服力。 */
@@ -577,7 +664,7 @@
     justify-content:center;transition:background .2s var(--ease),color .2s var(--ease)}
   .lib-item .del:active{background:rgba(255,255,255,.10);color:#C6D6EF}
   .empty{text-align:center;color:var(--faint);font-size:var(--t-body);margin-top:64px;line-height:2.1}
-  .toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 98px);
+  .toast{position:fixed;left:50%;bottom:calc(var(--sab) + 98px);
     transform:translate(-50%,10px) scale(.96);
     background:rgba(16,34,62,.86);
     backdrop-filter:blur(18px) saturate(170%);-webkit-backdrop-filter:blur(18px) saturate(170%);
@@ -590,29 +677,57 @@
   .toast.show{opacity:1;transform:translate(-50%,0) scale(1)}
 
   /* ---------- 命中区（不是视觉尺寸）----------
-     按真实像素量，这些控件都低于 44×44 的推荐点按尺寸（WCAG 2.5.8 的 24×24 是达标的，
-     但 44 才是拇指在走动中点得准的线）：.back 38、.mini 34、.lib-btn 80×31、
-     .save-btn 107×29、重试 80×24、.del 28×28。
+     按真实像素量，这些控件原本都低于 44×44 的推荐点按尺寸（WCAG 2.5.8 的 24×24 是达标的，
+     但 44 才是拇指在走动中点得准的线）：.back 38、.mini 44×33、.lib-btn 62×33、
+     .save-btn 106×28、重试 54×28、.del 28×28、.mic 40×40、.quick span 138.6×32。
      视觉一个像素都不动——用透明的 ::after 往外撑命中区，圆角 inherit 让撑出来的
      区域跟着控件走。这几条全部走合成层，没有任何背景/边框，所以渲染像素为 0 变化
      （已用冻结动效后的 A/B 像素对比核过，见 7_改动与验收）。
-     .del 的 ::after 是按钮自己的，与 131 行 .lib-item::after 那道金发丝线不冲突。
-     .quick span 刻意不在此列：.quick 是 overflow-x:auto 的横向滚动容器，
-     竖直方向的扩展会被它自己裁掉，撑了也点不到——要动只能改容器高度，
-     那会连带挪动输入岛的位置，代价大于收益。 */
-  .back,.chat-head .mini,.chat-head .lib-btn,.msg .save-btn,.msg .retry-btn{position:relative}
+
+     ⚠ 算术口径（2026-09-29 更正）：::after 是 position:absolute，它的**包含块是宿主的
+     padding box**（CSS 2.1 §10.1「the containing block is formed by the padding edge
+     of the ancestor」），inset:-Npx 是从那条 padding 边往外量，所以
+
+         真实命中区 = padding box + 2N = border box − 2×边框 + 2N
+
+     这一栏最早是照"border box + 2N"写的，凡是带 1px 边框的控件就全都多算了 2px：
+     .back/.mic 其实只有 42×42、.mini 42×43、.lib-btn 60×43、.save-btn 122×46。
+     用 7_改动与验收\视觉校验脚本\H5-hitarea.py 渲染出来量到之后已把 inset 补齐，
+     下面每一条括号里的都是**实测值**，不是推出来的。
+     `.del` 高度仍是 38（宽 44）：往下撑会压到正文首行，是刻意的取舍，见它自己那条注释。
+     除 `.del` 这一条外，八处的宽高现在都在 44 以上。
+
+     .del 的 ::after 是按钮自己的，与 179 行 .lib-item::after 那道金发丝线不冲突。
+
+     .quick span 也在这份名单里，但它的撑法跟别人不一样，说清楚免得下次又被漏掉：
+     .quick 是 overflow-x:auto 的横向滚动容器，而 overflow 一轴为 auto 时另一轴
+     的 visible 会被算成 auto——所以竖直方向的 ::after 会被容器自己裁掉，**光写
+     ::after 是没用的**，得先让容器有地方接着它。给 .quick 的上内边距加了 7px，
+     撑出来的 45px 才落在容器的 padding box 内。这里曾经写过一次"要动只能改容器
+     高度，那会连带挪动输入岛的位置"——后半句是错的：输入岛是 flex 列尾的静态项，
+     它的位置由自己的 margin 和 .msg-wrap 的伸缩决定，给 .quick 加高只会从
+     flex:1 的 .msg-wrap 里借走那几个像素，岛一动不动（844×390 与 375×800 实测过）。 */
+  .back,.chat-head .mini,.chat-head .lib-btn,.msg .save-btn,.msg .retry-btn,
+  .mic,.quick span{position:relative}
   .back::after,.chat-head .mini::after,.chat-head .lib-btn::after,
-  .msg .save-btn::after,.msg .retry-btn::after,.lib-item .del::after{
+  .msg .save-btn::after,.msg .retry-btn::after,.lib-item .del::after,
+  .mic::after,.quick span::after{
     content:"";position:absolute;border-radius:inherit}
-  .back::after{inset:-3px}                        /* 38 -> 44 */
+  .back::after{inset:-4px}                        /* 36+8 -> 实测 44x44 */
+  /* 麦克风：padding box 38 -> 44。只撑 3px，是因为它和「发送」之间只有 8px 的缝，
+     再多就顶到发送键的命中区里，点缝上会随机命中其中一个。 */
+  .mic::after{inset:-3px}
   /* 「清空」「学习库」都由圆钮改成了文字钮，尺寸跟着变，这里按新的量补：
-     两颗都是 33px 高，左右已经够宽（44 / 62），所以只往上各撑 6px、
-     横向一律不动——横着撑会在两颗中间 9px 的缝里叠到一起，
-     点在缝上就会随机命中其中一个。 */
-  .chat-head .mini::after{inset:-6px 0}           /* 44x33 -> 44x45 */
-  .chat-head .lib-btn::after{inset:-6px 0}        /* 62x33 -> 62x45 */
-  .msg .save-btn::after{inset:-9px -8px}          /* 107x29 -> 123x47 */
-  .msg .retry-btn::after{inset:-11px -8px}        /* 80x24 -> 96x46 */
+     两颗都是 padding box 42 / 60 × 31，所以往上各撑 7px 补高度；
+     横向各撑 1px 把 42 补到 44——两颗中间有 9px 的缝，各吃掉 1px 之后还剩 7px，
+     点在缝上仍然不会随机命中其中一个。 */
+  .chat-head .mini::after{inset:-7px -1px}        /* 42x31 -> 实测 44x45 */
+  .chat-head .lib-btn::after{inset:-7px -1px}     /* 60x31 -> 实测 62x45 */
+  .msg .save-btn::after{inset:-9px -8px}          /* 106x28 -> 实测 122x46，达标 */
+  /* 重试键是 inline-block，宽度由文案撑出来，实测 padding box 是 54×28（不是注释里
+     一度写过的 80×24）。上下各撑 11px 到 49.8 高：上沿只探进它与提示文案之间
+     那 9px 间距里的 2px，离正文还有 7px，不会误触。 */
+  .msg .retry-btn::after{inset:-11px -8px}        /* 54x28 -> 实测 70x49.8，达标 */
   /* .del 的扩展刻意**只往上**：上边是 11px 的 padding 加一行短短的标签，往上是空的；
      往下 8px 会盖住正文第一行的末尾（实测正文第一行很长时，向下扩展会与它重叠
      55px²，虽然现在有 confirm 兜底，但把"删除"的命中区压到正文上本身就是错的）。
@@ -620,7 +735,32 @@
      向上只取 10px：.del 距条目的内沿本来就只有 11px，取 11 会让最上面 1px 落到
      overflow:hidden 的裁剪线外，白给。所以实际命中区是 44x38，相对原来的 28x28
      是把点得中的面积翻了四倍多，代价为零。 */
-  .lib-item .del::after{inset:-10px -8px 0 -8px}  /* 28x28 -> 44x38，且不压正文 */
+  .lib-item .del::after{inset:-10px -8px 0 -8px}  /* 28x28 -> 实测 44x38，且不压正文 */
+  /* 快捷问法：只往上下撑，实测 padding box 30 -> 44。横向一概不动——相邻胶囊之间
+     只有 8px 缝，横着撑必然互相重叠，而这三枚本来就长得够宽（实测 137 / 97 / 109px），
+     短板只在高度上。上 7 下 7 正好落在 .quick 新给的 7px 上内边距里。
+     （.quick 的上内边距一改小，这里立刻会被 overflow-x:auto 裁掉，两者必须一起动。） */
+  .quick span::after{inset:-7px 0}                /* 30+14 -> 实测 136.6x44 */
+
+  /* ---------- 极矮档（≤560px 高）里的对话页与学习库 ----------
+     上面那条 max-height:560px 只管首页。对话页/学习库在同一档下仍按竖屏的 74px
+     给悬浮顶栏让位，而屏高 320–390px 时 .msg-wrap 统共才 110–180px，43% 被这条
+     内边距吃掉——同一个失效模式在首页被承认并解决了，在这两块屏上根本没被承认。
+
+     ⚠ 这一段必须写在**所有** .chat-head/.back/.msg-wrap/.lib-list 基类规则之后。
+     媒体查询不加特异性，同特异性下靠源码顺序定胜负；把这几条塞进第 364 行那个
+     媒体块里是无效的（试过，量出来顶栏还是 52px、.back 还是 38px，静默不生效）。
+     所以它单独放在样式表末尾。
+
+     压薄量：.back 收到 34、上下内边距各 4 → 顶栏高 34+8+2(边框)=44，
+     从 sat+6 起、到 sat+50 止；让位量随之从 74 降到 60（仍然留 10px 净空）。
+     .back 缩到 34 之后命中区要重算：padding box 32，inset:-6px 才是 44，见"命中区"。 */
+  @media (max-height:560px){
+    .chat-head{top:calc(var(--sat) + 6px);padding:4px 8px 4px 5px}
+    .back{width:34px;height:34px}
+    .back::after{inset:-6px}                     /* 32+12 -> 44x44 */
+    .msg-wrap,.lib-list{padding-top:calc(var(--sat) + 60px)}
+  }
 
   /* 键盘可达性：焦点环是必需项，不是装饰。下面这条只作用于键盘聚焦，
      不会在触摸点击后冒出来（输入框的焦点环在上面单独给了） */
@@ -704,7 +844,19 @@
     <div class="quick" id="quickBar"></div>
     <div class="input-bar">
       <button class="mic" id="micBtn" onclick="toggleVoice()">🎤</button>
-      <input id="chatInput" placeholder="说一句或输入你的需求…" />
+      <!-- 占位符字数是被宽度倒推出来的，别再凭手感加长：实测 320 宽下输入框的
+           文字区只有 142px，16px 的汉字恰好 16px 一个，所以最多放 8 个字多一点。
+           原文案「说一句或输入你的需求…」11 个单位 = 176px，超出 33px，
+           而 WebKit 对超长的 placeholder **不给省略号**，直接从字形中间切断。
+           这里原先写"最窄那档是 320、留 31px 余量"，与上面 148 行那句
+           "设计下限约 295px（Galaxy Fold 外屏 280px 一类）"互相矛盾：
+           280 才是那份口径里的下限，而它在 320 之外——文字区只有 102px，
+           末尾那个"…"（112−96=16px 宽）当时只剩 6px 可显示，是被切过的。
+           去掉"…"之后是 6 个字 = 96px：320 下余 46px、280 下余 6px，两档都放得下，
+           也不用为它单独加一条媒体查询。
+           「说」和「提问」分别对应左边那颗麦克风和键盘输入，没有丢信息。
+           16px 这个字号不能动——它是挡住 iOS 聚焦自动放大的线，不是排版选择。 -->
+      <input id="chatInput" placeholder="说一句或提问" />
       <button class="send" id="sendBtn" onclick="send()">➤</button>
     </div>
   </section>
@@ -844,7 +996,15 @@ function loadHist(scene){
 }
 
 function show(id){ document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active")); $(id).classList.add("active"); }
-function goHome(){ show("screen-home"); renderRecent(); if(history.state && history.state.chat){ try{ history.back(); }catch(e){} } }
+let goingHome=false;
+function goHome(){
+  show("screen-home"); renderRecent();
+  // history.back() 是异步的：连按两次顶栏那枚 ‹，第二次进来时 history.state 还是
+  // {chat:...}，于是又 back 一次、一口气退两层，可能直接退出来源页/关掉 WebView。
+  // 用这个标志把"已经发过一次返回"钉住，popstate 收到之后解锁。
+  if(goingHome) return;
+  if(history.state && history.state.chat){ goingHome=true; try{ history.back(); }catch(e){ goingHome=false; } }
+}
 
 /* 首页徽章只反映「有没有真的连上 AI」：只有真收到模型回答才显示「已接入」。
    本页面不产生任何本地回答，所以没有「演示模式」这种状态。
@@ -886,6 +1046,7 @@ function syncSending(){
 function openChat(scene, noPush){
   // 用 hasOwnProperty 判断：SCENES 是普通对象，SCENES["constructor"] 之类会是真值
   if(!Object.prototype.hasOwnProperty.call(SCENES, scene)) return goHome();
+  goingHome = false;          // 万一上一次 back() 没触发 popstate，重新进场景也要解锁
   curScene = scene;
   viewGen++;                                  // 本次重建的代号（见 requestReply 末尾）
   const sc = SCENES[scene];
@@ -1018,6 +1179,11 @@ function pushHist(scene, q, a){
 }
 
 async function send(){
+  // 发送即结束聆听。原来这里不管录音：请求在途时 syncSending() 会把 micBtn.disabled
+  // 置真，而 .mic:disabled{animation:none} 会连带停掉「正在聆听」的脉冲——用户看到
+  // 一颗不动的灰按钮，既不知道它还在听（识别结果照样往输入框里追加），
+  // 也不知道自己能不能再点。先停掉，再走后面的流程。
+  if(recOn){ try{ rec.stop(); }catch(e){} recOn=false; $("micBtn").classList.remove("rec"); }
   const inp = $("chatInput"), text = inp.value.trim();
   if(!text) return;
   if(pending.has(curScene)){ toast("上一条还在等回复，请稍候"); return; }
@@ -1249,9 +1415,16 @@ document.getElementById("chatInput").addEventListener("keydown",e=>{
 // 以前这里无条件 show("screen-home")：后退回首页后再按「前进」，浏览器把地址
 // 恢复成 ?s=plan 而界面仍停在首页，地址栏和界面对不上。
 window.addEventListener("popstate",function(e){
+  goingHome = false;          // 返回已经落地，解锁 goHome 的连按保护
   const st = e && e.state;
   if(st && st.chat && Object.prototype.hasOwnProperty.call(SCENES, st.chat)) openChat(st.chat, true);
-  else show("screen-home");
+  /* 回首页这条路也必须重算「最近存入」那一行。原来这里是裸的 show("screen-home")，
+     于是 renderRecent 只在 goHome()（顶栏那枚 ‹）和启动时被调到，而**系统返回键、
+     微信内置浏览器的返回箭头走的正是这里**——用户刚在对话里点了「存入学习库」，
+     用返回键退回来，看到的还是存入之前的内容；本机第一次保存的话，那一行甚至
+     还停在"还没有存过内容 · 在对话里点「存入」"，而学习库列表里已经有那一条了。
+     同一份数据在两处显示，就得在两处都刷新。 */
+  else { show("screen-home"); renderRecent(); }
 });
 (function init(){
   try{
