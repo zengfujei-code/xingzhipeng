@@ -30,6 +30,26 @@
        全局统一一个半径是最典型的模板感 */
     --r-xl:26px; --r-lg:22px; --r-md:15px; --r-sm:11px; --r-pill:999px;
 
+    /* 三个场景各有一个固定的色相，从首页卡片一路贯到顶栏圆点、学习库标签。
+       它是一套"同一个场景在哪儿都是这个颜色"的对应关系，不是三块装饰色——
+       所以只在 :root 定义一次，三个地方都引它，不再各写各的。 */
+    --c-plan:#2C8FE0; --c-homework:#17A3A8; --c-ask:#CE8F2E;
+
+    /* 版式：把原来 10/11/11.5/12/12.5/13/14/14.5/15/17/20 这十一个字号收成七档。
+       挤在 3px 里的六档彼此读不出差别，却让每一处都得单独做一次决定——
+       尺寸一多，节奏就没了，只剩"每块都略微不一样"的杂音。
+       下面每一档都对应明确的角色，加字号前先问能不能用现成的某一档。 */
+    --t-display:22px;   /* 刊头主标题 */
+    --t-title:17px;     /* 场景卡标题、顶栏标题 */
+    --t-lead:15px;      /* AI 回答正文、用户气泡、唤醒块主句 */
+    --t-body:13px;      /* 场景卡说明、学习库正文 */
+    --t-small:12px;     /* 快捷问法、保存/重试、标签、提示条、输入框占位 */
+    --t-micro:10.5px;   /* 眉标、页脚、时间戳 */
+    /* 输入框刻意**不**在上面这套里：iOS Safari 在聚焦时若输入框字号 < 16px，
+       会把整个页面放大一次，用户要手动缩回去，演示时非常明显。
+       16px 是那条线，它不是排版选择，是行为约束。 */
+    --t-input:16px;
+
     /* 深底上投影几乎不承载层次，撑起厚度的是"上沿高光 + 蓝色辉光"这一对，
        投影只留一点，负责把卡片从底上"抬"起来 */
     --sh-1:0 1px 2px rgba(0,0,0,.34);
@@ -87,9 +107,12 @@
      ============================================================ */
 
   /* ---------- 首页 ---------- */
-  /* 刊头从"整体居中"改成左对齐的报头：logo 与文字并排，标语缩进到文字下方对齐。
-     居中是最不容易出错的排版，也是最快的——它不承担任何判断。 */
-  .home-head{padding:calc(env(safe-area-inset-top) + 24px) 20px 0;text-align:left}
+  /* 刊头从三块收成两块：原来"眉标 + 标题 + 标语"竖着堆，占掉 113px；
+     而眉标写的「X+AI 文创共创计划」在页脚**一字不差地又出现一次**——
+     同一句话在一屏里说两遍，只会让人以为这两处要分别说明什么。
+     留页脚那一处（那里是署名该在的位置），刊头只留标题与标语，
+     标语也从 70px 缩进改成紧跟标题——缩进是给"另起一栏"用的，这里不是。 */
+  .home-head{padding:calc(env(safe-area-inset-top) + 22px) 20px 0;text-align:left}
   .masthead{display:flex;align-items:center;gap:14px}
   /* 方角图标做成一枚"机加工过的金属牌"：深蓝渐变 + 上沿高光 + 一圈金发丝线。
      渐变浅端取了品牌蓝压深一档的 #0A93CC —— 直接用 #00B0F0 时白字只有
@@ -100,23 +123,27 @@
     border:1px solid rgba(217,169,74,.34);
     box-shadow:0 16px 30px -14px rgba(0,45,105,.85),0 0 26px -6px rgba(0,176,240,.45),
       inset 0 1px 0 rgba(255,255,255,.30),inset 0 -1px 0 rgba(0,0,0,.16)}
-  .mast-text{min-width:0;display:flex;flex-direction:column;gap:7px}
-  .eyebrow{font-size:10px;font-weight:600;letter-spacing:.22em;color:var(--gold);white-space:nowrap}
-  .brand-title{font-size:20px;font-weight:800;letter-spacing:-.01em;white-space:nowrap;margin:0}
+  .mast-text{min-width:0;display:flex;flex-direction:column;gap:3px}
+  /* overflow/text-overflow 是兜底：.mast-text 有 min-width:0、这条又是 nowrap，
+     视口窄到约 295px（Galaxy Fold 外屏 280px 一类）时标题会溢出，而没有裁剪时它是
+     "长出去"而不是"出省略号"，最后被 #app 的 overflow:hidden 从字形中间切断。
+     字号提到 22px 之后这条不再是理论问题：实测 320px 下标题需要 205px、
+     可用 214px，余量只剩 9px，再窄一点就会真的剪到字形。 */
+  .brand-title{font-size:var(--t-display);font-weight:800;letter-spacing:-.015em;white-space:nowrap;margin:0;
+    overflow:hidden;text-overflow:ellipsis}
   /* 标题走"白到蓝"的纵向渐变，像被上面的辉光打亮。背景裁切一旦不被支持，
      color:transparent 会让标题整条消失——所以用 @supports 兜住了才敢这么写 */
   @supports ((-webkit-background-clip:text) or (background-clip:text)){
     .brand-title{background:linear-gradient(180deg,#FFFFFF 12%,#C7DEFB 100%);
       -webkit-background-clip:text;background-clip:text;color:transparent}
   }
-  @media (min-width:420px){ .brand-title{font-size:22px} }
-  /* 标语缩进到与标题左边缘对齐（等于 logo 宽 + 间距），前面挂一截金线当引号。
-     不缩进的话它会掉到 logo 正下方，把"报头"读成两截。 */
-  .slogan{position:relative;margin:17px 0 0 70px;color:var(--sub);font-size:12px;
-    letter-spacing:.16em;font-weight:500}
-  .slogan::before{content:"";position:absolute;left:-15px;top:50%;width:9px;height:1px;
+  /* 标语紧跟标题，前面挂一截金线当引号——这是刊头里唯一的金色，
+     和卡片上沿的发丝线是同一支笔。字号降到 11px 并收掉字距：
+     它是气氛，不是信息，不该和标题争读。 */
+  .slogan{position:relative;margin:0;padding-left:15px;color:var(--sub);font-size:11px;
+    letter-spacing:.14em;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .slogan::before{content:"";position:absolute;left:0;top:50%;width:9px;height:1px;
     background:linear-gradient(90deg,rgba(217,169,74,0),rgba(217,169,74,.85))}
-  @media (max-width:360px){ .slogan{margin-left:0} .slogan::before{display:none} }
 
   /* 玻璃卡片的公共面。不是"白底+边框+阴影"三件套，而是嵌在夜色里的一层薄玻璃：
      上沿一道受光高光、外沿一圈发丝线、内部一层极淡的受光渐变。
@@ -137,30 +164,58 @@
   .msg.ai::before,.lib-item::before{content:"";position:absolute;left:0;width:2px;pointer-events:none;
     background:linear-gradient(180deg,var(--blue) 0%,rgba(217,169,74,.78) 100%)}
 
-  /* 唤醒块改成竖排：原先它是一条横排的提示条，现在是一块独立的"感应区"——
-     圆环居中在上、文字在下的构图，读起来才像"把手机放上去"的动作，
-     而不是一句普通的说明。 */
-  .nfc-hint{position:relative;overflow:hidden;margin:22px 18px 0;border-radius:var(--r-lg);
-    padding:18px 16px 17px;display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center}
-  .nfc-ripple{width:46px;height:46px;border-radius:50%;flex:none;position:relative;
+  /* 唤醒块从竖排大卡降成一条横向提示条，并且**挪到卡片下面**。
+     原来是"首页上最大的一个方块"（实测 137px，比主卡还高），而它讲的是
+     "怎么打开这个页面"——用户是碰了鼠标垫才到这一屏的，那一步他刚做完。
+     拿最大的一块版面去教一个已经完成的动作，主次就反了。降成一条之后它
+     仍然在（扫垫面二维码进来的人需要它），但排在三张卡之后，读作脚注。 */
+  .nfc-hint{position:relative;overflow:hidden;margin:14px 18px 0;border-radius:var(--r-md);
+    padding:9px 14px;display:flex;align-items:center;gap:12px;text-align:left}
+  .nfc-ripple{width:38px;height:38px;border-radius:50%;flex:none;position:relative;
     background:radial-gradient(circle,rgba(0,176,240,.30) 0%,rgba(0,176,240,.12) 52%,rgba(0,176,240,0) 78%);
-    display:flex;align-items:center;justify-content:center;font-size:21px}
+    display:flex;align-items:center;justify-content:center;font-size:17px}
   .nfc-ripple::before,.nfc-ripple::after{content:"";position:absolute;inset:0;border-radius:50%;
     border:1.5px solid rgba(0,176,240,.55);animation:ripple 2.2s var(--ease-soft) infinite}
   .nfc-ripple::after{animation-delay:1.1s}
   @keyframes ripple{0%{transform:scale(.72);opacity:.85}100%{transform:scale(1.55);opacity:0}}
-  .nfc-hint b{font-size:14px;font-weight:600;letter-spacing:.01em}
-  .nfc-hint span{display:block;font-size:12px;color:var(--sub);margin-top:4px;line-height:1.5}
+  .nfc-hint b{font-size:var(--t-body);font-weight:600;letter-spacing:.01em}
+  .nfc-hint span{display:block;font-size:var(--t-small);color:var(--sub);margin-top:2px;line-height:1.45}
 
-  /* 三个场景不再排成三行等高卡片——那是最省事、也最没有判断的一种排法。
-     改成错格：学习计划占满整行当主卡（横排、大图标、带发光的主按钮），
-     另外两个并排成为两块竖排的窄卡。主次一眼分得开，三张卡的"同等重要"
-     也被还原成它们的真实关系：先计划，再执行。 */
-  .scene-list{padding:16px 18px 6px;flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;
-    display:grid;grid-template-columns:1fr 1fr;gap:14px;align-content:start}
+  /* 三个场景改成一列通栏行，主次靠"尺寸与权重"拉开，而不是靠宽度。
+     上一版是"1 宽 + 2 窄"的错格。错格本身没错，但两列在 375px 下每张只剩
+     163px 宽，正文栏实测 131px —— 中文在 131px 里一行放得下 11 个字，
+     「口述作业要求，AI 拆解任 / 务、排优先级与提醒」就是这么从词中间断开的。
+     通栏之后正文栏 198px，同一句话断在标点处。等级差改用四件事一起给：
+     图标 54/44、标题 17/15、主按钮"发光实心"对普通箭头、主卡受光更强——
+     这些都在，所以并不等于"三行一样高的卡片"。
+     另外每张卡补一句例句：进去之前就能看见"该说什么"，比进去再猜有用。 */
+  .scene-list{padding:16px 18px;flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;
+    display:grid;grid-template-columns:1fr;gap:12px;
+    /* 行高必须写死成 max-content，余量交给 space-between 摊进三道行距：
+       一屏正好填满，也不会在"最后一张卡"和"唤醒条"之间留一个孤立的大洞——
+       上一版那里实测空了 104px，读起来像出错，而摊进行距后同样的留白就成了节奏。
+       行高试过四种，只有 max-content 全尺寸都对，别再走回去：
+       · auto：空间不够时（320×640）三行被压成等高的 92px，而卡片内容要 116px，
+         卡片被自己的 overflow:hidden 上下各切一刀（实拍图里标题和例句都是半截），
+         而且 grid 的 scrollHeight 不把溢出算进去，列表还不滚，等于内容直接消失；
+       · minmax(118px,140px)：横屏卡片自然高只有 39px，硬地板把 196px 的列表
+         撑出 231px 溢出；
+       · minmax(auto,140px)：auto 这个下限在中文里等于 min-content，也就是
+         "一行一个字"，同样压到内容之下，裁得更狠；
+       · 1fr 拉满：375×1000 这类高屏上卡片会被撑到 200px 以上。
+       max-content 的语义正是"不小于内容"，而它不影响有空间时的排布：
+       375×800 下实测与 auto 逐像素相同（125/118/118/43），靠行距吃掉余量。 */
+    grid-auto-rows:max-content;
+    align-content:space-between}
+  /* 屏太高时行距会涨到几十上百像素（把留白摊进行距在高屏上读起来像散架），
+     所以改回整体居中：留白聚到上下两端，读起来是"菜单居中"。
+     门槛必须留在溢出高度之上——内容自然高 440 + 页头页脚固定部分 234 +
+     本块内边距 32 = 706px，取 900 留了足够余量。（内容溢出时 center 会裁掉
+     上边且滚不到，这是 flex/grid 居中的老毛病，所以这条不能无条件生效。） */
+  @media (min-height:900px){ .scene-list{align-content:center} }
   .scene-card{position:relative;overflow:hidden;cursor:pointer;
-    border-radius:var(--r-lg);padding:15px;
-    display:flex;flex-direction:column;align-items:flex-start;gap:12px;
+    border-radius:var(--r-lg);padding:14px 16px;
+    display:flex;align-items:center;gap:15px;
     box-shadow:var(--sh-1),var(--sh-2),inset 0 1px 0 var(--hair);
     transition:transform .18s var(--ease),box-shadow .28s var(--ease),border-color .28s var(--ease)}
   .scene-card::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
@@ -168,33 +223,36 @@
   .scene-card:active{transform:scale(.984);box-shadow:var(--sh-1),0 6px 14px -12px rgba(0,0,0,.5),inset 0 1px 0 var(--hair)}
   @media (hover:hover){ .scene-card:hover{border-color:var(--line-2);box-shadow:var(--sh-1),var(--sh-3),var(--glow),inset 0 1px 0 var(--hair)} }
 
-  /* 主卡：横排 */
-  .scene-card.lead{grid-column:1 / -1;flex-direction:row;align-items:center;gap:16px;
-    padding:17px 18px;min-height:118px}
-  .scene-card .scene-text{min-width:0;position:relative;z-index:1}
-  .scene-card.lead .scene-text{flex:1}
-  /* 竖排窄卡：图标、标题、说明自上而下，右下角留一枚小箭头 —— 空出的下半部分
-     正好给箭头安身，卡片因此是"排好了版"而不是"内容没填满" */
-  .scene-card:not(.lead){min-height:186px;padding-bottom:44px}
-  .s1{--ico-a:#2C8FE0;--ico-b:#0B3E86}
-  .s2{--ico-a:#17A3A8;--ico-b:#0A5A6E}
-  .s3{--ico-a:#CE8F2E;--ico-b:#8A4E12}
-  .scene-ico{width:48px;height:48px;border-radius:var(--r-md);flex:none;position:relative;z-index:1;
-    display:flex;align-items:center;justify-content:center;font-size:23px;color:#fff;
+  /* 主卡：比次卡大一号——图标、标题、内边距同时加，不是只放大一个字 */
+  .scene-card.lead{padding:16px 17px;gap:16px}
+  .scene-card .scene-text{min-width:0;position:relative;z-index:1;flex:1}
+  .s1{--ico-a:var(--c-plan);--ico-b:#0B3E86}
+  .s2{--ico-a:var(--c-homework);--ico-b:#0A5A6E}
+  .s3{--ico-a:var(--c-ask);--ico-b:#8A4E12}
+  .scene-ico{width:44px;height:44px;border-radius:13px;flex:none;position:relative;z-index:1;
+    display:flex;align-items:center;justify-content:center;font-size:21px;color:#fff;
     background:linear-gradient(152deg,var(--ico-a,#2C8FE0),var(--ico-b,#0B3E86));
     box-shadow:0 10px 20px -12px rgba(0,0,0,.7),inset 0 1px 0 rgba(255,255,255,.26),inset 0 -1px 0 rgba(0,0,0,.13)}
   .scene-card.lead .scene-ico{width:54px;height:54px;font-size:25px;border-radius:16px}
   .scene-card h2{font-size:15px;font-weight:700;letter-spacing:-.005em}
-  .scene-card.lead h2{font-size:17px}
-  .scene-card p{font-size:11.5px;color:var(--sub);margin-top:5px;line-height:1.55;text-wrap:pretty}
-  .scene-card.lead p{font-size:12px;margin-top:4px}
-  /* 主卡的箭头是一枚带发光的主按钮，窄卡的箭头退成一枚静态小圆 */
-  .scene-card .go{position:absolute;right:13px;bottom:12px;width:28px;height:28px;border-radius:50%;
+  .scene-card.lead h2{font-size:var(--t-title)}
+  .scene-card p{font-size:var(--t-body);color:var(--sub);margin-top:3px;line-height:1.6;text-wrap:pretty;
+    line-break:strict}
+  /* 例句：告诉用户"进去之后可以说什么"。它是一句提示、不是可点的东西——
+     所以不给胶囊底、不加边框（那会读成按钮），只用一截金线起头。
+     nowrap + 省略号是兜底：文案以后变长时，宁可截断也不要它把卡片撑高。 */
+  .scene-eg{display:block;position:relative;margin-top:6px;padding-left:13px;
+    font-size:var(--t-small);font-style:normal;color:var(--faint);line-height:1.5;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .scene-eg::before{content:"";position:absolute;left:0;top:50%;width:7px;height:1px;
+    background:rgba(217,169,74,.7)}
+  /* 箭头从"绝对定位在右下角"改成行内的一项：卡片不再靠一块空版面给它安身。
+     同一件"进去"的事给两档权重——主卡是发光实心按钮，次卡是普通箭头。 */
+  .scene-card .go{flex:none;width:30px;height:30px;border-radius:50%;
     display:flex;align-items:center;justify-content:center;font-size:17px;line-height:1;
     color:#9FB2D4;background:rgba(255,255,255,.06);border:1px solid var(--line);
     transition:transform .28s var(--ease),color .28s var(--ease),background .28s var(--ease)}
-  .scene-card.lead .go{position:relative;right:auto;bottom:auto;margin-left:auto;flex:none;
-    width:38px;height:38px;font-size:20px;color:#fff;
+  .scene-card.lead .go{width:38px;height:38px;font-size:20px;color:#fff;
     background:linear-gradient(152deg,#0A93CC,#003A8C);border-color:rgba(255,255,255,.18);
     box-shadow:0 12px 24px -12px rgba(0,0,0,.75),0 0 28px -10px rgba(0,176,240,.75),
       inset 0 1px 0 rgba(255,255,255,.22)}
@@ -202,20 +260,107 @@
     .scene-card:hover .go{transform:translateX(2px);color:var(--blue);background:rgba(0,176,240,.14)}
     .scene-card.lead:hover .go{color:#fff;background:linear-gradient(152deg,#0A93CC,#003A8C)}
   }
-  .home-foot{margin-top:auto;padding:16px 18px calc(env(safe-area-inset-bottom) + 18px);text-align:center;
-    color:var(--faint);font-size:11px;line-height:1.75;letter-spacing:.02em;font-variant-numeric:tabular-nums}
+  /* 320px（iPhone SE 一代那类）上主卡正文栏只剩 125px，描述一行摆不下两个字。
+     把主卡降回次卡的图标尺寸，宽度还给文字（实测 125 → 152.67px）。
+     卡宽 284 是死的（320 − 列表左右各 18），所以宽度只能从内部抢：主卡原本
+     独占一枚 38px 的箭头圆——但整张卡本身就是点击区，这枚圆只是装饰，
+     比它旁边的两张卡还大一号没有道理。压到与次卡一致的 30px 就多出 8px。
+     例句那一行在 320 上仍会走省略号——那本来就是它的兜底，不算缺陷。
+     ⚠ 这一块必须留在这三条基类规则的**后面**：同为 `.scene-card.lead .go`
+     这种特异性，源码顺序就是胜负，写到上面去会被下面的基类原样盖掉
+     （实测就是这样静默失效的：改了 CSS，textW 一点没动）。 */
+  @media (max-width:340px){
+    .scene-card.lead{padding:14px 16px;gap:13px}
+    .scene-card.lead .scene-ico{width:44px;height:44px;font-size:21px;border-radius:13px}
+    .scene-card.lead .go{width:30px;height:30px;font-size:17px}
+  }
+
+  /* 「最近存入」：学习库里最新的一条；库为空时同一块显示"怎么存"的说明。
+     它是首页唯一一块活数据——首页不只是三选一的菜单，还接着上一轮的成果，
+     也顺带回答"存进学习库之后东西去哪了"。左侧同样走蓝金导轨，
+     因为它和 AI 回答本来就是同一种东西。
+     这一行必须恒占一格（哪怕没内容）：.scene-list 的行模板是按四行写的，
+     藏掉第四行会让三张卡自己涨高、下次存完东西回来又缩回去。 */
+  .recent{position:relative;overflow:hidden;border-radius:var(--r-md);cursor:pointer;
+    display:flex;align-items:center;gap:10px;padding:11px 12px 11px 16px;
+    background:linear-gradient(180deg,rgba(255,255,255,.055) 0%,rgba(255,255,255,.022) 100%);
+    border:1px solid var(--line);box-shadow:var(--sh-1),inset 0 1px 0 var(--hair)}
+  .recent::before{content:"";position:absolute;left:0;top:11px;bottom:11px;width:2px;border-radius:0 2px 2px 0;
+    background:linear-gradient(180deg,var(--blue) 0%,rgba(217,169,74,.78) 100%)}
+  .recent-txt{flex:1;min-width:0;font-size:var(--t-body);color:var(--sub);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .recent-go{flex:none;font-size:15px;color:#7E90B0;line-height:1}
+  /* 场景标签的三种色相。学习库与「最近存入」共用同一条规则，
+     所以"学习计划 = 蓝"在哪儿都成立，不是各画各的。 */
+  .tag{display:inline-block;flex:none;font-size:11px;font-weight:600;border-radius:7px;padding:2px 8px;
+    color:#8FD6F6;background:rgba(0,176,240,.13);border:1px solid rgba(0,176,240,.28)}
+  .tag.k-homework{color:#6FD3D6;background:rgba(23,163,168,.14);border-color:rgba(23,163,168,.30)}
+  .tag.k-ask{color:#EFC178;background:rgba(206,143,46,.14);border-color:rgba(206,143,46,.30)}
+  .home-foot{margin-top:auto;padding:14px 18px calc(env(safe-area-inset-bottom) + 16px);text-align:center;
+    color:var(--faint);font-size:var(--t-micro);line-height:1.7;letter-spacing:.02em;
+    font-variant-numeric:tabular-nums}
+  /* 署名与徽章分成两块而不是用 <br/> 挤在一起：徽章是状态、署名是出处，
+     两者的行距要求不一样，塞进一段文字里就得靠 margin 硬凑。 */
+  .home-foot .school{display:block;margin-top:9px}
   /* 连接状态徽章：只反映「有没有真的连上 AI」，本页面不存在演示/离线兜底内容。
      前面加一颗同色小圆点——状态类信息用点比用整块底色更克制也更易读。
      深色底上不能用浅底那套"淡黄底+深黄字"，反过来：薄琥珀底 + 亮琥珀字 */
   .status-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(217,169,74,.12);color:#EBC97F;
     border:1px solid rgba(217,169,74,.28);border-radius:var(--r-pill);padding:3px 11px;font-size:11px;
-    font-weight:600;margin-bottom:9px}
+    font-weight:600}
   .status-badge::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor;flex:none;
     box-shadow:0 0 0 3px rgba(217,169,74,.14)}
   .status-badge.ok{background:rgba(23,166,121,.13);color:#5FD3A8;border-color:rgba(23,166,121,.30)}
   .status-badge.ok::before{box-shadow:0 0 0 3px rgba(23,166,121,.14)}
   .status-badge.err{background:rgba(224,74,80,.14);color:#FF9A9E;border-color:rgba(224,74,80,.32)}
   .status-badge.err::before{box-shadow:0 0 0 3px rgba(224,74,80,.14)}
+
+  /* ---------- 极矮视口（横屏）----------
+     首页的固定部分（刊头 + 唤醒条 + 页脚）实测约 240px，而横屏视口只有 375–390px
+     高。.scene-list 是唯一的弹性项（flex:1 → flex-basis:0），分到的是剩下的那点
+     空间——上一版固定部分 361px 时它只分到 29px，三张卡被压成一条缝，
+     能看见但点不准，横屏下首页基本不可用。成因不是 min-height:0 塌陷，
+     纯粹是竖向空间不够，所以解法是**把可省的都省掉**。
+     用 max-height 而不是 orientation 判定：横屏才是触发场景，但窗口很矮的桌面
+     浏览器同样需要，而这个条件在 375×800 竖屏（PPT 08–11 截图）下**永不成立**，
+     所以下面这些压缩不会影响那四张交付图。
+
+     ⚠ 但只压外部留白是不够的。9/29 实测 844×390：列表盒只有 196px，而三张卡
+     按竖屏的字号量出来是 74/69/69，加上「最近存入」那一行 43px 共 305px——
+     溢出 109px，实拍里第三张卡被从中间切断、第四行整行落在折叠线以下，
+     而且列表自己的 scrollHeight 又没把溢出的行算进去，连滚动都救不回来。
+     所以这一版必须**连卡片自身的字号和内边距一起压**（h2 14px / 说明 12px /
+     图标 32–36px / 内边距 8px）。压完三张卡各 55px，在 844×390、740×360、
+     667×375 三个横屏尺寸上实测溢出都是 0、三张卡全部完整可见
+     （55px 仍大于 44px 的拇指命中下限）。 */
+  @media (max-height:560px){
+    .home-head{padding-top:calc(env(safe-area-inset-top) + 8px)}
+    .logo{width:44px;height:44px;font-size:19px}
+    .brand-title{font-size:19px}
+    .slogan{display:none}                       /* 横屏下最该省的一行：它是气氛，不是信息 */
+    /* 例句是"进去之前"的辅助，一屏放不下时它排在前面被省掉；
+       场景名和说明是必须留下的 */
+    .scene-eg{display:none}
+    .scene-list{padding:8px 18px;gap:8px}
+    .scene-card{padding:8px 12px;gap:11px}
+    .scene-card.lead{padding:8px 12px}
+    .scene-card .scene-ico{width:32px;height:32px;font-size:16px;border-radius:10px}
+    .scene-card.lead .scene-ico{width:36px;height:36px;font-size:18px;border-radius:11px}
+    .scene-card h2{font-size:14px}
+    .scene-card.lead h2{font-size:14px}          /* 基类里 lead 单独放大过，这里要压回来 */
+    .scene-card p{font-size:12px;margin-top:2px;line-height:1.45}
+    .scene-card .go{width:26px;height:26px;font-size:15px}
+    .scene-card.lead .go{width:28px;height:28px;font-size:16px}
+    /* 第四行在横屏里让位：844×390 的列表盒 232px 里，三张卡 55×3 加两道行距
+       已经占掉 181px，塞不下第四行的 43px。它是"最近存入"的快捷方式，
+       转回竖屏就在，横屏下先保证三张主卡点得准。 */
+    .recent{display:none}
+    .nfc-hint{margin:8px 18px 0;padding:7px 12px}
+    .nfc-hint span{display:none}                 /* 留主句「碰一碰鼠标垫右上角」，副标题让位 */
+    .nfc-ripple{width:26px;height:26px;font-size:14px}
+    .home-foot{padding:7px 18px calc(env(safe-area-inset-bottom) + 7px);line-height:1.45}
+    .home-foot .school{margin-top:4px}
+  }
 
   /* ---------- 对话页 ---------- */
   /* 顶栏从"贴边通栏 + 下边框"改成浮在消息上方的一枚胶囊：它不再把屏幕切成两截，
@@ -231,21 +376,48 @@
     color:#BFD9F7;cursor:pointer;flex:none;line-height:1;box-shadow:var(--sh-1);
     transition:transform .18s var(--ease),background .2s var(--ease)}
   .back:active{transform:scale(.94);background:rgba(255,255,255,.12)}
-  .chat-head h2{font-size:15px;font-weight:700;letter-spacing:-.005em;flex:1;min-width:0;
+  /* 标题改成"场景名 + 一颗场景色圆点"，不再写「AI 学习搭档 · 学习计划」。
+     两个原因：一是顶栏里四个控件挤在 351px 内，标题只剩 156px，整串标题
+     刚好卡满、一点余量都没有（实测 clientWidth 156 = scrollWidth 156，
+     再窄一个字就出省略号）；二是"AI 学习搭档"是产品名，首页刊头已经写过，
+     顶栏写场景名才是用户此刻需要定位的东西——聊天软件显示的是联系人，不是 App 名。 */
+  .chat-head h2{position:relative;padding-left:15px;font-size:var(--t-title);font-weight:700;
+    letter-spacing:-.005em;flex:1;min-width:0;
     overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .chat-head .lib-btn{border:1px solid var(--line);background:var(--card);border-radius:var(--r-pill);font-size:11px;
+  /* 圆点用伪元素而不是额外标签：shoot.py 会读 #chatTitle.textContent 自证
+     "这一屏确实是本场景"，伪元素不会往 textContent 里塞字符。
+     另外 h2 保持 block + nowrap/ellipsis——若改成 display:flex 放圆点，
+     文字会变成匿名 flex 项，text-overflow 就不再生效了。 */
+  .chat-head h2::before{content:"";position:absolute;left:0;top:50%;margin-top:-3.5px;
+    width:7px;height:7px;border-radius:50%;background:var(--blue);
+    box-shadow:0 0 8px rgba(0,176,240,.6)}
+  .chat-head h2.c-plan::before{background:var(--c-plan);box-shadow:0 0 8px rgba(44,143,224,.6)}
+  .chat-head h2.c-homework::before{background:var(--c-homework);box-shadow:0 0 8px rgba(23,163,168,.6)}
+  .chat-head h2.c-ask::before{background:var(--c-ask);box-shadow:0 0 8px rgba(206,143,46,.6)}
+  .chat-head .lib-btn{border:1px solid var(--line);background:var(--card);border-radius:var(--r-pill);font-size:var(--t-small);
     font-weight:600;color:#BFD9F7;padding:7px 12px;cursor:pointer;flex:none;white-space:nowrap;box-shadow:var(--sh-1);
     transition:transform .18s var(--ease),background .2s var(--ease)}
   .chat-head .lib-btn:active{transform:scale(.96);background:rgba(255,255,255,.12)}
-  .chat-head .mini{width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:var(--card);font-size:14px;
-    color:#BFD9F7;cursor:pointer;flex:none;line-height:1;box-shadow:var(--sh-1);
-    transition:transform .18s var(--ease),background .2s var(--ease)}
-  .chat-head .mini:active{transform:scale(.94);background:rgba(255,255,255,.12)}
+  /* 「清空」从一枚圆形 emoji 按钮改成一枚轻量文字按钮。
+     🧹 是这一屏唯一一个全彩字形，其余全是单色线性元素，它一出现就像跑错了地方；
+     而且清空是破坏性且低频的操作，视觉上本来就不该和「学习库」一样重——
+     所以给它去掉底色和描边，只留文字。 */
+  .chat-head .mini{border:1px solid transparent;background:none;border-radius:var(--r-pill);
+    font-size:var(--t-small);font-weight:600;color:#9FB2D4;padding:7px 9px;cursor:pointer;flex:none;
+    white-space:nowrap;transition:transform .18s var(--ease),background .2s var(--ease),color .2s var(--ease)}
+  .chat-head .mini:active{transform:scale(.96);background:rgba(255,255,255,.12);color:#BFD9F7}
 
   /* 顶部要给悬浮顶栏让出空间（10 + 52 + 12 = 74），否则第一条消息会被压在栏下面 */
   .msg-wrap{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;
     padding:calc(env(safe-area-inset-top) + 74px) 16px 10px;
     display:flex;flex-direction:column;gap:15px}
+  /* 首条消息 auto 上边距：把整段对话压到输入条上方。
+     原来内容顶着顶栏排，一段两轮的对话在 800px 屏上底下空出 140px
+     （实测末条底边距消息区底 96px，加上下面的快捷问法 43px），
+     看着像"下面还有东西没加载出来"。
+     用 auto 边距而不是 justify-content:flex-end：内容一溢出，auto 边距就
+     退化成 0，上边照样滚得到；flex-end 在溢出方向上会把上边裁掉且滚不回去。 */
+  .msg-wrap > .msg:first-child{margin-top:auto}
   /* 回答从"对话气泡"改成通栏玻璃卡片 + 左侧导轨。理由不是好看：
      模型的回答经常几百字，装进一个 82% 宽的气泡里就是在读一根窄柱；
      通栏之后行宽正常，导轨负责把它和用户那一条区分开。 */
@@ -254,11 +426,33 @@
    于是长回答被 .msg-wrap 压扁、末尾的「存入学习库」按钮被整个裁掉，且消息区不再滚动。
    实测：550 字的回答内容高 679px 被压成 335px，按钮落在 y=884（视口只有 800）——肉眼
    看就是"回答凭空短了一截"。旧版没有 overflow:hidden，所以这个坑是新引入的。 */
-.msg{flex:0 0 auto;padding:12px 15px;border-radius:18px;font-size:14px;line-height:1.68;
+.msg{flex:0 0 auto;padding:12px 15px;border-radius:18px;font-size:var(--t-lead);line-height:1.68;
     white-space:pre-wrap;word-break:break-word;text-wrap:pretty}
   .msg.ai{align-self:stretch;border-radius:var(--r-lg);padding:14px 16px 14px 22px;
     position:relative;overflow:hidden;color:var(--ink)}
   .msg.ai::before{top:14px;bottom:14px;border-radius:0 2px 2px 0}
+  /* ---------- AI 回答的 Markdown 最小子集 ----------
+     星火返回的是 Markdown，而改动前是按纯文本直出的：屏幕上就是
+     「### 第四阶段：收尾+备考准备（23:00-23:30）」「**建议顺序**：」「*****」
+     这样的字面记号。整屏里最不像成品的就是它——不是排版不够讲究，是没排版。
+     渲染范围刻意只有四种（小标题 / 加粗 / 列表 / 分隔线）：认多了会把正文里
+     正常的星号、井号也吃成奇怪的排版，而星火实际会用的就这几种。
+     这些是**块级**元素，所以行距由它们自己定，不再依赖 .msg 的 pre-wrap。 */
+  .msg.ai .md-p{margin:0}
+  .msg.ai .md-p.md-gap{margin-top:10px}     /* 原文里的空行，换算成段间距 */
+  .msg.ai .md-h{margin:12px 0 0;font-size:var(--t-lead);font-weight:700;color:#FFFFFF;
+    letter-spacing:.005em;line-height:1.5}
+  .msg.ai .md-h:first-child{margin-top:0}
+  .msg.ai .md-h.md-gap{margin-top:16px}
+  .msg.ai .md-li{position:relative;margin:5px 0 0;padding-left:15px}
+  .msg.ai .md-li.md-gap{margin-top:11px}
+  /* 列表点用伪元素：这样项目符号挂在文字左边、折行时保持悬挂缩进，
+     不会像"• "那样一折行就掉到行首 */
+  .msg.ai .md-li::before{content:"";position:absolute;left:3px;top:.68em;width:4px;height:4px;
+    border-radius:50%;background:rgba(0,176,240,.8)}
+  .msg.ai .md-rule{display:block;height:1px;margin:12px 0 0;
+    background:linear-gradient(90deg,rgba(255,255,255,.24),rgba(255,255,255,0))}
+  .msg.ai .md-h b,.msg.ai .md-p b,.msg.ai .md-li b{font-weight:700;color:#FFFFFF}
   /* 用户气泡走"海军蓝"：一是和玻璃质感的通栏回答形成明确的两极，二是
      #00B0F0 上压白字只有 ~2.6:1（不达 AA），这个渐变最浅处仍 >4.5:1。
      深色底上它的亮度明显高于夜色，所以照样跳得出来 */
@@ -266,7 +460,9 @@
     border-radius:18px 18px 6px 18px;max-width:78%;
     align-self:flex-end;box-shadow:0 12px 26px -14px rgba(0,0,0,.7),0 0 26px -12px rgba(0,176,240,.5),
       inset 0 1px 0 rgba(255,255,255,.20)}
-  .msg .save-btn{display:inline-block;margin-top:9px;font-size:12px;font-weight:600;color:#9FD8F7;background:rgba(0,176,240,.13);
+  /* 正文现在是块级 <p>，所以这枚按钮跟在 </p> 之后会自己换行——
+     addMsg 里那个 <br/> 因此去掉了，间距改由 margin 负责。 */
+  .msg .save-btn{display:inline-block;margin-top:11px;font-size:var(--t-small);font-weight:600;color:#9FD8F7;background:rgba(0,176,240,.13);
     border:1px solid rgba(0,176,240,.30);border-radius:var(--r-pill);padding:4px 13px;cursor:pointer;
     transition:transform .18s var(--ease),background .2s var(--ease)}
   .msg .save-btn:active{transform:scale(.96);background:rgba(0,176,240,.24)}
@@ -275,10 +471,10 @@
      文字和「重试」按钮分两行——加不了包裹层。 */
   .msg.sys{align-self:center;max-width:94%;padding:11px 15px;
     background:rgba(217,169,74,.10);border:1px solid rgba(217,169,74,.26);color:#E8C77E;
-    font-size:12.5px;line-height:1.65;text-align:center;border-radius:var(--r-md);box-shadow:var(--sh-1);
+    font-size:var(--t-small);line-height:1.65;text-align:center;border-radius:var(--r-md);box-shadow:var(--sh-1);
     display:flex;flex-direction:column;align-items:center}
   /* 连接失败提示条里的「重试」按钮 */
-  .msg .retry-btn{display:inline-block;margin-top:9px;font-size:12px;font-weight:600;color:#F0D79B;background:rgba(217,169,74,.14);
+  .msg .retry-btn{display:inline-block;margin-top:9px;font-size:var(--t-small);font-weight:600;color:#F0D79B;background:rgba(217,169,74,.14);
     border:1px solid rgba(217,169,74,.32);border-radius:var(--r-pill);padding:4px 15px;cursor:pointer;
     transition:transform .18s var(--ease),background .2s var(--ease)}
   .msg .retry-btn:active{transform:scale(.96);background:rgba(217,169,74,.26)}
@@ -293,21 +489,25 @@
     -webkit-mask-image:linear-gradient(90deg,#000 0,#000 calc(100% - 20px),transparent 100%);
     mask-image:linear-gradient(90deg,#000 0,#000 calc(100% - 20px),transparent 100%)}
   .quick::-webkit-scrollbar{display:none}
-  .quick span{background:var(--card);border:1px solid var(--line);border-radius:var(--r-pill);padding:7px 13px;font-size:12px;
+  .quick span{background:var(--card);border:1px solid var(--line);border-radius:var(--r-pill);padding:7px 12px;font-size:var(--t-small);
     color:#BFD9F7;cursor:pointer;flex:none;box-shadow:var(--sh-1);
     transition:transform .18s var(--ease),background .2s var(--ease),border-color .2s var(--ease)}
   .quick span:active{transform:scale(.96);background:rgba(255,255,255,.12)}
   /* 输入条从"贴边通栏 + 上边框"改成浮在底部的岛：外壳是玻璃，里面再嵌一条胶囊输入框。
      两层圆角同心（26 - 7 = 19 ≈ 内层胶囊的实际观感半径），这是"机加工"读起来的原因。
      它同样不滚动，backdrop-filter 用在它身上也是安全的。 */
-  .input-bar{margin:0 12px calc(env(safe-area-inset-bottom) + 10px);z-index:5;
+  /* position:relative 是给下面那条 z-index 用的。原来是裸的 z-index:5，
+     而没有 position 时 z-index 对普通流元素**完全无效**——它现在能压住滚动的消息，
+     只是因为 ① 它排在 .msg-wrap 之后 ② backdrop-filter 让它生成了 stacking context。
+     层级靠副作用维持：哪天把岛挪到消息前面，它就会被滚动内容盖住，且不报任何错。 */
+  .input-bar{position:relative;margin:0 12px calc(env(safe-area-inset-bottom) + 10px);z-index:5;
     background:rgba(10,26,50,.76);
     backdrop-filter:blur(22px) saturate(170%);-webkit-backdrop-filter:blur(22px) saturate(170%);
     border:1px solid var(--line-2);border-radius:var(--r-xl);
     padding:7px 7px 7px 9px;display:flex;gap:8px;align-items:center;
     box-shadow:0 20px 44px -20px rgba(0,0,0,.88),0 0 44px -22px rgba(0,176,240,.60),inset 0 1px 0 var(--hair)}
   .input-bar input{flex:1;min-width:0;border:1px solid var(--line);background:rgba(255,255,255,.05);border-radius:var(--r-pill);
-    padding:11px 16px;font-size:14.5px;color:var(--ink);outline:none;
+    padding:11px 16px;font-size:var(--t-input);color:var(--ink);outline:none;
     box-shadow:inset 0 1px 2px rgba(0,0,0,.35);
     transition:background .22s var(--ease),border-color .22s var(--ease),box-shadow .22s var(--ease)}
   /* 占位符原先硬编码 #7C8CAE，与 --faint 各改各的迟早会漂；直接引令牌。
@@ -341,19 +541,42 @@
   /* 同一个雷：.lib-list 也是 flex 列，.lib-item 本来就带着 overflow:hidden（旧版如此），
    所以"学习库攒到超过一屏就把第一条压扁、✕ 按钮被裁掉"是**线上既有的潜在缺陷**，
    只是没人存满过一屏。这里一并钉死。 */
+/* 条目正文与对话页的回答是同一份东西，所以走同一套 Markdown 渲染（mdLite）。
+   既然如此，这里就**不再需要** white-space:pre-wrap——换行改由块级 <p> 承担。
+   （这一段以前是真出过事的：学习库存的是带 ① ② ③ 的多行清单，而 .lib-item
+   拿不到 .msg 那条祖先规则给的 pre-wrap，换行被折成空格——实测一条 6 行的
+   清单渲染成 1 行、高 104px，补上 pre-wrap 才回到 6 行 211px。换成块级渲染后，
+   同一个坑不会再回来：换行由元素边界决定，不依赖能不能继承到某条祖先规则。） */
 .lib-item{flex:0 0 auto;position:relative;overflow:hidden;border-radius:var(--r-md);
-    padding:13px 16px 13px 22px;font-size:13px;line-height:1.65;color:var(--ink);
+    padding:12px 16px 12px 22px;font-size:var(--t-body);line-height:1.65;color:var(--ink);
     box-shadow:var(--sh-1),0 10px 22px -18px rgba(0,0,0,.6),inset 0 1px 0 var(--hair);text-wrap:pretty}
-  .lib-item::before{top:13px;bottom:13px;border-radius:0 2px 2px 0}
-  .lib-item .tag{display:inline-block;font-size:11px;font-weight:600;color:#8FD6F6;background:rgba(0,176,240,.13);
-    border:1px solid rgba(0,176,240,.28);border-radius:7px;padding:1.5px 9px;margin-bottom:7px}
-  .lib-item time{display:block;color:var(--faint);font-size:11px;margin-top:7px;
+  .lib-item::before{top:12px;bottom:12px;border-radius:0 2px 2px 0}
+  .lib-item .tag{margin-bottom:6px}
+  .lib-item .md-p{margin:0}
+  .lib-item .md-p.md-gap{margin-top:8px}
+  .lib-item .md-h{margin:9px 0 0;font-size:var(--t-body);font-weight:700;color:#FFFFFF}
+  .lib-item .md-h.md-gap{margin-top:12px}
+  .lib-item .md-li{position:relative;margin:3px 0 0;padding-left:14px}
+  .lib-item .md-li.md-gap{margin-top:9px}
+  .lib-item .md-li::before{content:"";position:absolute;left:3px;top:.66em;width:4px;height:4px;
+    border-radius:50%;background:rgba(0,176,240,.8)}
+  .lib-item .md-rule{display:block;height:1px;margin:9px 0 0;
+    background:linear-gradient(90deg,rgba(255,255,255,.24),rgba(255,255,255,0))}
+  .lib-item time{display:block;color:var(--faint);font-size:var(--t-micro);margin-top:8px;
     font-variant-numeric:tabular-nums;letter-spacing:.01em}
-  .lib-item .del{position:absolute;top:11px;right:12px;border:none;background:none;color:#8C9EBC;font-size:16px;
+  /* 顶栏右侧的条数。它替掉了原来那枚「刷新」按钮——学习库读的是本机 localStorage，
+     没有远端可刷新，那个按钮点下去只是把同一份数据重画一遍，是个什么都不做的控件。
+     换成"有几条"是真信息，而且列表为空时它自然消失。 */
+  .lib-count{flex:none;font-size:var(--t-small);font-weight:600;color:#9FB2D4;padding-right:7px;
+    font-variant-numeric:tabular-nums}
+  /* × 的颜色从 #8C9EBC 提到 #A9B8D2：它是这一屏唯一的操作入口，
+     而原来在正文的 #9FB2D4 旁边几乎看不出是个按钮。位置一个字没动——
+     命中区（44×38）是按这个位置量过的，动一下就要重量。 */
+  .lib-item .del{position:absolute;top:11px;right:12px;border:none;background:none;color:#A9B8D2;font-size:16px;
     line-height:1;cursor:pointer;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;
     justify-content:center;transition:background .2s var(--ease),color .2s var(--ease)}
   .lib-item .del:active{background:rgba(255,255,255,.10);color:#C6D6EF}
-  .empty{text-align:center;color:var(--faint);font-size:13px;margin-top:64px;line-height:2.1}
+  .empty{text-align:center;color:var(--faint);font-size:var(--t-body);margin-top:64px;line-height:2.1}
   .toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 98px);
     transform:translate(-50%,10px) scale(.96);
     background:rgba(16,34,62,.86);
@@ -365,6 +588,39 @@
     opacity:0;pointer-events:none;z-index:99;max-width:80%;
     transition:opacity .28s var(--ease),transform .28s var(--ease)}
   .toast.show{opacity:1;transform:translate(-50%,0) scale(1)}
+
+  /* ---------- 命中区（不是视觉尺寸）----------
+     按真实像素量，这些控件都低于 44×44 的推荐点按尺寸（WCAG 2.5.8 的 24×24 是达标的，
+     但 44 才是拇指在走动中点得准的线）：.back 38、.mini 34、.lib-btn 80×31、
+     .save-btn 107×29、重试 80×24、.del 28×28。
+     视觉一个像素都不动——用透明的 ::after 往外撑命中区，圆角 inherit 让撑出来的
+     区域跟着控件走。这几条全部走合成层，没有任何背景/边框，所以渲染像素为 0 变化
+     （已用冻结动效后的 A/B 像素对比核过，见 7_改动与验收）。
+     .del 的 ::after 是按钮自己的，与 131 行 .lib-item::after 那道金发丝线不冲突。
+     .quick span 刻意不在此列：.quick 是 overflow-x:auto 的横向滚动容器，
+     竖直方向的扩展会被它自己裁掉，撑了也点不到——要动只能改容器高度，
+     那会连带挪动输入岛的位置，代价大于收益。 */
+  .back,.chat-head .mini,.chat-head .lib-btn,.msg .save-btn,.msg .retry-btn{position:relative}
+  .back::after,.chat-head .mini::after,.chat-head .lib-btn::after,
+  .msg .save-btn::after,.msg .retry-btn::after,.lib-item .del::after{
+    content:"";position:absolute;border-radius:inherit}
+  .back::after{inset:-3px}                        /* 38 -> 44 */
+  /* 「清空」「学习库」都由圆钮改成了文字钮，尺寸跟着变，这里按新的量补：
+     两颗都是 33px 高，左右已经够宽（44 / 62），所以只往上各撑 6px、
+     横向一律不动——横着撑会在两颗中间 9px 的缝里叠到一起，
+     点在缝上就会随机命中其中一个。 */
+  .chat-head .mini::after{inset:-6px 0}           /* 44x33 -> 44x45 */
+  .chat-head .lib-btn::after{inset:-6px 0}        /* 62x33 -> 62x45 */
+  .msg .save-btn::after{inset:-9px -8px}          /* 107x29 -> 123x47 */
+  .msg .retry-btn::after{inset:-11px -8px}        /* 80x24 -> 96x46 */
+  /* .del 的扩展刻意**只往上**：上边是 11px 的 padding 加一行短短的标签，往上是空的；
+     往下 8px 会盖住正文第一行的末尾（实测正文第一行很长时，向下扩展会与它重叠
+     55px²，虽然现在有 confirm 兜底，但把"删除"的命中区压到正文上本身就是错的）。
+     向下保持 0，则命中区的下边缘与原 28×28 完全重合——那块区域实测与正文重叠为 0。
+     向上只取 10px：.del 距条目的内沿本来就只有 11px，取 11 会让最上面 1px 落到
+     overflow:hidden 的裁剪线外，白给。所以实际命中区是 44x38，相对原来的 28x28
+     是把点得中的面积翻了四倍多，代价为零。 */
+  .lib-item .del::after{inset:-10px -8px 0 -8px}  /* 28x28 -> 44x38，且不压正文 */
 
   /* 键盘可达性：焦点环是必需项，不是装饰。下面这条只作用于键盘聚焦，
      不会在触摸点击后冒出来（输入框的焦点环在上面单独给了） */
@@ -384,36 +640,55 @@
       <div class="masthead">
         <div class="logo">星</div>
         <div class="mast-text">
-          <span class="eyebrow">X+AI 文创共创计划</span>
           <h1 class="brand-title">星智碰 · AI 学习搭档</h1>
+          <p class="slogan">触碰唤醒星火　阅览 AI 智慧</p>
         </div>
       </div>
-      <p class="slogan">触碰唤醒星火　阅览 AI 智慧</p>
-    </div>
-    <div class="nfc-hint">
-      <div class="nfc-ripple">📡</div>
-      <div><b>碰一碰鼠标垫右上角</b><span>免安装直达，或扫描垫面二维码进入</span></div>
     </div>
     <div class="scene-list" id="sceneList">
       <div class="scene-card lead s1" data-scene="plan">
         <div class="scene-ico">📅</div>
-        <div class="scene-text"><h2>学习计划</h2><p>说出专业与目标，生成一周学习计划与每日任务</p></div>
+        <div class="scene-text">
+          <h2>学习计划</h2>
+          <p>说出专业与目标，生成一周学习计划与每日任务</p>
+          <em class="scene-eg">例：一周内学好 Python 循环</em>
+        </div>
         <div class="go">›</div>
       </div>
       <div class="scene-card s2" data-scene="homework">
         <div class="scene-ico">✅</div>
-        <div class="scene-text"><h2>作业管家</h2><p>口述作业要求，AI 拆解任务、排优先级与提醒</p></div>
+        <div class="scene-text">
+          <h2>作业管家</h2>
+          <p>口述作业要求，AI 拆解任务、排优先级与提醒</p>
+          <em class="scene-eg">例：高数 12 题，周五交</em>
+        </div>
         <div class="go">›</div>
       </div>
       <div class="scene-card s3" data-scene="ask">
         <div class="scene-ico">💬</div>
-        <div class="scene-text"><h2>随问随答</h2><p>知识点讲解、中英互译，语音提问张口就答</p></div>
+        <div class="scene-text">
+          <h2>随问随答</h2>
+          <p>知识点讲解、中英互译，语音提问张口就答</p>
+          <em class="scene-eg">例：讲讲什么是递归</em>
+        </div>
         <div class="go">›</div>
       </div>
+      <!-- 第四行恒在：有内容时是「最近存入」，空库时由 renderRecent 换成一句说明 -->
+      <div class="recent" id="recentCard" onclick="showLib()">
+        <span class="tag" id="recentTag">学习库</span>
+        <span class="recent-txt" id="recentTxt"></span>
+        <span class="recent-go">›</span>
+      </div>
+    </div>
+    <!-- 唤醒条排在卡片之后：用户是碰了垫子才到这一屏的，这一步刚做完，
+         它现在是脚注而不是头条（扫垫面二维码进来的人仍然需要它） -->
+    <div class="nfc-hint">
+      <div class="nfc-ripple">📡</div>
+      <div><b>碰一碰鼠标垫右上角</b><span>免安装直达，或扫描垫面二维码进入</span></div>
     </div>
     <div class="home-foot">
-      <span class="status-badge" id="modeBadge">尚未对话 · 首次提问时连接讯飞星火</span><br/>
-      广州应用科技学院 · 科大讯飞AI产业学院　X+AI 文创共创计划
+      <span class="status-badge" id="modeBadge">尚未对话 · 首次提问时连接讯飞星火</span>
+      <span class="school">广州应用科技学院 · 科大讯飞AI产业学院　X+AI 文创共创计划</span>
     </div>
   </section>
 
@@ -421,9 +696,9 @@
   <section class="screen" id="screen-chat">
     <div class="chat-head">
       <button class="back" onclick="goHome()" aria-label="返回首页">‹</button>
-      <h2 id="chatTitle">AI 学习搭档</h2>
-      <button class="mini" onclick="clearChat()" aria-label="清空本场景对话" title="清空本场景对话">🧹</button>
-      <button class="lib-btn" onclick="showLib()">我的学习库</button>
+      <h2 id="chatTitle">对话</h2>
+      <button class="mini" onclick="clearChat()" aria-label="清空本场景对话" title="清空本场景对话">清空</button>
+      <button class="lib-btn" onclick="showLib()">学习库</button>
     </div>
     <div class="msg-wrap" id="msgWrap"></div>
     <div class="quick" id="quickBar"></div>
@@ -439,7 +714,7 @@
     <div class="chat-head">
       <button class="back" onclick="goHome()" aria-label="返回首页">‹</button>
       <h2>我的 AI 学习库</h2>
-      <button class="lib-btn" onclick="showLib()">刷新</button>
+      <span class="lib-count" id="libCount"></span>
     </div>
     <div class="lib-list" id="libList"></div>
   </section>
@@ -462,14 +737,26 @@ const CONFIG = {
 
 /* hint 是**页面写的开场提示**，不是模型说的话——所以它显示成系统提示条，绝不进 AI 气泡。
    用第三人称「AI 会…」而不是「我帮你…」：用第一人称会让人以为这是模型的开场白。 */
+/* quick 是"可以直接点一下就走"的示例问法。每条约 7–10 个字，是按实测宽度定的：
+   上一版每条 14–20 字，375px 下横排只露得出一条半（第二条从字中间被渐隐切掉），
+   看起来像"划一半断了"而不是"还有更多"。收短到 10 字以内之后两条完整可见，
+   第三条露出一角——那才是"可以往右划"的样子。
+   cls 是这颗场景的色相：首页卡片图标、顶栏圆点、学习库标签三处共用一个值。 */
 const SCENES = {
-  plan:     {name:"学习计划", hint:"可以这样开始：告诉我你的专业、本周课程目标或备考科目，AI 会帮你排一周计划。",
-             quick:["我是人工智能专业，本周想学好Python循环","期末高数还有两周，帮我安排复习","每天晚上7到10点可自习，做英语四级计划"]},
-  homework: {name:"作业管家", hint:"把作业要求念给我听（科目、内容、截止时间），AI 会帮你拆成任务清单并排优先级。",
-             quick:["高数习题册第3章12道题，周五交","英语作文一篇200词，下周三前","数据结构实验报告，周日晚上截止"]},
-  ask:      {name:"随问随答", hint:"随时提问知识点，或说一句中文/英文，AI 会帮你讲解和翻译。",
-             quick:["用通俗的话讲一下什么是递归","把“人工智能正在改变学习方式”翻译成英文","解释NFC为什么碰一下就能打开网页"]}
+  plan:     {name:"学习计划", cls:"c-plan",
+             hint:"可以这样开始：告诉我你的专业、本周课程目标或备考科目，AI 会帮你排一周计划。",
+             quick:["本学期想学好Python","两周备考高数","订一份四级计划"]},
+  homework: {name:"作业管家", cls:"c-homework",
+             hint:"把作业要求念给我听（科目、内容、截止时间），AI 会帮你拆成任务清单并排优先级。",
+             quick:["高数12题周五交","英语作文200词","实验报告周日交"]},
+  ask:      {name:"随问随答", cls:"c-ask",
+             hint:"随时提问知识点，或说一句中文/英文，AI 会帮你讲解和翻译。",
+             quick:["讲讲什么是递归","这句翻译成英文","NFC为什么能开网页"]}
 };
+/* 场景名的反查表。学习库里存的是场景**名字**（那是人要读的），而配色按场景键走；
+   名字对不上（手工改过的旧数据、以后改了文案）就退回默认蓝，不报错。 */
+const SCENE_BY_NAME = {};
+Object.keys(SCENES).forEach(function(k){ SCENE_BY_NAME[SCENES[k].name] = k; });
 
 /* ---------- 学术诚信前端拦截（这是一道「减速带」，不是硬约束） ----------
    这段是纯前端正则，只检查当前这一条消息，**确定可以被绕过**：
@@ -508,6 +795,45 @@ function toast(msg){ const t=$("toast"); t.textContent=msg; t.classList.add("sho
 function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
 function sceneName(s){ return (SCENES[s] && SCENES[s].name) ? SCENES[s].name : "该场景"; }
 
+/* ---------- AI 回答的 Markdown 最小子集 ----------
+   星火返回的是 Markdown，而在此之前它是按纯文本直出的：屏幕上是
+   「### 第四阶段：收尾+备考准备（23:00-23:30）」「**建议顺序**：」「*****」
+   这样的字面记号。整屏里最不像成品的就是这块——不是排版不够讲究，是没排版。
+   两条硬约束：
+   ① **先整体转义，再在转义后的串上替换**。模型输出是不可信输入（TXSS 那条
+      测试钉的就是这个），所以任何一条路径都不能让它产生真实标签；
+   ② 只认四种记号：小标题、**加粗**、- 列表、--- 分隔线。认多了会把正文里
+      正常的星号、井号也吃成奇怪的样子，而星火实际会用的就这几种。
+   四种之外一律原样保留——所以"不含 Markdown 的回答"渲染结果与改动前一致。 */
+function mdInline(s){ return s.replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>"); }
+function mdLite(text){
+  const lines = esc(text).split("\n");
+  const out = [];
+  let buf = [], bufGap = false, pendingGap = false;
+  function flushBuf(){
+    if(!buf.length) return;
+    out.push('<p class="md-p' + (bufGap ? " md-gap" : "") + '">' + buf.join("<br/>") + "</p>");
+    buf = [];
+  }
+  for(let i = 0; i < lines.length; i++){
+    const line = lines[i].replace(/\s+$/, "");
+    // 空行只起分隔作用：换算成下一段的上边距，不生成空节点
+    if(!line.trim()){ flushBuf(); if(out.length) pendingGap = true; continue; }
+    const h = line.match(/^\s{0,3}#{1,6}\s+(.*\S)\s*$/);
+    if(h){ flushBuf(); out.push('<p class="md-h' + (pendingGap ? " md-gap" : "") + '">' + mdInline(h[1]) + "</p>"); pendingGap = false; continue; }
+    // 分隔线必须排在列表前面判：--- 也会被当成一个 "- " 开头的列表项
+    if(/^\s*(?:-{3,}|\*{3,}|_{3,})\s*$/.test(line)){ flushBuf(); out.push('<span class="md-rule"></span>'); pendingGap = false; continue; }
+    // 列表：- 或 * 后面必须跟空白；数字编号允许 "1." "1、" "1)"；①②③ 允许不带空格
+    const li = line.match(/^\s*(?:[-*•]\s+|(?:\d+)[.、)]\s*|[①-⑳]\s*)(\S.*)$/);
+    if(li){ flushBuf(); out.push('<p class="md-li' + (pendingGap ? " md-gap" : "") + '">' + mdInline(li[1]) + "</p>"); pendingGap = false; continue; }
+    if(!buf.length) bufGap = pendingGap;   // 段间距取自"这一段开头前有没有空行"，
+    buf.push(mdInline(line));              // 不能用当前值——它已经被中间的空行改过了
+    pendingGap = false;
+  }
+  flushBuf();
+  return out.join("");
+}
+
 /* hist_* 只应该存 {q,a} 数组，但同源下可能残留旧版本或手工写过的脏值。
    以前这里直接 store.get(...).slice(-12)，脏值会让 .slice 抛 TypeError——而它
    正好落在「取回答」的 try 里，会被 catch 当成网络异常，报成一句永远不会自愈的
@@ -518,7 +844,7 @@ function loadHist(scene){
 }
 
 function show(id){ document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active")); $(id).classList.add("active"); }
-function goHome(){ show("screen-home"); if(history.state && history.state.chat){ try{ history.back(); }catch(e){} } }
+function goHome(){ show("screen-home"); renderRecent(); if(history.state && history.state.chat){ try{ history.back(); }catch(e){} } }
 
 /* 首页徽章只反映「有没有真的连上 AI」：只有真收到模型回答才显示「已接入」。
    本页面不产生任何本地回答，所以没有「演示模式」这种状态。
@@ -563,7 +889,10 @@ function openChat(scene, noPush){
   curScene = scene;
   viewGen++;                                  // 本次重建的代号（见 requestReply 末尾）
   const sc = SCENES[scene];
-  $("chatTitle").textContent = "AI 学习搭档 · " + sc.name;
+  // 顶栏只写场景名：产品名首页刊头已经给过，顶栏该回答的是"我在哪个场景里"。
+  // class 挂上场景色，供样式里那颗 ::before 圆点取色（见 .chat-head h2 注释）。
+  $("chatTitle").textContent = sc.name;
+  $("chatTitle").className = sc.cls;
   $("msgWrap").innerHTML = "";
   $("quickBar").innerHTML = "";
   // 用 createElement 而不是拼内联 onclick 字符串：以后文案里出现引号也不会把页面拼坏
@@ -612,8 +941,11 @@ function addMsg(role, text, opts){
   div.className = "msg " + role;
   // 原文挂在元素属性上：存学习库时直接取，不再靠 childNodes[0] 这种 DOM 结构假设
   div._text = String(text==null?"":text);
-  let html = opts.raw ? div._text : esc(div._text);
-  if(opts.savable) html += '<br/><span class="save-btn" onclick="saveLib(this)">⭐ 存入学习库</span>';
+  // 只有 AI 的正文走 Markdown 渲染：需要排版的是模型的输出，用户自己敲的字原样显示。
+  // opts.raw 用于本页自己生成的 HTML 片段（打字指示器），那条路径不经转义。
+  let html = opts.raw ? div._text : (role === "ai" ? mdLite(div._text) : esc(div._text));
+  // 不再拼 <br/>：正文现在是块级 <p>，按钮跟在 </p> 之后会自己换行
+  if(opts.savable) html += '<span class="save-btn" onclick="saveLib(this)">⭐ 存入学习库</span>';
   div.innerHTML = html;
   wrap.appendChild(div); wrap.scrollTop = wrap.scrollHeight;
   return div;
@@ -787,6 +1119,38 @@ function loadLib(){
   const lib = store.get("library", []);
   return Array.isArray(lib) ? lib.filter(x=>x && typeof x==="object") : [];
 }
+/* 首页的「最近存入」：学习库里最新的一条。saveLib 用 unshift，所以 [0] 就是最新——
+   和 showLib 的"从头部取"是同一个约定，两处必须一致，不然首页显示的和列表第一条对不上。
+   空库时不藏整块，而是换成一句"怎么存"的说明：它恒占 .scene-list 的第四行，
+   藏掉会让三张卡自己涨高。顺带也把"存哪儿去了"在首页就回答掉。
+   每次回首页都要重算（goHome），不能在启动时算一次——用户存完东西回来就变了。 */
+function renderRecent(){
+  const el = $("recentCard"); if(!el) return;
+  const tag = $("recentTag"), txt = $("recentTxt");
+  const last = loadLib()[0];
+  if(!last){
+    if(tag){ tag.className = "tag"; tag.textContent = "学习库"; }
+    if(txt) txt.textContent = "还没有存过内容 · 在对话里点「存入学习库」";
+    return;
+  }
+  const k = SCENE_BY_NAME[last.scene];
+  if(tag){ tag.className = "tag" + (k ? " k-" + k : ""); tag.textContent = last.scene || "学习库"; }
+  // 摘要是单行省略的一行字，不排 markdown，所以记号要在这里逐行剥掉。
+  // 不能只在整串开头剥一次：回答里第二个小标题的 ### 在中间，实测就漏在摘要里
+  // （同理还有分段的 - 和分隔线 ---）。剥完按 " · " 接起来，读得出是几条要点。
+  if(txt) txt.textContent = String(last.content == null ? "" : last.content)
+    .split(/\n+/)
+    .map(function(s){
+      return s
+        .replace(/^\s*(?:#{1,6}|-{2,}|\*{2,}|[-*•+]|\d+[.、)]|[①-⑳])\s*/, "")  // 行首记号 / 分隔线
+        .replace(/\*\*/g, "")                                                   // 行内加粗
+        .replace(/\s+/g, " ")                                                   // 行内空白压平
+        .trim();
+    })
+    .filter(function(s){ return s; })            // 空行（含被剥空的分隔线）丢掉
+    .join(" · ")
+    .slice(0, 160);
+}
 function saveLib(btn){
   const msgEl = btn.closest(".msg");
   const content = (msgEl && msgEl._text ? msgEl._text : "").trim();
@@ -804,13 +1168,27 @@ function showLib(){
   // ——索引一旦错位就会删错条。读取侧的渲染上限也必须与写入侧同源，否则
   // localStorage 里残留的超长数组会在一次 innerHTML 里拼出上万个节点。
   const lib = loadLib().slice(0, LIB_MAX);
-  $("libList").innerHTML = lib.length ? lib.map((x,i)=>
-    `<div class="lib-item"><button class="del" onclick="delLib(${i})">×</button><span class="tag">${esc(x.scene)}</span><br/>${esc(x.content)}<time>${esc(x.time)}</time></div>`).join("")
+  const cnt = $("libCount"); if(cnt) cnt.textContent = lib.length ? (lib.length + " 条") : "";
+  // 标签按场景上色（认不出名字就退回默认蓝）。条目正文同样走 mdLite——
+  // 学习库存的就是 AI 回答原文，在列表里和在对话里是同一份东西，不该只有一处排版。
+  $("libList").innerHTML = lib.length ? lib.map(function(x,i){
+    const k = SCENE_BY_NAME[x.scene];
+    return `<div class="lib-item"><button class="del" onclick="delLib(${i})">×</button>`
+      + `<span class="tag${k ? " k-" + k : ""}">${esc(x.scene)}</span>`
+      + mdLite(x.content) + `<time>${esc(x.time)}</time></div>`;
+  }).join("")
     : `<div class="empty">📭<br/>学习库还是空的<br/>在对话中把 AI 生成的计划、任务清单保存到这里</div>`;
 }
 function delLib(i){
   const lib = loadLib();                 // 必须与 showLib 用同一套归一，否则索引错位删错条
   if(!(i >= 0 && i < lib.length)) return;
+  // 删除不可撤销，而 ✕ 就贴在条目正文的右上角——误触一次就永久少一条记录。
+  // clearChat（599 行）早就是"先 confirm 再动手"，这里一直漏着；本轮又把 ✕ 的
+  // 命中区从 28×28 补到了 44×44，误触面只会更大，这道闸不能没有。
+  // 带上内容开头，用户才知道自己删的是哪一条。
+  const raw = typeof lib[i].content === "string" ? lib[i].content : "";
+  const head = raw.replace(/\s+/g, " ").trim().slice(0, 20);
+  if(!window.confirm("删除这条学习库记录？\n\n" + head + (head.length >= 20 ? "…" : "") + "\n\n删除后无法恢复。")) return;
   lib.splice(i,1);
   // 写失败就不要再 showLib()：它会从 localStorage 读回**没删掉**的那条，条目
   // 原样留在列表里、还一声不吭，用户会以为按钮坏了而反复点。
@@ -874,6 +1252,7 @@ window.addEventListener("popstate",function(e){
 (function init(){
   try{
     setMode(CONFIG.apiProxy ? "unknown" : "noconfig");
+    renderRecent();          // 首页的「最近存入」在启动时也要算一次（goHome 只管"回到首页"那条路径）
     const s = new URLSearchParams(location.search).get(CONFIG.sceneParam);
     if(Object.prototype.hasOwnProperty.call(SCENES, s)){
       // 先把当前条目标记为首页垫在下面，返回键才有的可回
