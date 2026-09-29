@@ -48,17 +48,27 @@
   .scene-card h2{font-size:16px}.scene-card p{font-size:12px;color:var(--sub);margin-top:3px;line-height:1.5}
   .scene-card .go{margin-left:auto;color:#9DB4D6;font-size:20px}
   .home-foot{padding:8px 18px calc(env(safe-area-inset-bottom) + 14px);text-align:center;color:#9DB4D6;font-size:11px;line-height:1.7}
-  .demo-badge{display:inline-block;background:#FFF4E0;color:#C77A1A;border-radius:999px;padding:2px 10px;font-size:11px;margin-bottom:6px}
+  /* 连接状态徽章：只反映「有没有真的连上 AI」，本页面不存在演示/离线兜底内容 */
+  .status-badge{display:inline-block;background:#FFF4E0;color:#C77A1A;border-radius:999px;padding:2px 10px;font-size:11px;margin-bottom:6px}
+  .status-badge.ok{background:#E7F8F2;color:#0E9F6E}
+  .status-badge.err{background:#FDECEC;color:#C0392B}
 
   /* ---------- 对话页 ---------- */
   .chat-head{background:#fff;border-bottom:1px solid var(--line);padding:calc(env(safe-area-inset-top) + 12px) 14px 12px;display:flex;align-items:center;gap:10px}
   .back{width:34px;height:34px;border-radius:50%;border:none;background:#EEF6FF;font-size:18px;color:var(--deep);cursor:pointer;flex:none}
   .chat-head h2{font-size:16px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.chat-head .lib-btn{border:1px solid var(--line);background:#fff;border-radius:999px;font-size:11px;color:var(--deep);padding:5px 10px;cursor:pointer;flex:none;white-space:nowrap}
+  .chat-head .mini{width:34px;height:34px;border-radius:50%;border:none;background:#EEF6FF;font-size:15px;color:var(--deep);cursor:pointer;flex:none}
   .msg-wrap{flex:1;overflow-y:auto;padding:16px 14px;display:flex;flex-direction:column;gap:14px}
   .msg{max-width:82%;padding:11px 14px;border-radius:14px;font-size:14px;line-height:1.65;white-space:pre-wrap;word-break:break-word}
   .msg.ai{background:#fff;border:1px solid var(--line);border-top-left-radius:4px;box-shadow:0 2px 8px rgba(0,90,180,.05);align-self:flex-start}
   .msg.me{background:linear-gradient(135deg,var(--blue),#1888d8);color:#fff;border-top-right-radius:4px;align-self:flex-end}
   .msg .save-btn{display:inline-block;margin-top:8px;font-size:12px;color:var(--deep);background:#EAF5FF;border:1px solid #BFE0FB;border-radius:999px;padding:3px 12px;cursor:pointer}
+  /* 系统提示条：用于「服务返回了错误」这类不是模型回答的内容，样式刻意区别于对话气泡 */
+  .msg.sys{align-self:center;max-width:92%;background:#FFF7E6;border:1px solid #FBE2B0;color:#8A5A00;
+    font-size:12.5px;line-height:1.6;text-align:center;border-radius:10px}
+  /* 连接失败提示条里的「重试」按钮 */
+  .msg .retry-btn{display:inline-block;margin-top:8px;font-size:12px;color:#8A5A00;background:#FFF0CC;
+    border:1px solid #F0CE85;border-radius:999px;padding:3px 14px;cursor:pointer}
   .typing{display:inline-flex;gap:4px;align-items:center}.typing i{width:6px;height:6px;border-radius:50%;background:#9DB4D6;animation:blink 1.2s infinite}
   .typing i:nth-child(2){animation-delay:.2s}.typing i:nth-child(3){animation-delay:.4s}
   @keyframes blink{0%,60%,100%{opacity:.25}30%{opacity:1}}
@@ -69,6 +79,7 @@
   .mic,.send{border:none;width:42px;height:42px;border-radius:50%;font-size:18px;cursor:pointer;flex:none}
   .mic{background:#EEF6FF;color:var(--deep)}.send{background:linear-gradient(135deg,var(--blue),var(--deep));color:#fff}
   .mic.rec{background:#FFE9E9;color:#E5484D;animation:pulse 1s infinite}
+  .mic:disabled,.send:disabled{opacity:.45;cursor:not-allowed;animation:none}
   @keyframes pulse{50%{box-shadow:0 0 0 6px rgba(229,72,77,.15)}}
 
   /* ---------- 学习库 ---------- */
@@ -115,7 +126,7 @@
       </div>
     </div>
     <div class="home-foot">
-      <span class="demo-badge" id="modeBadge">演示模式 · 配置代理后接入讯飞星火</span><br/>
+      <span class="status-badge" id="modeBadge">尚未对话 · 首次提问时连接讯飞星火</span><br/>
       广州应用科技学院 · 科大讯飞AI产业学院　X+AI 文创共创计划
     </div>
   </section>
@@ -123,23 +134,24 @@
   <!-- 对话页 -->
   <section class="screen" id="screen-chat">
     <div class="chat-head">
-      <button class="back" onclick="goHome()">‹</button>
+      <button class="back" onclick="goHome()" aria-label="返回首页">‹</button>
       <h2 id="chatTitle">AI 学习搭档</h2>
+      <button class="mini" onclick="clearChat()" aria-label="清空本场景对话" title="清空本场景对话">🧹</button>
       <button class="lib-btn" onclick="showLib()">我的学习库</button>
     </div>
     <div class="msg-wrap" id="msgWrap"></div>
     <div class="quick" id="quickBar"></div>
     <div class="input-bar">
       <button class="mic" id="micBtn" onclick="toggleVoice()">🎤</button>
-      <input id="chatInput" placeholder="说一句或输入你的需求…" onkeydown="if(event.key==='Enter')send()"/>
-      <button class="send" onclick="send()">➤</button>
+      <input id="chatInput" placeholder="说一句或输入你的需求…" />
+      <button class="send" id="sendBtn" onclick="send()">➤</button>
     </div>
   </section>
 
   <!-- 学习库 -->
   <section class="screen" id="screen-lib">
     <div class="chat-head">
-      <button class="back" onclick="goHome()">‹</button>
+      <button class="back" onclick="goHome()" aria-label="返回首页">‹</button>
       <h2>我的 AI 学习库</h2>
       <button class="lib-btn" onclick="showLib()">刷新</button>
     </div>
@@ -158,34 +170,27 @@
  * ============================================================ */
 const CONFIG = {
   apiProxy: "https://1491306416-dv2u0ynvjn.ap-guangzhou.tencentscf.com/api/chat",  // 星火助手 API 后端代理（云函数）
-  sceneParam: "s"        // NFC 标签可写入 https://域名/?s=plan 直达场景
+  sceneParam: "s",       // NFC 标签可写入 https://域名/?s=plan 直达场景
+  timeoutMs: 70000       // 前端等待上限：必须大于云函数内部超时（50 秒），否则会先于后端放弃
 };
 
+/* hint 是**页面写的开场提示**，不是模型说的话——所以它显示成系统提示条，绝不进 AI 气泡。
+   用第三人称「AI 会…」而不是「我帮你…」：用第一人称会让人以为这是模型的开场白。 */
 const SCENES = {
-  plan:     {name:"学习计划", hello:"你好，我是学习计划搭档。请告诉我你的专业、本周课程目标或备考科目，我来帮你排一周计划。",
+  plan:     {name:"学习计划", hint:"可以这样开始：告诉我你的专业、本周课程目标或备考科目，AI 会帮你排一周计划。",
              quick:["我是人工智能专业，本周想学好Python循环","期末高数还有两周，帮我安排复习","每天晚上7到10点可自习，做英语四级计划"]},
-  homework: {name:"作业管家", hello:"把作业要求念给我听（科目、内容、截止时间），我帮你拆成任务清单并排优先级。",
+  homework: {name:"作业管家", hint:"把作业要求念给我听（科目、内容、截止时间），AI 会帮你拆成任务清单并排优先级。",
              quick:["高数习题册第3章12道题，周五交","英语作文一篇200词，下周三前","数据结构实验报告，周日晚上截止"]},
-  ask:      {name:"随问随答", hello:"随时问我知识点，或说一句中文/英文，我帮你讲解和翻译。",
+  ask:      {name:"随问随答", hint:"随时提问知识点，或说一句中文/英文，AI 会帮你讲解和翻译。",
              quick:["用通俗的话讲一下什么是递归","把“人工智能正在改变学习方式”翻译成英文","解释NFC为什么碰一下就能打开网页"]}
 };
 
-/* ---------- 演示模式本地回复（不联网，用于评审演示与原型验证） ---------- */
-function demoReply(scene, text){
-  const t = text||"";
-  if(scene==="plan"){
-    return `已为你生成一周学习计划（示例）：\n\n周一至周五\n07:30-08:00 晨读/背单词 20 个\n19:00-19:45 听课/看教材对应章节\n19:55-21:00 练习 + 错题整理\n21:10-21:40 复盘当日内容\n\n周六：专题强化 90 分钟 + 一套小测\n周日：查漏补缺 + 预习下周内容\n\n建议：把“${t.slice(0,14)||'本周目标'}”拆成每天一个可完成的小任务，完成后回到这里打卡。\n（正式接入星火大模型后，将按你的专业、课表与目标动态生成）`;
-  }
-  if(scene==="homework"){
-    return `作业已拆解为 3 个任务：\n\n任务1（高优先级）：梳理要求与资料，预计 20 分钟，建议今天完成\n任务2（中优先级）：完成主体内容，预计 60-90 分钟，截止前 2 天完成\n任务3（中优先级）：检查、排版与提交，预计 20 分钟，截止前 1 天完成\n\n已记录你的描述：“${t.slice(0,30)||'未识别到作业内容'}”。\n点击下方“存入学习库”可保存本清单。`;
-  }
-  if(/翻译|english|英文/i.test(t)){
-    return `翻译（示例）：\n"Artificial intelligence is transforming the way we learn."\n\n关键词：transform 改变；the way we learn 学习方式。\n正式版将调用星火大模型给出更贴合语境的译文与讲解。`;
-  }
-  return `关于“${t||'这个问题'}”的讲解（示例）：\n\n1. 先用一句话说清核心概念；\n2. 再举一个生活中的例子帮助理解；\n3. 最后给一个可以马上动手的小练习。\n\n当前为离线演示回复。正式接入讯飞星火后，这里会返回大模型的实时解答，支持语音连续提问与中英互译。`;
-}
-
-/* ---------- 学术诚信前端拦截（确定性约束，不依赖模型自觉） ---------- */
+/* ---------- 学术诚信前端拦截（这是一道「减速带」，不是硬约束） ----------
+   这段是纯前端正则，只检查当前这一条消息，**确定可以被绕过**：
+   分成两条发（第二条没有动词）、在关键词中间插入零宽字符、换一个同义词，
+   都能通过。它也会误拦「帮我写个总结」这类正常的学习请求。
+   真正起作用的是云端那份系统提示词的自觉约束，服务端并没有第二道闸。
+   所以：对外说明时不要把它讲成可靠的完整防护。 */
 function guard(text){
   const t = text.replace(/\s+/g,'');
   const verb = /(帮我写|替我写|给我写|帮我做|帮我弄|帮我整|写一篇|写个|写一份|写段|生成一篇|生成一份|生成个|凑字数|凑一篇|直接给我|给我一份|来一篇|来份|帮我搞定|帮我完成)/;
@@ -199,35 +204,120 @@ function guard(text){
 
 /* ---------- 状态与存储 ---------- */
 let curScene = null;
+let sending = false;
 const $ = id => document.getElementById(id);
 const store = {
-  get(k,d){ try{return JSON.parse(localStorage.getItem(k))??d}catch(e){return d} },
-  set(k,v){ localStorage.setItem(k,JSON.stringify(v)) }
+  get(k,d){ try{ const v=JSON.parse(localStorage.getItem(k)); return v===null?d:v; }catch(e){ return d; } },
+  // set 返回是否成功：写满配额 / 隐私模式下 setItem 会抛异常，调用方需要知道
+  set(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); return true; }catch(e){ return false; } }
 };
 function toast(msg){ const t=$("toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove("show"),1800); }
-function esc(s){ return s.replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
 
 function show(id){ document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active")); $(id).classList.add("active"); }
-function goHome(){ show("screen-home"); }
-function openChat(scene){
-  curScene=scene;
-  $("chatTitle").textContent="AI 学习搭档 · "+SCENES[scene].name;
-  $("msgWrap").innerHTML="";
-  $("quickBar").innerHTML = SCENES[scene].quick.map(q=>`<span onclick="quickAsk('${q}')">${q}</span>`).join("");
-  addMsg("ai", SCENES[scene].hello);
+function goHome(){ show("screen-home"); if(history.state && history.state.chat){ try{ history.back(); }catch(e){} } }
+
+/* 首页徽章只反映「有没有真的连上 AI」：只有真收到模型回答才显示「已接入」。
+   本页面不产生任何本地回答，所以没有「演示模式」这种状态。 */
+function setMode(state){
+  const b=$("modeBadge"); if(!b) return;
+  if(state==="online"){ b.textContent="已接入讯飞星火智能体"; b.className="status-badge ok"; }
+  else if(state==="offline"){ b.textContent="未连接到 AI 服务 · 请检查网络"; b.className="status-badge err"; }
+  else if(state==="noconfig"){ b.textContent="未配置 AI 服务地址"; b.className="status-badge err"; }
+  else { b.textContent="尚未对话 · 首次提问时连接讯飞星火"; b.className="status-badge"; }
+}
+function setSending(on){
+  sending = !!on;
+  const b=$("sendBtn"), m=$("micBtn");
+  if(b) b.disabled = sending;
+  if(m) m.disabled = sending;
+}
+
+function openChat(scene, noPush){
+  // 用 hasOwnProperty 判断：SCENES 是普通对象，SCENES["constructor"] 之类会是真值
+  if(!Object.prototype.hasOwnProperty.call(SCENES, scene)) return goHome();
+  curScene = scene;
+  const sc = SCENES[scene];
+  $("chatTitle").textContent = "AI 学习搭档 · " + sc.name;
+  $("msgWrap").innerHTML = "";
+  $("quickBar").innerHTML = "";
+  // 用 createElement 而不是拼内联 onclick 字符串：以后文案里出现引号也不会把页面拼坏
+  sc.quick.forEach(function(q){
+    const s = document.createElement("span");
+    s.textContent = q;
+    s.onclick = function(){ quickAsk(q); };
+    $("quickBar").appendChild(s);
+  });
+  // 开场提示走提示条，不走 AI 气泡：模型这一轮根本没说话，用气泡就是在伪造它说过
+  addNotice(sc.hint);
+  const hist = store.get("hist_"+scene, []);
+  if(Array.isArray(hist) && hist.length){
+    // 重进场景时把历史重放出来：模型一直「记得」这些轮，界面不能装作没聊过
+    hist.forEach(function(t){
+      if(!t) return;
+      if(t.q) addMsg("me", t.q);
+      if(t.a) addMsg("ai", t.a, {savable:true});
+    });
+  }
   show("screen-chat");
+  if(!noPush){ try{ history.pushState({chat:scene}, "", "?"+CONFIG.sceneParam+"="+encodeURIComponent(scene)); }catch(e){} }
+}
+function clearChat(){
+  if(!curScene) return;
+  if(!window.confirm("清空本场景的对话记录？清空后无法恢复。")) return;
+  store.set("hist_"+curScene, []);
+  openChat(curScene, true);
+  toast("已清空本场景对话");
 }
 function quickAsk(q){ $("chatInput").value=q; send(); }
 
-function addMsg(role, text, savable, raw){
-  const wrap=$("msgWrap");
-  const div=document.createElement("div");
-  div.className="msg "+role;
-  div.innerHTML = (raw?text:esc(text)) + (savable?`<br/><span class="save-btn" onclick="saveLib(this)">⭐ 存入学习库</span>`:"");
-  wrap.appendChild(div); wrap.scrollTop=wrap.scrollHeight;
+function addMsg(role, text, opts){
+  opts = opts || {};
+  const wrap = $("msgWrap");
+  const div = document.createElement("div");
+  div.className = "msg " + role;
+  // 原文挂在元素属性上：存学习库时直接取，不再靠 childNodes[0] 这种 DOM 结构假设
+  div._text = String(text==null?"":text);
+  let html = opts.raw ? div._text : esc(div._text);
+  if(opts.savable) html += '<br/><span class="save-btn" onclick="saveLib(this)">⭐ 存入学习库</span>';
+  div.innerHTML = html;
+  wrap.appendChild(div); wrap.scrollTop = wrap.scrollHeight;
   return div;
 }
-function addTyping(){ const d=addMsg("ai",'<span class="typing"><i></i><i></i><i></i></span>',false,true); return d; }
+function addTyping(){ return addMsg("ai", '<span class="typing"><i></i><i></i><i></i></span>', {raw:true}); }
+// 系统提示条：与对话气泡区分开，不进历史、不给「存入学习库」。
+// 连不上时带上「重试」按钮——重试走的是同一条取回答的路径，不会重复插入用户气泡。
+function addNotice(text, retry){
+  const wrap = $("msgWrap");
+  const div = document.createElement("div");
+  div.className = "msg sys";
+  // 用 textContent：服务端文案里就算带尖括号，也不会被当成 HTML 解析
+  div.textContent = String(text==null?"":text);
+  if(retry){
+    const btn = document.createElement("span");
+    btn.className = "retry-btn";
+    btn.textContent = "重试";
+    btn.onclick = function(){
+      if(sending) return;
+      btn.remove();                                              // 防止连点留下多个按钮
+      if(retry.scene !== curScene) openChat(retry.scene, true);   // 用户已经切走，先切回去
+      requestReply(retry.scene, retry.text);
+    };
+    div.appendChild(btn);
+  }
+  wrap.appendChild(div); wrap.scrollTop = wrap.scrollHeight;
+  return div;
+}
+
+// fetch 本身没有超时：手机切网、隧道里连接被吞时，可能长时间既不成功也不失败，
+// 打字动画就会一直转、用户以为「AI 不理我」，所以自己加一道兜底。
+function fetchWithTimeout(url, opts, ms){
+  if(typeof AbortController === "undefined") return fetch(url, opts);
+  const ctl = new AbortController();
+  const tid = setTimeout(function(){ ctl.abort(); }, ms || CONFIG.timeoutMs);
+  return fetch(url, Object.assign({}, opts, {signal: ctl.signal}))
+    .finally(function(){ clearTimeout(tid); });
+}
 
 // 请求体转纯 ASCII：中文一律用 \uXXXX 转义。
 // 云函数在部分触发器下会把请求体按 Latin-1 解码，直接发中文会变成乱码；
@@ -237,70 +327,157 @@ function asciiJSON(o){
     c=>"\\u"+c.charCodeAt(0).toString(16).padStart(4,"0"));
 }
 
+function pushHist(scene, q, a){
+  const k = "hist_"+scene;
+  let h = store.get(k, []); if(!Array.isArray(h)) h = [];
+  h.push({q: String(q).slice(0,2000), a: String(a).slice(0,4000)});
+  while(h.length > 12) h.shift();          // 只留最近 12 轮，不让 localStorage 无限膨胀
+  if(!store.set(k, h)) toast("本机存储空间不足，对话历史未能保存");
+}
+
 async function send(){
-  const inp=$("chatInput"), text=inp.value.trim();
+  const inp = $("chatInput"), text = inp.value.trim();
   if(!text) return;
-  const blocked=guard(text);
-  if(blocked){ inp.value=""; addMsg("me",text); addMsg("ai",blocked); return; }
-  inp.value=""; addMsg("me",text);
-  const wait=addTyping();
-  let reply;
-  if(CONFIG.apiProxy){
-    try{
-      const r=await fetch(CONFIG.apiProxy,{method:"POST",headers:{"Content-Type":"application/json"},
-        body:asciiJSON({scene:curScene,query:text,history:store.get("hist_"+curScene,[]).slice(-6)})});
-      if(!r.ok) throw new Error("HTTP "+r.status);
-      const data=await r.json();
-      reply=data.reply||data.answer||"（代理返回格式异常，请检查云函数）";
-    }catch(e){ reply="网络或代理服务暂时不可用，已切换为本地演示回复。\n\n"+demoReply(curScene,text); toast("代理不可用，已用演示模式"); }
-  }else{
-    await new Promise(r=>setTimeout(r,600));
-    reply=demoReply(curScene,text);
+  if(sending){ toast("上一条还在等回复，请稍候"); return; }
+  const blocked = guard(text);
+  // 拦截文案是前端规则写的，不是模型答的——所以显示成系统提示条，
+  // 不能塞进 AI 气泡里冒充满分回答（这是本页唯一的「不经过模型就出字」的地方）
+  if(blocked){ inp.value=""; addMsg("me",text); addNotice("学习提醒：" + blocked); return; }
+  inp.value=""; addMsg("me", text);
+  await requestReply(curScene, text);
+}
+
+// 取回答：只管「发请求 + 渲染结果」，不插用户气泡——所以提示条上的「重试」可以直接复用它，
+// 不会在界面上重复出现一条一模一样的提问。
+// 这里没有任何本地写死的兜底回答：连不上就如实说连不上，并给一个「重试」按钮。
+async function requestReply(scene, text){
+  if(!CONFIG.apiProxy){
+    // 地址没配是配置错误，不是「AI 回答不了」——说清楚，别拿别的东西冒充回答
+    setMode("noconfig");
+    addNotice("未配置 AI 服务地址，无法连接讯飞星火。请在 CONFIG.apiProxy 填入云函数地址。");
+    return;
   }
-  wait.remove();
-  addMsg("ai",reply,true);
-  const h=store.get("hist_"+curScene,[]); h.push({q:text,a:reply}); store.set("hist_"+curScene,h);
+  if(sending){ toast("上一条还在等回复，请稍候"); return; }
+  setSending(true);
+  const wait = addTyping();
+
+  let reply = null, notice = null;
+  try{
+    const r = await fetchWithTimeout(CONFIG.apiProxy, {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: asciiJSON({scene: scene, query: text, history: store.get("hist_"+scene, []).slice(-12)})
+    }, CONFIG.timeoutMs);
+    // 接口约定：响应体永远是 JSON。无论 HTTP 状态码都先尝试解析并取 reply——
+    // 否则云函数为 400/429/503 写好的那些「给用户看的话」一句都到不了用户眼前。
+    let data = null;
+    try{ data = await r.json(); }catch(e){ data = null; }
+    const msg = (data && typeof data.reply === "string") ? data.reply.trim() : "";
+    if(r.ok && msg){ reply = msg; setMode("online"); }
+    else { notice = msg || ("服务暂时不可用（HTTP "+r.status+"），请稍后重试。"); setMode("offline"); }
+  }catch(e){
+    // 网络失败 / 超时 / 跨域被拦：如实告诉用户这次没连上，不编内容
+    if(e && e.name === "AbortError")
+      notice = "等待讯飞星火回复超时（超过 " + Math.round(CONFIG.timeoutMs/1000) + " 秒），本次没有收到回答。";
+    else
+      notice = "没能连上 AI 服务，请检查网络后重试。";
+    setMode("offline");
+  }
+
+  if(wait) wait.remove();
+  setSending(false);
+  if(scene !== curScene) return;           // 用户已切走，丢弃这次结果
+
+  if(notice) addNotice(notice, {scene: scene, text: text});
+  if(reply){
+    // 能走到这里就一定是模型答的：可存学习库、也写进历史。
+    // 历史必须记——模型靠它保持上下文，重进场景也会重放这段对话。
+    addMsg("ai", reply, {savable: true});
+    pushHist(scene, text, reply);
+  }
 }
 
 function saveLib(btn){
-  const msgEl=btn.closest(".msg");
-  const content=msgEl.childNodes[0].textContent.trim();
-  const lib=store.get("library",[]);
-  lib.unshift({scene:SCENES[curScene].name,content,time:new Date().toLocaleString("zh-CN")});
-  store.set("library",lib); btn.textContent="✓ 已保存"; btn.style.pointerEvents="none"; toast("已存入我的 AI 学习库");
+  const msgEl = btn.closest(".msg");
+  const content = (msgEl && msgEl._text ? msgEl._text : "").trim();
+  if(!content){ toast("这条内容无法保存"); return; }
+  let lib = store.get("library", []); if(!Array.isArray(lib)) lib = [];
+  lib.unshift({scene:(curScene && SCENES[curScene] ? SCENES[curScene].name : ""), content: content, time: new Date().toLocaleString("zh-CN")});
+  while(lib.length > 200) lib.pop();
+  if(!store.set("library", lib)){ toast("本机存储空间不足，保存失败"); return; }
+  btn.textContent = "✓ 已保存"; btn.style.pointerEvents = "none"; toast("已存入我的 AI 学习库");
 }
 function showLib(){
   show("screen-lib");
-  const lib=store.get("library",[]);
-  $("libList").innerHTML = lib.length ? lib.map((x,i)=>
+  const lib = store.get("library", []);
+  $("libList").innerHTML = (Array.isArray(lib) && lib.length) ? lib.map((x,i)=>
     `<div class="lib-item"><button class="del" onclick="delLib(${i})">×</button><span class="tag">${esc(x.scene)}</span><br/>${esc(x.content)}<time>${esc(x.time)}</time></div>`).join("")
     : `<div class="empty">📭<br/>学习库还是空的<br/>在对话中把 AI 生成的计划、任务清单保存到这里</div>`;
 }
-function delLib(i){ const lib=store.get("library",[]); lib.splice(i,1); store.set("library",lib); showLib(); }
+function delLib(i){ let lib = store.get("library", []); if(!Array.isArray(lib)) return; lib.splice(i,1); store.set("library", lib); showLib(); }
 
 /* ---------- 语音输入（浏览器 Web Speech，不支持时优雅降级为文字） ---------- */
 const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
 let rec=null, recOn=false;
 if(SR){
   rec=new SR(); rec.lang="zh-CN"; rec.interimResults=false;
-  rec.onresult=e=>{ $("chatInput").value=e.results[0][0].transcript; };
+  rec.onresult=e=>{
+    const t = (e.results[0] && e.results[0][0] ? e.results[0][0].transcript : "") || "";
+    const inp = $("chatInput");
+    inp.value = inp.value ? (inp.value + " " + t) : t;   // 追加，不覆盖已经手打的内容
+  };
   rec.onend=()=>{ recOn=false; $("micBtn").classList.remove("rec"); };
-  rec.onerror=()=>{ recOn=false; $("micBtn").classList.remove("rec"); toast("没有听到声音，请再试一次"); };
+  // 按 e.error 区分原因：一律说「没有听到声音」会让授权被拒的用户徒劳重试
+  rec.onerror=e=>{
+    recOn=false; $("micBtn").classList.remove("rec");
+    const code = (e && e.error) || "";
+    toast(
+      (code==="not-allowed" || code==="service-not-allowed") ? "麦克风权限被拒绝，请在浏览器设置里允许后重试" :
+      (code==="audio-capture") ? "没有检测到麦克风" :
+      (code==="network")       ? "语音识别服务连不上，请检查网络" :
+      (code==="no-speech")     ? "没有听到声音，请再试一次" :
+                                 "语音输入失败，请改用文字输入");
+  };
 }
 function toggleVoice(){
   if(!SR){ toast("当前浏览器不支持网页语音，请用文字输入，或使用讯飞语音SDK版本"); return; }
-  if(!recOn){ rec.start(); recOn=true; $("micBtn").classList.add("rec"); toast("正在聆听…"); }
-  else { rec.stop(); recOn=false; $("micBtn").classList.remove("rec"); }
+  if(!recOn){
+    try{ rec.start(); }catch(e){ toast("语音输入启动失败，请稍后重试"); return; }
+    recOn=true; $("micBtn").classList.add("rec"); toast("正在聆听…");
+  }else{
+    try{ rec.stop(); }catch(e){}
+    recOn=false; $("micBtn").classList.remove("rec");
+  }
 }
 
 /* ---------- 启动：首页卡片 / NFC 与二维码可带 ?s= 场景参数直达 ---------- */
 document.getElementById("sceneList").addEventListener("click",e=>{
   const card=e.target.closest(".scene-card"); if(card) openChat(card.dataset.scene);
 });
+// 回车发送。中文输入法在候选词上按回车是「上屏」，此时 keydown 的 key 也常常是 'Enter'，
+// 不判断 isComposing 就会把还没上屏的半句话当成问题发出去。
+document.getElementById("chatInput").addEventListener("keydown",e=>{
+  if(e.key !== "Enter") return;
+  if(e.isComposing || e.keyCode === 229) return;
+  e.preventDefault(); send();
+});
+// 浏览器返回键/侧滑：回到首页，而不是直接退出页面
+window.addEventListener("popstate",function(){ show("screen-home"); });
 (function init(){
-  if(CONFIG.apiProxy) $("modeBadge").textContent="已接入讯飞星火智能体";
-  const s=new URLSearchParams(location.search).get(CONFIG.sceneParam);
-  if(SCENES[s]) openChat(s);
+  try{
+    setMode(CONFIG.apiProxy ? "unknown" : "noconfig");
+    const s = new URLSearchParams(location.search).get(CONFIG.sceneParam);
+    if(Object.prototype.hasOwnProperty.call(SCENES, s)){
+      // 先把当前条目标记为首页垫在下面，返回键才有的可回
+      try{ history.replaceState({home:true}, "", location.pathname); }catch(e){}
+      openChat(s);
+    }
+  }catch(e){
+    // 初始化出错时不要白屏：留在首页并给出可读提示
+    show("screen-home");
+    toast("页面初始化出现问题，已回到首页");
+    if(window.console) console.error("init failed:", e);
+  }
 })();
 </script>
 </body>
