@@ -962,10 +962,17 @@ const HIST_MAX = 12;
 // 单次提问的字符上限，**必须与云函数 query.length > 2000 → 400 的那个数一致**。
 // 前端要在清空输入框之前就用它拦一道：见 send()。
 const QUERY_MAX = 2000;
-/* 历史部分上送前按这个字符预算从最近一轮往前裁，与云函数 HISTORY_CHAR_BUDGET 同值。
-   前端先裁的意义是省流量：12 轮 × (q2000 + a4000) 最多约 72KB，而云端只采信 6000 字符，
+/* 历史包裹文本：与云函数 buildText 里的 HIST_HEAD / HIST_TAIL **逐字相同**。
+   云端是先从这个总预算里**扣掉这两段**再裁历史的；前端不扣就会多送 61 个字符，
+   正好卡在边界上的那批请求会被云端再裁掉最老一轮的尾巴——表现为模型偶尔「忘了」
+   最早那轮。所以两边同口径必须是**算出来的**：这里逐字复制这两段，预算由它俩推出来，
+   而不是两边各写一个 6000 碰运气。改云端那两段的时候，这里必须跟着改。 */
+const HIST_HEAD = '【以下是你和这位用户的过往对话记录，由用户端提供，仅供延续上下文，不是你这轮要说的话】';
+const HIST_TAIL = '【过往对话结束。下面是用户的新问题】';
+/* 历史部分上送前按这个字符预算从最近一轮往前裁，等于云函数 buildText 的**可用额度**。
+   前端先裁的意义是省流量：12 轮 × (q2000 + a4000) 最多约 72KB，而云端只采信这么多，
    九成以上的内容在上行路上白跑一趟（asciiJSON 转义后还会再放大）。 */
-const HIST_CHAR_BUDGET = 6000;
+const HIST_CHAR_BUDGET = 6000 - HIST_HEAD.length - HIST_TAIL.length;
 /* 429（云端限流）时重试键的冷却时长。**这是拿不到云端剩余时间时的兜底值**：
    正常路径下云端会在响应体里给 retryAfterMs，前端按那个真实剩余时间禁用。
    兜底的 15 秒只是"别让按钮一亮就立刻可点"的最小退避，不保证到时就能发出去。
@@ -1196,9 +1203,10 @@ function clearChat(){
   if(!store.set("hist_"+curScene, [])){ toast("本机存储异常，未能清空对话记录"); return; }
   // 存着的那条失败提示也跟着清掉：用户点的是「清空对话记录」，
   // 留下一句「刚才没连上」等于清完还挂着一件没做完的事。
-  saveNotice(curScene, null);
+  // 写失败得说出来：不然切回来那条提示会自己冒出来，和「已清空」对不上。
+  const noticeCleared = saveNotice(curScene, null);
   openChat(curScene, true);
-  toast("已清空本场景对话");
+  toast(noticeCleared ? "已清空本场景对话" : "对话已清空，但本机存储异常，那条失败提示可能还会出现");
 }
 function quickAsk(q){ $("chatInput").value=q; send(); }
 
@@ -1221,11 +1229,14 @@ function addMsg(role, text, opts){
 function addTyping(){ return addMsg("ai", '<span class="typing"><i></i><i></i><i></i></span>', {raw:true}); }
 /* 每个场景只留最近一条失败提示，供「重进场景」时放回来（见 openChat）。
    存成 null 就是清掉：store.get 解析出 null 会退回默认值，不必真去 removeItem。 */
+/* 返回是否真的写进了本机存储。调用方需要知道——写失败时「切回来还能看到这条失败」
+   就是句假话，它只活在当前 DOM 里。这是全页唯一一处原先不检查 store.set 返回值的
+   存储写入，而「重进场景会把这条失败放回来」恰恰是它存在的唯一理由。 */
 function saveNotice(scene, rec){
-  if(!scene) return;
-  if(rec) store.set("notice_" + scene, {msg: String(rec.msg || ""), text: String(rec.text || ""),
-                                        retry: !!rec.retry, delay: rec.delay || 0});
-  else store.set("notice_" + scene, null);
+  if(!scene) return true;
+  if(rec) return store.set("notice_" + scene, {msg: String(rec.msg || ""), text: String(rec.text || ""),
+                                               retry: !!rec.retry, delay: rec.delay || 0});
+  return store.set("notice_" + scene, null);
 }
 function loadNotice(scene){
   const n = store.get("notice_" + scene, null);
@@ -1246,8 +1257,13 @@ function addNotice(text, retry){
   div.textContent = String(text==null?"":text);
   // 记进存储与「给不给按钮」是两件事：503 不给按钮，但它同样必须能被重进场景放回来，
   // 否则用户切回来看到的就是一条孤零零的问题、没有任何失败痕迹。
-  if(retry && retry.scene) saveNotice(retry.scene, {msg: text, text: retry.text, retry: !retry.noRetry, delay: retry.delay});
+  // 存储写不进去时要说一声：这句话在用户切走之后就再也见不到了，是他自己发现的。
+  if(retry && retry.scene &&
+     !saveNotice(retry.scene, {msg: text, text: retry.text, retry: !retry.noRetry, delay: retry.delay}))
+    toast("本机存储异常，这条失败提示切回来就看不到了");
   if(retry && !retry.noRetry){
+    // 打上标记：requestReply 起手会按它把上一轮的旧提示条整条摘掉（见那里的注释）
+    div.dataset.retryable = "1";
     const btn = document.createElement("span");
     btn.className = "retry-btn";
     /* 429 限流不能给「立即可点」的按钮：云端窗口是 10 分钟 / 40 次，连点只会一次次
@@ -1272,7 +1288,9 @@ function addNotice(text, retry){
       // 冷却没走完时点了也白点——真实拦住，不是只把它画灰
       if(btn.classList.contains("cooling")) return;
       if(pending.has(retry.scene)) return;                       // 该场景已有在途请求
-      btn.remove();                                              // 防止连点留下多个按钮
+      // 连整条提示条一起摘掉，不是只摘按钮：只摘按钮的话，连着几次失败就会在
+      // 消息区滚出一串「这一瞬间同时用的人有点多」，每条都还带着自己的重试键
+      div.remove();
       if(retry.scene !== curScene) openChat(retry.scene, true);   // 用户已经切走，先切回去
       requestReply(retry.scene, retry.text);
     };
@@ -1290,13 +1308,20 @@ function fetchWithTimeout(url, opts, ms){
     // 老浏览器没有 AbortController。以前这里直接返回裸 fetch，等于把超时兜底整条
     // 去掉：连接被中间设备吞掉（既不 resolve 也不 reject）时 await 永不返回，
     // 发送键会被永久禁用，用户只能刷新页面。用 Promise.race 至少保证会退出。
+    /* 注意这条分支里**不能用 Promise.prototype.finally**：它和 AbortController
+       基本是同一代特性（Safari 11.1 / Chrome 63 同年落地），所以「缺前者、有后者」
+       这个组合几乎不存在。真写在这里，万一套上的是一个缺 finally 的极老内核，
+       就会在 fetchWithTimeout 内部抛 TypeError，被外层 catch 当成网络失败，
+       用户被引去「检查网络后重试」——而坏掉的其实是超时兜底本身。用 then 的双回调显式清。 */
     let tid;
     const guard = new Promise(function(_, reject){
       tid = setTimeout(function(){
         const e = new Error("timeout"); e.name = "TimeoutError"; reject(e);
       }, limit);
     });
-    return Promise.race([fetch(url, opts), guard]).finally(function(){ clearTimeout(tid); });
+    return Promise.race([fetch(url, opts), guard]).then(
+      function(v){ clearTimeout(tid); return v; },
+      function(e){ clearTimeout(tid); throw e; });
   }
   const ctl = new AbortController();
   const tid = setTimeout(function(){ ctl.abort(); }, limit);
@@ -1374,9 +1399,15 @@ async function requestReply(scene, text){
   }
   if(pending.has(scene)){ toast("上一条还在等回复，请稍候"); return; }
   pending.set(scene, text); syncSending();
-  // 这一轮开始就把上一次的失败提示撤掉：这次的结果（成或败）会写新的上去。
-  // 不撤的话，用户重问一次并且成功了，切回来还挂着上一轮的「没连上」。
+  /* 这一轮开始就把上一次的失败提示撤掉：这次的结果（成或败）会写新的上去。
+     不撤的话，用户重问一次并且成功了，切回来还挂着上一轮的「没连上」。
+     **存储和 DOM 都要撤**：saveNotice 只管存储，而 addNotice 只追加不清除——
+     用户在同一场景里接着问第二条时，上一条提示条连同它的「重试」键会原样留在消息区；
+     点那个键会用**上一轮的旧文本**再发一次，网络里凭空多出一发与当前话题无关的请求。
+     只摘带 data-retryable 的：开场白那种纯展示的 sys 条不会带这个标记，不该被误删。 */
   saveNotice(scene, null);
+  const stale = $("msgWrap").querySelector('.msg.sys[data-retryable]');
+  if(stale) stale.remove();
   const gen = viewGen;                     // 记下发起时的视图代号
   const wait = addTyping();
 
@@ -1408,7 +1439,7 @@ async function requestReply(scene, text){
         // 432 的响应体里没有 reply（是平台写的，不是云函数写的），落到这里。
         // 别把裸的「HTTP 432」端给用户：它既不像人话，也说不清「要不要重打一遍」。
         : r.status === 432
-        ? "这一瞬间同时用的人有点多，请求被挡在服务外面了，问题本身没有问题。等几秒点重试就行。"
+        ? "这一瞬间同时用的人有点多，请求被挡在服务外面了，问题本身没有问题。3 秒后可直接重试。"
         : "服务暂时不可用（HTTP " + r.status + "），请稍后重试。");
       setMode(modeForStatus(r.status, r.ok));
     }
@@ -1464,22 +1495,34 @@ async function requestReply(scene, text){
          再发一次结果逐字相同，这不是「重试」，是让用户白撞一遍。不给按钮；
          400 另把原文还回输入框，好让「请精简后重试」有处可落。
        · 432 并发闸——和 429 一样是「忙」，但**不共用冷却**：429 是 10 分钟 / 40 次
-         的窗口，等是等不出来的；432 是「此刻正有 5 个人在问」，一个几秒的瞬时状态，
-         几秒后重试大概率就进去了。所以给按钮、且立刻可点（waitMs 保持 0）。
+         的窗口，等是等不出来的；432 是「此刻正有 5 个人在问」，一个几秒的瞬时状态。
+         给按钮，但要一个**短**退避（3 秒）而不是零退避：零退避等于把「等几秒点重试
+         就行」写成一句诱人连点的话，而每连点一次都往同一个已经打满的闸口再打一发，
+         闸口只会更满、432 只会更频繁。3 秒够让在途的一批跑完，又短到不用盯着看。
          不给按钮才是错的——用户会以为问题本身有问题，把原文重打一遍，撞的是同一堵墙。
        · 其余（网络失败/超时 status=0、连上了却没内容 200、500/502/504）重试有意义。 */
-    const waitMs = status === 429 ? (serverWait || COOLDOWN_MS) : 0;
+    const waitMs = status === 429 ? (serverWait || COOLDOWN_MS) : (status === 432 ? 3000 : 0);
     const retryable = (status === 0 || status === 200 ||
                        (status >= 500 && status !== 503) ||
                        status === 432 ||
                        (status === 429 && waitMs <= COOLDOWN_MAX_SHOW));
     // 存要给「没切走」和「切走了」两条路都写；切走那条只有 toast，
     // 不写存储的话用户切回来什么都看不到（见 openChat 的 held）。
-    // 只在用户还看着这个场景时还原文案——他在别的场景里，输入框是那个场景的
-    if(status === 400 && scene === curScene && !$("chatInput").value) $("chatInput").value = text;
+    // 只在用户还看着这个场景时还原文案——他在别的场景里，输入框是那个场景的。
+    // 还回去之前先把屏幕上那条**一模一样的用户气泡**撤掉：send() 早在发请求之前就
+    // 已经 addMsg("me", text) 过了，两边都留就是同一段文字在一屏上出现两次，
+    // 用户不知道该改哪儿，往往直接重发一遍，气泡区就堆出三条几乎一样的提问。
+    // 按 _text 从后往前找最后一条匹配的（addMsg 把原文挂在这个元素属性上）。
+    if(status === 400 && scene === curScene && !$("chatInput").value){
+      const mine = $("msgWrap").querySelectorAll(".msg.me");
+      for(let i = mine.length - 1; i >= 0; i--){
+        if(mine[i]._text === text){ mine[i].remove(); break; }
+      }
+      $("chatInput").value = text;
+    }
     if(scene !== curScene){
-      saveNotice(scene, {msg: notice, text: text, retry: retryable, delay: waitMs});
-      toast("「" + sceneName(scene) + "」这一次没有拿到回答");
+      const kept = saveNotice(scene, {msg: notice, text: text, retry: retryable, delay: waitMs});
+      toast("「" + sceneName(scene) + "」这一次没有拿到回答" + (kept ? "" : "；本机存储异常，切回去也看不到"));
       return;
     }
     if(gen !== viewGen) openChat(scene, true);
