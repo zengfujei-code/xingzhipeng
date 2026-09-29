@@ -4,8 +4,10 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
 <title>星智碰 · AI 学习搭档</title>
-<style>
-  /* ============================================================
+<meta name="theme-color" content="#061428" />
+<meta name="description" content="星智碰 · AI 学习搭档：碰一碰 NFC 鼠标垫，免安装直达 AI 学习助手。" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23003A8C'/%3E%3Crect x='1' y='1' width='62' height='62' rx='15' fill='none' stroke='%23D9A94A' stroke-opacity='.45'/%3E%3Ctext x='32' y='45' font-size='38' font-family='sans-serif' text-anchor='middle' fill='%23ffffff'%3E%E6%98%9F%3C/text%3E%3C/svg%3E" />
+<style>  /* ============================================================
      设计令牌 · 深蓝夜航（深色玻璃）
      品牌色（--blue / --deep）与 PPT、垫面视觉稿、主效果图是同一套，
      **不要在这里改**——页面一旦换蓝，就和已交付的物料分成两个视觉体系。
@@ -15,8 +17,8 @@
   :root{
     color-scheme:dark;              /* 让输入框、滚动条等原生控件跟着变暗，否则会有白缝 */
     --blue:#00B0F0; --blue-dk:#0A6FBE; --deep:#003A8C;
-    --gold:#D9A94A;                 /* 发丝线专用。深底上本身有 8.5:1，但设计上仍只用它画线 */
-    --ink:#EAF2FF; --sub:#9FB2D4; --faint:#7C8CAE;
+    --gold:#D9A94A;                 /* 发丝线与导轨专用。深底上本身 8.5:1，但设计上只用它画线 */
+    --ink:#EAF2FF; --sub:#9FB2D4; --faint:#8998B6;
     --bg:#061428; --bg-2:#0A1E3A;
     /* 玻璃面：不是一块不透明色，而是一层薄白叠在夜蓝上——
        body 的径向辉光能从下面透上来，这才是"玻璃"读起来像玻璃的原因 */
@@ -24,8 +26,9 @@
     --line:rgba(255,255,255,.09); --line-2:rgba(255,255,255,.17);
     --hair:rgba(255,255,255,.14);   /* 玻璃上沿的受光高光 */
 
-    /* 圆角分三级：外壳大、内件小、胶囊全圆。全局统一一个半径是最典型的模板感 */
-    --r-lg:22px; --r-md:15px; --r-sm:11px; --r-pill:999px;
+    /* 圆角分四级：漂浮岛最大、外壳次之、内件小、胶囊全圆。
+       全局统一一个半径是最典型的模板感 */
+    --r-xl:26px; --r-lg:22px; --r-md:15px; --r-sm:11px; --r-pill:999px;
 
     /* 深底上投影几乎不承载层次，撑起厚度的是"上沿高光 + 蓝色辉光"这一对，
        投影只留一点，负责把卡片从底上"抬"起来 */
@@ -73,28 +76,48 @@
     transform:translateY(8px);transition:opacity .3s var(--ease),transform .3s var(--ease)}
   .screen.active{opacity:1;pointer-events:auto;transform:none;position:relative;flex:1;min-height:0}
 
+  /* ============================================================
+     版式骨架 —— 这一版动的是「样子」，不是配色
+     三块屏各有一套互不相同的构成：
+       首页   左对齐刊头 → 竖排 NFC 唤醒块 → 1 宽 2 窄的错格卡片（bento）
+       对话   悬浮胶囊顶栏 + 通栏玻璃回答（左侧蓝金导轨）+ 漂浮输入岛
+       学习库 同样带导轨的条目流
+     贯穿全页的同一套signature只有两件：玻璃上沿的金色发丝线、内容左侧的导轨。
+     别的地方都刻意不复用，否则又变成"三张一样的卡"。
+     ============================================================ */
+
   /* ---------- 首页 ---------- */
-  .home-head{padding:calc(env(safe-area-inset-top) + 26px) 22px 12px;text-align:center}
-  .brand{display:flex;align-items:center;justify-content:center;gap:10px}
+  /* 刊头从"整体居中"改成左对齐的报头：logo 与文字并排，标语缩进到文字下方对齐。
+     居中是最不容易出错的排版，也是最快的——它不承担任何判断。 */
+  .home-head{padding:calc(env(safe-area-inset-top) + 24px) 20px 0;text-align:left}
+  .masthead{display:flex;align-items:center;gap:14px}
   /* 方角图标做成一枚"机加工过的金属牌"：深蓝渐变 + 上沿高光 + 一圈金发丝线。
      渐变浅端取了品牌蓝压深一档的 #0A93CC —— 直接用 #00B0F0 时白字只有
-     2.48:1，连大字要求的 3:1 都不到（这是改动前就有的问题）。
-     深色底上再加一圈蓝色外辉光，把"牌"和夜色分开 */
-  .logo{width:46px;height:46px;border-radius:15px;
+     2.48:1，连大字要求的 3:1 都不到（这是改动前就有的问题）。 */
+  .logo{width:56px;height:56px;border-radius:17px;flex:none;
     background:linear-gradient(152deg,#0A93CC 0%,#003A8C 100%);
-    display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:21px;
+    display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:23px;
     border:1px solid rgba(217,169,74,.34);
     box-shadow:0 16px 30px -14px rgba(0,45,105,.85),0 0 26px -6px rgba(0,176,240,.45),
       inset 0 1px 0 rgba(255,255,255,.30),inset 0 -1px 0 rgba(0,0,0,.16)}
-  .brand-title{font-size:21px;font-weight:800;letter-spacing:-.01em;white-space:nowrap;text-align:center;margin:12px 0 0;text-wrap:balance}
+  .mast-text{min-width:0;display:flex;flex-direction:column;gap:7px}
+  .eyebrow{font-size:10px;font-weight:600;letter-spacing:.22em;color:var(--gold);white-space:nowrap}
+  .brand-title{font-size:20px;font-weight:800;letter-spacing:-.01em;white-space:nowrap;margin:0}
   /* 标题走"白到蓝"的纵向渐变，像被上面的辉光打亮。背景裁切一旦不被支持，
      color:transparent 会让标题整条消失——所以用 @supports 兜住了才敢这么写 */
   @supports ((-webkit-background-clip:text) or (background-clip:text)){
     .brand-title{background:linear-gradient(180deg,#FFFFFF 12%,#C7DEFB 100%);
       -webkit-background-clip:text;background-clip:text;color:transparent}
   }
-  @media (min-width:420px){ .brand-title{font-size:23px;letter-spacing:0} }
-  .slogan{margin-top:9px;color:var(--sub);font-size:12px;letter-spacing:.18em;font-weight:500}
+  @media (min-width:420px){ .brand-title{font-size:22px} }
+  /* 标语缩进到与标题左边缘对齐（等于 logo 宽 + 间距），前面挂一截金线当引号。
+     不缩进的话它会掉到 logo 正下方，把"报头"读成两截。 */
+  .slogan{position:relative;margin:17px 0 0 70px;color:var(--sub);font-size:12px;
+    letter-spacing:.16em;font-weight:500}
+  .slogan::before{content:"";position:absolute;left:-15px;top:50%;width:9px;height:1px;
+    background:linear-gradient(90deg,rgba(217,169,74,0),rgba(217,169,74,.85))}
+  @media (max-width:360px){ .slogan{margin-left:0} .slogan::before{display:none} }
+
   /* 玻璃卡片的公共面。不是"白底+边框+阴影"三件套，而是嵌在夜色里的一层薄玻璃：
      上沿一道受光高光、外沿一圈发丝线、内部一层极淡的受光渐变。
      这里刻意**不用 backdrop-filter**——这些卡片在滚动容器里，逐帧重算背景模糊
@@ -103,53 +126,90 @@
     background:linear-gradient(180deg,rgba(255,255,255,.085) 0%,rgba(255,255,255,.032) 100%);
     border:1px solid var(--line);
     box-shadow:var(--sh-2),inset 0 1px 0 var(--hair)}
-  /* 金色发丝线：只画在玻璃上沿，中间实、两头散开。三张卡片重复同一道线，
-     就成了这一版的签名，而不至于变成三条晃眼的金边 */
+  /* 金色发丝线：只画在玻璃上沿，中间实、两头散开。几块玻璃重复同一道线，
+     就成了这一版的签名，而不至于变成几条晃眼的金边 */
   .nfc-hint::after,.scene-card::after,.lib-item::after{content:"";position:absolute;left:14%;right:14%;top:0;
     height:1px;pointer-events:none;
     background:linear-gradient(90deg,rgba(217,169,74,0) 0%,rgba(217,169,74,.52) 50%,rgba(217,169,74,0) 100%)}
-  /* 原先 .nfc-hint 是 1px 虚线框。虚线是"草稿/待填"的视觉语言，跟"成品"正好相反 */
-  .nfc-hint{margin:18px auto 6px;width:86%;position:relative;overflow:hidden;
-    border-radius:20px;padding:14px 16px;display:flex;align-items:center;gap:13px}
-  .nfc-ripple{width:42px;height:42px;border-radius:50%;
+  /* 蓝金导轨：AI 产出的内容（回答、学习库条目）左侧一道渐细的竖线。
+     它替代了"气泡小尾巴"——回答不再是一条条靠右或靠左的气泡，而是一叠通栏卡片。
+     导轨统一从品牌蓝渐到金，与上沿的金发丝线是同一套语言。 */
+  .msg.ai::before,.lib-item::before{content:"";position:absolute;left:0;width:2px;pointer-events:none;
+    background:linear-gradient(180deg,var(--blue) 0%,rgba(217,169,74,.78) 100%)}
+
+  /* 唤醒块改成竖排：原先它是一条横排的提示条，现在是一块独立的"感应区"——
+     圆环居中在上、文字在下的构图，读起来才像"把手机放上去"的动作，
+     而不是一句普通的说明。 */
+  .nfc-hint{position:relative;overflow:hidden;margin:22px 18px 0;border-radius:var(--r-lg);
+    padding:18px 16px 17px;display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center}
+  .nfc-ripple{width:46px;height:46px;border-radius:50%;flex:none;position:relative;
     background:radial-gradient(circle,rgba(0,176,240,.30) 0%,rgba(0,176,240,.12) 52%,rgba(0,176,240,0) 78%);
-    position:relative;flex:none;display:flex;align-items:center;justify-content:center;font-size:20px}
+    display:flex;align-items:center;justify-content:center;font-size:21px}
   .nfc-ripple::before,.nfc-ripple::after{content:"";position:absolute;inset:0;border-radius:50%;
     border:1.5px solid rgba(0,176,240,.55);animation:ripple 2.2s var(--ease-soft) infinite}
   .nfc-ripple::after{animation-delay:1.1s}
   @keyframes ripple{0%{transform:scale(.72);opacity:.85}100%{transform:scale(1.55);opacity:0}}
   .nfc-hint b{font-size:14px;font-weight:600;letter-spacing:.01em}
-  .nfc-hint span{display:block;font-size:12px;color:var(--sub);margin-top:3px;line-height:1.5}
-  .scene-list{padding:16px 18px 8px;display:flex;flex-direction:column;gap:13px;overflow-y:auto;flex:1;min-height:0;
-    overscroll-behavior:contain}
-  .scene-card{position:relative;overflow:hidden;
-    border-radius:var(--r-lg);padding:17px 18px;display:flex;align-items:center;gap:15px;
-    box-shadow:var(--sh-1),var(--sh-2),inset 0 1px 0 var(--hair);cursor:pointer;
+  .nfc-hint span{display:block;font-size:12px;color:var(--sub);margin-top:4px;line-height:1.5}
+
+  /* 三个场景不再排成三行等高卡片——那是最省事、也最没有判断的一种排法。
+     改成错格：学习计划占满整行当主卡（横排、大图标、带发光的主按钮），
+     另外两个并排成为两块竖排的窄卡。主次一眼分得开，三张卡的"同等重要"
+     也被还原成它们的真实关系：先计划，再执行。 */
+  .scene-list{padding:16px 18px 6px;flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;
+    display:grid;grid-template-columns:1fr 1fr;gap:14px;align-content:start}
+  .scene-card{position:relative;overflow:hidden;cursor:pointer;
+    border-radius:var(--r-lg);padding:15px;
+    display:flex;flex-direction:column;align-items:flex-start;gap:12px;
+    box-shadow:var(--sh-1),var(--sh-2),inset 0 1px 0 var(--hair);
     transition:transform .18s var(--ease),box-shadow .28s var(--ease),border-color .28s var(--ease)}
   .scene-card::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
     background:radial-gradient(130% 90% at 6% -10%,rgba(0,176,240,.16) 0%,rgba(0,176,240,0) 62%)}
   .scene-card:active{transform:scale(.984);box-shadow:var(--sh-1),0 6px 14px -12px rgba(0,0,0,.5),inset 0 1px 0 var(--hair)}
   @media (hover:hover){ .scene-card:hover{border-color:var(--line-2);box-shadow:var(--sh-1),var(--sh-3),var(--glow),inset 0 1px 0 var(--hair)} }
-  /* 三个场景保留可辨识的色相（蓝/青/金），但整体降饱和、统一打光方向，
-     不再像三个糖果色按钮；垫面与 PPT 里的三场景也是一一对应的 */
-  .scene-ico{width:48px;height:48px;border-radius:var(--r-md);flex:none;display:flex;align-items:center;justify-content:center;
-    font-size:23px;color:#fff;position:relative;
+
+  /* 主卡：横排 */
+  .scene-card.lead{grid-column:1 / -1;flex-direction:row;align-items:center;gap:16px;
+    padding:17px 18px;min-height:118px}
+  .scene-card .scene-text{min-width:0;position:relative;z-index:1}
+  .scene-card.lead .scene-text{flex:1}
+  /* 竖排窄卡：图标、标题、说明自上而下，右下角留一枚小箭头 —— 空出的下半部分
+     正好给箭头安身，卡片因此是"排好了版"而不是"内容没填满" */
+  .scene-card:not(.lead){min-height:186px;padding-bottom:44px}
+  .s1{--ico-a:#2C8FE0;--ico-b:#0B3E86}
+  .s2{--ico-a:#17A3A8;--ico-b:#0A5A6E}
+  .s3{--ico-a:#CE8F2E;--ico-b:#8A4E12}
+  .scene-ico{width:48px;height:48px;border-radius:var(--r-md);flex:none;position:relative;z-index:1;
+    display:flex;align-items:center;justify-content:center;font-size:23px;color:#fff;
+    background:linear-gradient(152deg,var(--ico-a,#2C8FE0),var(--ico-b,#0B3E86));
     box-shadow:0 10px 20px -12px rgba(0,0,0,.7),inset 0 1px 0 rgba(255,255,255,.26),inset 0 -1px 0 rgba(0,0,0,.13)}
-  .s1 .scene-ico{background:linear-gradient(152deg,#2C8FE0,#0B3E86)}
-  .s2 .scene-ico{background:linear-gradient(152deg,#17A3A8,#0A5A6E)}
-  .s3 .scene-ico{background:linear-gradient(152deg,#CE8F2E,#8A4E12)}
-  .scene-card h2{font-size:16px;font-weight:700;letter-spacing:-.005em}
-  .scene-card p{font-size:12px;color:var(--sub);margin-top:4px;line-height:1.55;text-wrap:pretty}
-  .scene-card .go{margin-left:auto;color:#7C8CAE;font-size:19px;transition:transform .28s var(--ease),color .28s var(--ease)}
-  @media (hover:hover){ .scene-card:hover .go{transform:translateX(2px);color:var(--blue)} }
-  .home-foot{padding:10px 18px calc(env(safe-area-inset-bottom) + 16px);text-align:center;color:var(--faint);
-    font-size:11px;line-height:1.75;letter-spacing:.02em;font-variant-numeric:tabular-nums}
+  .scene-card.lead .scene-ico{width:54px;height:54px;font-size:25px;border-radius:16px}
+  .scene-card h2{font-size:15px;font-weight:700;letter-spacing:-.005em}
+  .scene-card.lead h2{font-size:17px}
+  .scene-card p{font-size:11.5px;color:var(--sub);margin-top:5px;line-height:1.55;text-wrap:pretty}
+  .scene-card.lead p{font-size:12px;margin-top:4px}
+  /* 主卡的箭头是一枚带发光的主按钮，窄卡的箭头退成一枚静态小圆 */
+  .scene-card .go{position:absolute;right:13px;bottom:12px;width:28px;height:28px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;font-size:17px;line-height:1;
+    color:#9FB2D4;background:rgba(255,255,255,.06);border:1px solid var(--line);
+    transition:transform .28s var(--ease),color .28s var(--ease),background .28s var(--ease)}
+  .scene-card.lead .go{position:relative;right:auto;bottom:auto;margin-left:auto;flex:none;
+    width:38px;height:38px;font-size:20px;color:#fff;
+    background:linear-gradient(152deg,#0A93CC,#003A8C);border-color:rgba(255,255,255,.18);
+    box-shadow:0 12px 24px -12px rgba(0,0,0,.75),0 0 28px -10px rgba(0,176,240,.75),
+      inset 0 1px 0 rgba(255,255,255,.22)}
+  @media (hover:hover){
+    .scene-card:hover .go{transform:translateX(2px);color:var(--blue);background:rgba(0,176,240,.14)}
+    .scene-card.lead:hover .go{color:#fff;background:linear-gradient(152deg,#0A93CC,#003A8C)}
+  }
+  .home-foot{margin-top:auto;padding:16px 18px calc(env(safe-area-inset-bottom) + 18px);text-align:center;
+    color:var(--faint);font-size:11px;line-height:1.75;letter-spacing:.02em;font-variant-numeric:tabular-nums}
   /* 连接状态徽章：只反映「有没有真的连上 AI」，本页面不存在演示/离线兜底内容。
      前面加一颗同色小圆点——状态类信息用点比用整块底色更克制也更易读。
      深色底上不能用浅底那套"淡黄底+深黄字"，反过来：薄琥珀底 + 亮琥珀字 */
   .status-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(217,169,74,.12);color:#EBC97F;
     border:1px solid rgba(217,169,74,.28);border-radius:var(--r-pill);padding:3px 11px;font-size:11px;
-    font-weight:600;margin-bottom:8px}
+    font-weight:600;margin-bottom:9px}
   .status-badge::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor;flex:none;
     box-shadow:0 0 0 3px rgba(217,169,74,.14)}
   .status-badge.ok{background:rgba(23,166,121,.13);color:#5FD3A8;border-color:rgba(23,166,121,.30)}
@@ -158,46 +218,65 @@
   .status-badge.err::before{box-shadow:0 0 0 3px rgba(224,74,80,.14)}
 
   /* ---------- 对话页 ---------- */
-  /* 顶栏与输入栏是**固定/常驻**元素，这里用 backdrop-filter 是安全的：
-     它们自己不滚动，模糊的是身后滚过去的消息，不会逐帧重算 */
-  .chat-head{background:rgba(8,22,44,.78);
-    backdrop-filter:blur(20px) saturate(160%);-webkit-backdrop-filter:blur(20px) saturate(160%);
-    border-bottom:1px solid var(--line);padding:calc(env(safe-area-inset-top) + 13px) 14px 13px;
-    display:flex;align-items:center;gap:10px}
+  /* 顶栏从"贴边通栏 + 下边框"改成浮在消息上方的一枚胶囊：它不再把屏幕切成两截，
+     消息从它下面滚过去 —— 这才是整页最该有玻璃感的地方。
+     它是常驻元素、自己不滚动，所以这里用 backdrop-filter 是安全的。 */
+  .chat-head{position:absolute;top:calc(env(safe-area-inset-top) + 10px);left:12px;right:12px;z-index:5;
+    background:rgba(9,24,48,.74);
+    backdrop-filter:blur(20px) saturate(165%);-webkit-backdrop-filter:blur(20px) saturate(165%);
+    border:1px solid var(--line);border-radius:var(--r-pill);
+    padding:6px 8px 6px 7px;display:flex;align-items:center;gap:9px;
+    box-shadow:var(--sh-2),inset 0 1px 0 var(--hair)}
   .back{width:38px;height:38px;border-radius:50%;border:1px solid var(--line);background:var(--card);font-size:18px;
     color:#BFD9F7;cursor:pointer;flex:none;line-height:1;box-shadow:var(--sh-1);
     transition:transform .18s var(--ease),background .2s var(--ease)}
   .back:active{transform:scale(.94);background:rgba(255,255,255,.12)}
-  .chat-head h2{font-size:16px;font-weight:700;letter-spacing:-.005em;flex:1;min-width:0;
+  .chat-head h2{font-size:15px;font-weight:700;letter-spacing:-.005em;flex:1;min-width:0;
     overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .chat-head .lib-btn{border:1px solid var(--line);background:var(--card);border-radius:var(--r-pill);font-size:11px;
     font-weight:600;color:#BFD9F7;padding:7px 12px;cursor:pointer;flex:none;white-space:nowrap;box-shadow:var(--sh-1);
     transition:transform .18s var(--ease),background .2s var(--ease)}
   .chat-head .lib-btn:active{transform:scale(.96);background:rgba(255,255,255,.12)}
-  .chat-head .mini{width:38px;height:38px;border-radius:50%;border:1px solid var(--line);background:var(--card);font-size:15px;
+  .chat-head .mini{width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:var(--card);font-size:14px;
     color:#BFD9F7;cursor:pointer;flex:none;line-height:1;box-shadow:var(--sh-1);
     transition:transform .18s var(--ease),background .2s var(--ease)}
   .chat-head .mini:active{transform:scale(.94);background:rgba(255,255,255,.12)}
-  .msg-wrap{flex:1;min-height:0;overflow-y:auto;padding:18px 14px 6px;display:flex;flex-direction:column;gap:14px;
-    overscroll-behavior:contain}
-  /* 气泡的"尾巴"用一个只圆 6px 的角表示，比画三角形干净 */
-  .msg{max-width:82%;padding:12px 15px;border-radius:18px;font-size:14px;line-height:1.68;
+
+  /* 顶部要给悬浮顶栏让出空间（10 + 52 + 12 = 74），否则第一条消息会被压在栏下面 */
+  .msg-wrap{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;
+    padding:calc(env(safe-area-inset-top) + 74px) 16px 10px;
+    display:flex;flex-direction:column;gap:15px}
+  /* 回答从"对话气泡"改成通栏玻璃卡片 + 左侧导轨。理由不是好看：
+     模型的回答经常几百字，装进一个 82% 宽的气泡里就是在读一根窄柱；
+     通栏之后行宽正常，导轨负责把它和用户那一条区分开。 */
+  /* flex:0 0 auto 是必需的，不是保险。.msg.ai 为了裁掉左侧竖线多出来的圆角，带了
+   overflow:hidden；而 flex 项的 min-height:auto 在 overflow 非 visible 时会**变成 0**，
+   于是长回答被 .msg-wrap 压扁、末尾的「存入学习库」按钮被整个裁掉，且消息区不再滚动。
+   实测：550 字的回答内容高 679px 被压成 335px，按钮落在 y=884（视口只有 800）——肉眼
+   看就是"回答凭空短了一截"。旧版没有 overflow:hidden，所以这个坑是新引入的。 */
+.msg{flex:0 0 auto;padding:12px 15px;border-radius:18px;font-size:14px;line-height:1.68;
     white-space:pre-wrap;word-break:break-word;text-wrap:pretty}
-  .msg.ai{border-top-left-radius:6px;
-    align-self:flex-start;color:var(--ink)}
-  /* 用户气泡走"海军蓝"：一是和玻璃质感的 AI 卡片形成明确的两极，二是
+  .msg.ai{align-self:stretch;border-radius:var(--r-lg);padding:14px 16px 14px 22px;
+    position:relative;overflow:hidden;color:var(--ink)}
+  .msg.ai::before{top:14px;bottom:14px;border-radius:0 2px 2px 0}
+  /* 用户气泡走"海军蓝"：一是和玻璃质感的通栏回答形成明确的两极，二是
      #00B0F0 上压白字只有 ~2.6:1（不达 AA），这个渐变最浅处仍 >4.5:1。
      深色底上它的亮度明显高于夜色，所以照样跳得出来 */
-  .msg.me{background:linear-gradient(158deg,#0A6FBE 0%,#003A8C 100%);color:#fff;border-top-right-radius:6px;
+  .msg.me{background:linear-gradient(158deg,#0A6FBE 0%,#003A8C 100%);color:#fff;
+    border-radius:18px 18px 6px 18px;max-width:78%;
     align-self:flex-end;box-shadow:0 12px 26px -14px rgba(0,0,0,.7),0 0 26px -12px rgba(0,176,240,.5),
       inset 0 1px 0 rgba(255,255,255,.20)}
   .msg .save-btn{display:inline-block;margin-top:9px;font-size:12px;font-weight:600;color:#9FD8F7;background:rgba(0,176,240,.13);
     border:1px solid rgba(0,176,240,.30);border-radius:var(--r-pill);padding:4px 13px;cursor:pointer;
     transition:transform .18s var(--ease),background .2s var(--ease)}
   .msg .save-btn:active{transform:scale(.96);background:rgba(0,176,240,.24)}
-  /* 系统提示条：用于「服务返回了错误」这类不是模型回答的内容，样式刻意区别于对话气泡 */
-  .msg.sys{align-self:center;max-width:92%;background:rgba(217,169,74,.10);border:1px solid rgba(217,169,74,.26);color:#E8C77E;
-    font-size:12.5px;line-height:1.65;text-align:center;border-radius:14px;box-shadow:var(--sh-1)}
+  /* 系统提示条：用于「服务返回了错误」这类不是模型回答的内容，样式刻意区别于对话气泡。
+     addNotice 是先 textContent 再 appendChild，所以这里只能靠 flex 列排把
+     文字和「重试」按钮分两行——加不了包裹层。 */
+  .msg.sys{align-self:center;max-width:94%;padding:11px 15px;
+    background:rgba(217,169,74,.10);border:1px solid rgba(217,169,74,.26);color:#E8C77E;
+    font-size:12.5px;line-height:1.65;text-align:center;border-radius:var(--r-md);box-shadow:var(--sh-1);
+    display:flex;flex-direction:column;align-items:center}
   /* 连接失败提示条里的「重试」按钮 */
   .msg .retry-btn{display:inline-block;margin-top:9px;font-size:12px;font-weight:600;color:#F0D79B;background:rgba(217,169,74,.14);
     border:1px solid rgba(217,169,74,.32);border-radius:var(--r-pill);padding:4px 15px;cursor:pointer;
@@ -207,29 +286,45 @@
   .typing i{width:6px;height:6px;border-radius:50%;background:rgba(159,178,212,.55);animation:blink 1.3s var(--ease-soft) infinite}
   .typing i:nth-child(2){animation-delay:.18s}.typing i:nth-child(3){animation-delay:.36s}
   @keyframes blink{0%,62%,100%{opacity:.22;transform:translateY(0)}32%{opacity:1;transform:translateY(-2px)}}
-  .quick{padding:2px 14px 10px;display:flex;gap:8px;overflow-x:auto;white-space:nowrap;
-    overscroll-behavior-x:contain;scrollbar-width:none}
+  /* 快捷问法：右侧留一道渐隐，暗示"还能往右划"。不溢出时右侧本来就是空白，
+     所以这道渐隐什么也遮不住，不会把最后一条吃掉 */
+  .quick{padding:2px 16px 10px;display:flex;gap:8px;overflow-x:auto;white-space:nowrap;
+    overscroll-behavior-x:contain;scrollbar-width:none;
+    -webkit-mask-image:linear-gradient(90deg,#000 0,#000 calc(100% - 20px),transparent 100%);
+    mask-image:linear-gradient(90deg,#000 0,#000 calc(100% - 20px),transparent 100%)}
   .quick::-webkit-scrollbar{display:none}
   .quick span{background:var(--card);border:1px solid var(--line);border-radius:var(--r-pill);padding:7px 13px;font-size:12px;
     color:#BFD9F7;cursor:pointer;flex:none;box-shadow:var(--sh-1);
     transition:transform .18s var(--ease),background .2s var(--ease),border-color .2s var(--ease)}
   .quick span:active{transform:scale(.96);background:rgba(255,255,255,.12)}
-  .input-bar{background:rgba(8,22,44,.82);
-    backdrop-filter:blur(20px) saturate(160%);-webkit-backdrop-filter:blur(20px) saturate(160%);
-    border-top:1px solid var(--line);padding:11px 12px calc(env(safe-area-inset-bottom) + 11px);
-    display:flex;gap:9px;align-items:center}
-  .input-bar input{flex:1;min-width:0;border:1px solid var(--line);background:rgba(255,255,255,.055);border-radius:var(--r-pill);
-    padding:12px 17px;font-size:14.5px;color:var(--ink);outline:none;
+  /* 输入条从"贴边通栏 + 上边框"改成浮在底部的岛：外壳是玻璃，里面再嵌一条胶囊输入框。
+     两层圆角同心（26 - 7 = 19 ≈ 内层胶囊的实际观感半径），这是"机加工"读起来的原因。
+     它同样不滚动，backdrop-filter 用在它身上也是安全的。 */
+  .input-bar{margin:0 12px calc(env(safe-area-inset-bottom) + 10px);z-index:5;
+    background:rgba(10,26,50,.76);
+    backdrop-filter:blur(22px) saturate(170%);-webkit-backdrop-filter:blur(22px) saturate(170%);
+    border:1px solid var(--line-2);border-radius:var(--r-xl);
+    padding:7px 7px 7px 9px;display:flex;gap:8px;align-items:center;
+    box-shadow:0 20px 44px -20px rgba(0,0,0,.88),0 0 44px -22px rgba(0,176,240,.60),inset 0 1px 0 var(--hair)}
+  .input-bar input{flex:1;min-width:0;border:1px solid var(--line);background:rgba(255,255,255,.05);border-radius:var(--r-pill);
+    padding:11px 16px;font-size:14.5px;color:var(--ink);outline:none;
     box-shadow:inset 0 1px 2px rgba(0,0,0,.35);
     transition:background .22s var(--ease),border-color .22s var(--ease),box-shadow .22s var(--ease)}
-  .input-bar input::placeholder{color:#7C8CAE}
+  /* 占位符原先硬编码 #7C8CAE，与 --faint 各改各的迟早会漂；直接引令牌。
+   改令牌的原因：按真实像素量，#7C8CAE 在输入岛底(23,40,64)上只有 4.40:1，
+   在学习库玻璃面(30,45,68)上 4.11:1，都低于正文要求的 4.5。
+   提亮到 #8998B6 后最差 4.78:1，仍明显暗于 --sub，层级不乱。 */
+.input-bar input::placeholder{color:var(--faint)}
   /* 原来这里是裸的 outline:none（键盘用户看不到焦点）。改成"描边 + 光晕"，
      比系统默认轮廓更贴合本页，也仍然是明确的焦点指示 */
   .input-bar input:focus{background:rgba(255,255,255,.09);border-color:rgba(0,176,240,.55);box-shadow:0 0 0 4px rgba(0,176,240,.16)}
-  .mic,.send{border:none;width:44px;height:44px;border-radius:50%;font-size:17px;cursor:pointer;flex:none;line-height:1;
+  /* 两个圆钮不等大：发送是这条动线里唯一的"提交"，麦克风是辅助。
+     一样大等于说这两件事一样重要 */
+  .mic,.send{border:none;border-radius:50%;cursor:pointer;flex:none;line-height:1;
     transition:transform .18s var(--ease),box-shadow .25s var(--ease),background .22s var(--ease)}
-  .mic{background:rgba(0,176,240,.12);color:#9FD8F7;border:1px solid rgba(0,176,240,.26);box-shadow:var(--sh-1)}
-  .send{background:linear-gradient(152deg,#0A93CC,#003A8C);color:#fff;
+  .mic{width:40px;height:40px;font-size:16px;background:rgba(0,176,240,.12);color:#9FD8F7;
+    border:1px solid rgba(0,176,240,.26);box-shadow:var(--sh-1)}
+  .send{width:46px;height:46px;font-size:17px;background:linear-gradient(152deg,#0A93CC,#003A8C);color:#fff;
     box-shadow:0 12px 24px -12px rgba(0,0,0,.7),0 0 30px -10px rgba(0,176,240,.75),inset 0 1px 0 rgba(255,255,255,.22)}
   .mic:active,.send:active{transform:scale(.93)}
   .mic.rec{background:rgba(224,74,80,.18);color:#FF8E93;border-color:rgba(224,74,80,.40);animation:pulse 1.4s var(--ease-soft) infinite}
@@ -237,11 +332,19 @@
   @keyframes pulse{50%{box-shadow:0 0 0 7px rgba(224,74,80,.16)}}
 
   /* ---------- 学习库 ---------- */
-  .lib-list{flex:1;min-height:0;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:11px;
-    overscroll-behavior:contain}
-  .lib-item{position:relative;overflow:hidden;border-radius:var(--r-md);
-    padding:13px 15px;font-size:13px;line-height:1.65;color:var(--ink);
+  /* 和对话页共用悬浮顶栏，所以这里也要给顶栏让位 */
+  .lib-list{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;
+    padding:calc(env(safe-area-inset-top) + 74px) 16px 16px;
+    display:flex;flex-direction:column;gap:11px}
+  /* 条目也走左侧导轨：它和 AI 回答是同一种东西——AI 产出、被用户收藏下来的内容。
+     同一个来源用同一种形态，比给每块内容都设计一个花纹要有说服力。 */
+  /* 同一个雷：.lib-list 也是 flex 列，.lib-item 本来就带着 overflow:hidden（旧版如此），
+   所以"学习库攒到超过一屏就把第一条压扁、✕ 按钮被裁掉"是**线上既有的潜在缺陷**，
+   只是没人存满过一屏。这里一并钉死。 */
+.lib-item{flex:0 0 auto;position:relative;overflow:hidden;border-radius:var(--r-md);
+    padding:13px 16px 13px 22px;font-size:13px;line-height:1.65;color:var(--ink);
     box-shadow:var(--sh-1),0 10px 22px -18px rgba(0,0,0,.6),inset 0 1px 0 var(--hair);text-wrap:pretty}
+  .lib-item::before{top:13px;bottom:13px;border-radius:0 2px 2px 0}
   .lib-item .tag{display:inline-block;font-size:11px;font-weight:600;color:#8FD6F6;background:rgba(0,176,240,.13);
     border:1px solid rgba(0,176,240,.28);border-radius:7px;padding:1.5px 9px;margin-bottom:7px}
   .lib-item time{display:block;color:var(--faint);font-size:11px;margin-top:7px;
@@ -250,8 +353,8 @@
     line-height:1;cursor:pointer;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;
     justify-content:center;transition:background .2s var(--ease),color .2s var(--ease)}
   .lib-item .del:active{background:rgba(255,255,255,.10);color:#C6D6EF}
-  .empty{text-align:center;color:var(--faint);font-size:13px;margin-top:84px;line-height:2.1}
-  .toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 92px);
+  .empty{text-align:center;color:var(--faint);font-size:13px;margin-top:64px;line-height:2.1}
+  .toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 98px);
     transform:translate(-50%,10px) scale(.96);
     background:rgba(16,34,62,.86);
     backdrop-filter:blur(18px) saturate(170%);-webkit-backdrop-filter:blur(18px) saturate(170%);
@@ -278,28 +381,33 @@
   <!-- 首页 -->
   <section class="screen active" id="screen-home">
     <div class="home-head">
-      <div class="logo" style="margin:0 auto">星</div>
-      <h1 class="brand-title">星智碰 · AI 学习搭档</h1>
-      <div class="slogan">触碰唤醒星火　阅览 AI 智慧</div>
+      <div class="masthead">
+        <div class="logo">星</div>
+        <div class="mast-text">
+          <span class="eyebrow">X+AI 文创共创计划</span>
+          <h1 class="brand-title">星智碰 · AI 学习搭档</h1>
+        </div>
+      </div>
+      <p class="slogan">触碰唤醒星火　阅览 AI 智慧</p>
     </div>
     <div class="nfc-hint">
       <div class="nfc-ripple">📡</div>
       <div><b>碰一碰鼠标垫右上角</b><span>免安装直达，或扫描垫面二维码进入</span></div>
     </div>
     <div class="scene-list" id="sceneList">
-      <div class="scene-card s1" data-scene="plan">
+      <div class="scene-card lead s1" data-scene="plan">
         <div class="scene-ico">📅</div>
-        <div><h2>学习计划</h2><p>说出专业与目标，生成一周学习计划与每日任务</p></div>
+        <div class="scene-text"><h2>学习计划</h2><p>说出专业与目标，生成一周学习计划与每日任务</p></div>
         <div class="go">›</div>
       </div>
       <div class="scene-card s2" data-scene="homework">
         <div class="scene-ico">✅</div>
-        <div><h2>作业管家</h2><p>口述作业要求，AI 拆解任务、排优先级与提醒</p></div>
+        <div class="scene-text"><h2>作业管家</h2><p>口述作业要求，AI 拆解任务、排优先级与提醒</p></div>
         <div class="go">›</div>
       </div>
       <div class="scene-card s3" data-scene="ask">
         <div class="scene-ico">💬</div>
-        <div><h2>随问随答</h2><p>知识点讲解、中英互译，语音提问张口就答</p></div>
+        <div class="scene-text"><h2>随问随答</h2><p>知识点讲解、中英互译，语音提问张口就答</p></div>
         <div class="go">›</div>
       </div>
     </div>
