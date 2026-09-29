@@ -558,6 +558,11 @@
     border:1px solid rgba(217,169,74,.32);border-radius:var(--r-pill);padding:4px 15px;cursor:pointer;
     transition:transform .18s var(--ease),background .2s var(--ease)}
   .msg .retry-btn:active{transform:scale(.96);background:rgba(217,169,74,.26)}
+  /* 429 冷却中的重试键。缩成半透明只是一半——真正要拦住的是"点了没反应"
+     被当成手机卡了：所以字面把倒计时写在按钮上，并且 .cooling 在 onclick 里
+     也真的不往下走（见 addNotice）。 */
+  .msg .retry-btn.cooling{opacity:.45;cursor:default;background:rgba(217,169,74,.07);border-color:rgba(217,169,74,.18)}
+  .msg .retry-btn.cooling:active{transform:none;background:rgba(217,169,74,.07)}
   .typing{display:inline-flex;gap:4px;align-items:center;padding:2px 0}
   .typing i{width:6px;height:6px;border-radius:50%;background:rgba(159,178,212,.55);animation:blink 1.3s var(--ease-soft) infinite}
   .typing i:nth-child(2){animation-delay:.18s}.typing i:nth-child(3){animation-delay:.36s}
@@ -786,7 +791,7 @@
       </div>
     </div>
     <div class="scene-list" id="sceneList">
-      <div class="scene-card lead s1" data-scene="plan">
+      <div class="scene-card lead s1" data-scene="plan" role="button" tabindex="0">
         <div class="scene-ico">📅</div>
         <div class="scene-text">
           <h2>学习计划</h2>
@@ -795,7 +800,7 @@
         </div>
         <div class="go">›</div>
       </div>
-      <div class="scene-card s2" data-scene="homework">
+      <div class="scene-card s2" data-scene="homework" role="button" tabindex="0">
         <div class="scene-ico">✅</div>
         <div class="scene-text">
           <h2>作业管家</h2>
@@ -804,7 +809,7 @@
         </div>
         <div class="go">›</div>
       </div>
-      <div class="scene-card s3" data-scene="ask">
+      <div class="scene-card s3" data-scene="ask" role="button" tabindex="0">
         <div class="scene-ico">💬</div>
         <div class="scene-text">
           <h2>随问随答</h2>
@@ -814,17 +819,21 @@
         <div class="go">›</div>
       </div>
       <!-- 第四行恒在：有内容时是「最近存入」，空库时由 renderRecent 换成一句说明 -->
-      <div class="recent" id="recentCard" onclick="showLib()">
+      <div class="recent" id="recentCard" role="button" tabindex="0" onclick="showLib()">
         <span class="tag" id="recentTag">学习库</span>
         <span class="recent-txt" id="recentTxt"></span>
         <span class="recent-go">›</span>
       </div>
     </div>
     <!-- 唤醒条排在卡片之后：用户是碰了垫子才到这一屏的，这一步刚做完，
-         它现在是脚注而不是头条（扫垫面二维码进来的人仍然需要它） -->
+         它现在是脚注而不是头条。 -->
+    <!-- 副标题不提二维码：全案的规格里确实设计了「右下角二维码兜底通道」，
+         但那枚码有没有真的印在实物上、扫码这条路有没有在真机上验证过，
+         目前没有实测证据。**用户可见的界面只写已经确定的事**，不确定的
+         通路不写进来，免得页面在教用户做一件可能不存在的事。 -->
     <div class="nfc-hint">
       <div class="nfc-ripple">📡</div>
-      <div><b>碰一碰鼠标垫右上角</b><span>免安装直达，或扫描垫面二维码进入</span></div>
+      <div><b>碰一碰鼠标垫右上角</b><span>免安装直达，无需下载 App</span></div>
     </div>
     <div class="home-foot">
       <span class="status-badge" id="modeBadge">尚未对话 · 首次提问时连接讯飞星火</span>
@@ -877,12 +886,21 @@
 <script>
 /* ============================================================
  * 星智碰 H5 —— 配置区
- * 网页本体放在静态托管（GitHub/Gitee Pages）里浏览器才能正常显示；
- * 星火智能体由云函数代理，这里填云函数地址即可。API Key/Secret 只
- * 存在云函数后台，绝不写进本文件。
+ *
+ * 本页有两个部署形态，两份 index.html **除下面 apiProxy 那一行外必须逐字节相同**：
+ *   a) 静态托管形态（线上主入口）：本目录的 h5\index.html，apiProxy 写云函数完整地址。
+ *      NFC 标签指向的就是它；腾讯云函数默认域名返回网页会带强制下载头，
+ *      所以网页必须放在 GitHub/Gitee Pages 这类能直接渲染的静态托管上。
+ *   b) 同域形态（兼容用）：云函数代码包内那份，apiProxy 写相对路径 "/api/chat"，
+ *      只在经云函数 GET / 访问时成立——拿到 Pages 上会打到 user.github.io/api/chat 得 404。
+ *
+ * ⚠️ 改这里的任何东西（除了 apiProxy 的取值）都必须**同时改两份**。
+ *    两份漂移不会报错，只会让其中一个入口悄悄坏掉；校验见
+ *    9_过程与归档（不提交）\改动与验收\校验_两个变体.py。
+ * API Key/Secret 只存在云函数后台，绝不写进本文件。
  * ============================================================ */
 const CONFIG = {
-  apiProxy: "https://1491306416-dv2u0ynvjn.ap-guangzhou.tencentscf.com/api/chat",  // 星火助手 API 后端代理（云函数）
+  apiProxy: "https://1491306416-dv2u0ynvjn.ap-guangzhou.tencentscf.com/api/chat",  // 星火助手 API 后端代理（两个形态只有这一行的取值不同）
   sceneParam: "s",       // NFC 标签可写入 https://域名/?s=plan 直达场景
   timeoutMs: 70000       // 前端等待上限：必须大于云函数内部超时（50 秒），否则会先于后端放弃
 };
@@ -914,7 +932,11 @@ Object.keys(SCENES).forEach(function(k){ SCENE_BY_NAME[SCENES[k].name] = k; });
    这段是纯前端正则，只检查当前这一条消息，**确定可以被绕过**：
    分成两条发（第二条没有动词）、在关键词中间插入零宽字符、换一个同义词，
    都能通过。它也会误拦「帮我写个总结」这类正常的学习请求。
-   真正起作用的是云端那份系统提示词的自觉约束，服务端并没有第二道闸。
+
+   云端还有一道同类型的服务端拦截（云函数里的 looksLikeEssayRequest，命中返回 403），
+   挡的是「绕过前端直接打接口」。两道闸是**同一套正则、同样可绕**，第二道不因为
+   「在服务端」就更硬——它只是让人改不动前端也没法直接绕过去而已。
+   真正兜底的是云端系统提示词里的自觉约束。
    所以：对外说明时不要把它讲成可靠的完整防护。 */
 function guard(text){
   const t = text.replace(/\s+/g,'');
@@ -932,10 +954,27 @@ let curScene = null;
 let sending = false;   // 「当前场景」有没有在途请求：按钮禁用与回车拦截都看它
 let viewGen = 0;       // openChat 每重建一次视图就 +1，用来识别「回复到达时视图已被换过」
 const $ = id => document.getElementById(id);
-// 一个场景保留、重放、上送的轮数上限。三处必须是同一个数：写进存储的（pushHist）、
-// 重进场景时显示的（openChat）、发给模型的（requestReply 的 history）——只要有一处
-// 更大，就会出现「界面说聊过、模型没看到」。
+// 一个场景保留与重放的轮数上限：写进存储的（pushHist）和重进场景时显示的（openChat）
+// 必须是同一个数，否则会出现「界面说聊过、存储里没有」。
+// （发给模型的那一份还要在上述之上再过一道 HIST_CHAR_BUDGET，见 trimHistByBudget——
+//  轮数上限管的是存储体积，字符预算管的是上行体积，两个数不是一回事。）
 const HIST_MAX = 12;
+// 单次提问的字符上限，**必须与云函数 query.length > 2000 → 400 的那个数一致**。
+// 前端要在清空输入框之前就用它拦一道：见 send()。
+const QUERY_MAX = 2000;
+/* 历史部分上送前按这个字符预算从最近一轮往前裁，与云函数 HISTORY_CHAR_BUDGET 同值。
+   前端先裁的意义是省流量：12 轮 × (q2000 + a4000) 最多约 72KB，而云端只采信 6000 字符，
+   九成以上的内容在上行路上白跑一趟（asciiJSON 转义后还会再放大）。 */
+const HIST_CHAR_BUDGET = 6000;
+/* 429（云端限流）时重试键的冷却时长。**这是拿不到云端剩余时间时的兜底值**：
+   正常路径下云端会在响应体里给 retryAfterMs，前端按那个真实剩余时间禁用。
+   兜底的 15 秒只是"别让按钮一亮就立刻可点"的最小退避，不保证到时就能发出去。
+   网络类失败（status 0）不冷却，立刻可点。 */
+const COOLDOWN_MS = 15000;
+/* 超过这个时长的冷却就不再给重试键了。云函数的限流窗口是 10 分钟，
+   剩下的往往是好几分钟——让人盯着一个九分钟的倒计时，不如把「还要等多久」
+   写在文案里（服务端那句「请 N 秒后再试」），按钮收掉。 */
+const COOLDOWN_MAX_SHOW = 90000;
 // 学习库保留与渲染的条数上限。saveLib 从尾部丢、showLib 取头部渲染，两处同源。
 const LIB_MAX = 200;
 const store = {
@@ -995,7 +1034,44 @@ function loadHist(scene){
   return Array.isArray(h) ? h.filter(t=>t && typeof t==="object") : [];
 }
 
-function show(id){ document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active")); $(id).classList.add("active"); }
+/* 上送前按字符预算裁剪历史——**从最近一轮往前累加**，与云函数 buildText 的口径一致。
+   slice(-HIST_MAX) 只限轮数不限长度：12 轮 × (q2000 + a4000) 最多约 72KB，
+   而云端的 HISTORY_CHAR_BUDGET 只有 6000 字符，多出来的部分在服务端被原样丢掉。
+   界面重放仍然用全量（loadHist），只在这一条出网路径上裁——
+   屏幕上是「我们聊过」的完整记录，模型看到的仍是它能装下的那一段，两边不打架。 */
+function trimHistByBudget(list){
+  // 两道上限都要：轮数上限挡的是「localStorage 里被塞了超长历史」
+  // （本页自己不会产生，pushHist 已经截过，但存储是同源可写的，
+  //  别的页面/旧版本留下的脏数据照样能进来），字符预算挡的是上行体积。
+  // 只做预算不做轮数，就退回到"信任存储里最多只有 HIST_MAX 轮"这个假设上了。
+  const src = list.slice(-HIST_MAX);
+  const out = [];
+  let used = 0;
+  for(let i = src.length - 1; i >= 0; i--){
+    const t = src[i];
+    const len = String(t.q || "").length + String(t.a || "").length;
+    if(out.length && used + len > HIST_CHAR_BUDGET) break;
+    out.unshift(t); used += len;
+  }
+  return out;
+}
+
+/* 切屏要同时改两样东西：视觉上的 .active，和无障碍树上的 aria-hidden。
+   只改 .active 的话，非活动屏只是 opacity:0 —— 它**仍然留在无障碍树里**，
+   读屏用户退到首页后还会把对话页的整段历史念一遍，键盘 Tab 也会走进看不见的按钮。
+   （现代浏览器可直接用 inert，但公众号内置浏览器版本参差，aria-hidden 更稳。） */
+/* 切屏。除了 visible（.active 决定 opacity），还把「非当前屏」从无障碍树里摘掉：
+   它们只是 opacity:0，读屏仍会把首页三张卡、学习库整列念出来，而视觉上根本看不见。
+   这里逐屏 remove 再给目标屏 add（原来就是这两步，不动它的机制），
+   只是每次顺带把 aria-hidden 一起翻——两处状态必须同时改，漏一处就又对不上了。 */
+function show(id){
+  document.querySelectorAll(".screen").forEach(function(s){
+    s.classList.remove("active");
+    s.setAttribute("aria-hidden", "true");
+  });
+  const el = $(id);
+  if(el){ el.classList.add("active"); el.removeAttribute("aria-hidden"); }
+}
 let goingHome=false;
 function goHome(){
   show("screen-home"); renderRecent();
@@ -1018,6 +1094,7 @@ function setMode(state){
   else if(state==="busy"){ b.textContent="AI 服务繁忙 · 请稍后再试"; b.className="status-badge err"; }
   else if(state==="empty"){ b.textContent="AI 未返回内容 · 请重试"; b.className="status-badge err"; }
   else if(state==="denied"){ b.textContent="请求未被受理 · 请看下方提示"; b.className="status-badge err"; }
+  else if(state==="svcerr"){ b.textContent="AI 服务配置异常 · 联系维护者"; b.className="status-badge err"; }
   else if(state==="offline"){ b.textContent="未连接到 AI 服务 · 请检查网络"; b.className="status-badge err"; }
   else if(state==="noconfig"){ b.textContent="未配置 AI 服务地址"; b.className="status-badge err"; }
   else { b.textContent="尚未对话 · 首次提问时连接讯飞星火"; b.className="status-badge"; }
@@ -1030,8 +1107,12 @@ function setMode(state){
    说明网络是好的，那样写会把用户引去排查一个不存在的网络故障。 */
 function modeForStatus(status, ok){
   if(ok) return "empty";                              // 200 却没内容：服务通了，这次没答出东西
-  if(status === 429 || status === 503) return "busy"; // 服务通了但忙
-  if(status >= 500) return "offline";                 // 5xx：服务端故障，按连不上处理
+  if(status === 429) return "busy";                   // 限流：服务通了，只是这一分钟满了
+  // 503 在这份契约里只有一个来源：云函数环境变量没配全。它不是「忙」——
+  // 忙会自己好，配置缺失不会。写成「服务繁忙 · 请稍后再试」等于让用户等一件
+  // 永远不会发生的事，而且和下方提示条「请联系维护者」自相矛盾。
+  if(status === 503) return "svcerr";
+  if(status >= 500) return "offline";                 // 502 等：上游连不上，按故障处理
   return "denied";                                    // 400/403/405：请求本身没被受理
 }
 const pending = new Map();
@@ -1065,9 +1146,11 @@ function openChat(scene, noPush){
   });
   // 开场提示走提示条，不走 AI 气泡：模型这一轮根本没说话，用气泡就是在伪造它说过
   addNotice(sc.hint);
-  // 只重放与上送同一段（最近 HIST_MAX 轮）：屏幕上的上下文必须和模型看到的一致，
-  // 否则用户以为「我们聊过」而模型根本没看到。顺带挡住 localStorage 里残留的超长
-  // 历史（本页自己不会产生）——那会在一次同步循环里建出上万个节点、手机直接卡住。
+  // 重放最近 HIST_MAX 轮。这里跟「上送」用的不是同一刀：屏幕重放按轮数，
+  // 上行还要再过一道 trimHistByBudget 的字符预算。两者不必相等也不该假装相等——
+  // 屏幕给的是「我们聊过什么」的完整记录，模型看到的是它装得下的那一段。
+  // 上限本身是必须的：localStorage 里若有别的来源塞进来的超长历史（本页自己不会产生），
+  // 一次同步循环能建出上万个节点、手机直接卡住。
   const hist = loadHist(scene).slice(-HIST_MAX);
   if(hist.length){
     // 重进场景时把历史重放出来：模型一直「记得」这些轮，界面不能装作没聊过
@@ -1075,6 +1158,22 @@ function openChat(scene, noPush){
       if(t.q) addMsg("me", t.q);
       if(t.a) addMsg("ai", t.a, {savable:true});
     });
+  }
+  /* 上一次没成的那个提示条也要放回来。以前它只活在 DOM 里：在 A 提问后切到 B，
+     等 A 失败时用户正在看 B，只有一句会自己消失的 toast；切回 A 看见问题孤零零挂着、
+     下面什么都没有，分不清是「还在等」还是「早就失败了」。
+     存的是 store 不是历史：提示条不是模型说的话，不能跟着 history 上送，
+     否则等于我替模型伪造了一句它没说过的话。 */
+  const held = loadNotice(scene);
+  if(held){
+    /* 先把它的问题气泡补回来。历史只收「模型真答过」的轮次（pushHist 只在成功时调），
+       所以失败/被拦的那一轮问题并不在 hist 里——只放回提示条的话，屏幕上就是一条
+       「没能连上」孤零零浮着，上面没有对应的问题，用户不知道它是说哪一句。
+       加一道去重：万一这个问题后来重试成功、已经进了历史，就不要再补一条。 */
+    if(held.text && !hist.some(function(t){ return t.q === held.text; })) addMsg("me", held.text);
+    // delay 给 0：那是当时那一次 429 的冷却，等用户切回来早就过完了，
+    // 照搬会把一个已经过期的倒计时重新演一遍。
+    addNotice(held.msg, {scene: scene, text: held.text, delay: 0, noRetry: !held.retry});
   }
   show("screen-chat");
   syncSending();   // 在途的是别的场景就不该锁住这里
@@ -1090,6 +1189,9 @@ function clearChat(){
   // 写失败就不要往下走：openChat 会从 localStorage 读回**没被清掉**的历史，屏幕上
   // 内容原样回来、toast 却说「已清空」——那是谎报。
   if(!store.set("hist_"+curScene, [])){ toast("本机存储异常，未能清空对话记录"); return; }
+  // 存着的那条失败提示也跟着清掉：用户点的是「清空对话记录」，
+  // 留下一句「刚才没连上」等于清完还挂着一件没做完的事。
+  saveNotice(curScene, null);
   openChat(curScene, true);
   toast("已清空本场景对话");
 }
@@ -1112,19 +1214,58 @@ function addMsg(role, text, opts){
   return div;
 }
 function addTyping(){ return addMsg("ai", '<span class="typing"><i></i><i></i><i></i></span>', {raw:true}); }
+/* 每个场景只留最近一条失败提示，供「重进场景」时放回来（见 openChat）。
+   存成 null 就是清掉：store.get 解析出 null 会退回默认值，不必真去 removeItem。 */
+function saveNotice(scene, rec){
+  if(!scene) return;
+  if(rec) store.set("notice_" + scene, {msg: String(rec.msg || ""), text: String(rec.text || ""),
+                                        retry: !!rec.retry, delay: rec.delay || 0});
+  else store.set("notice_" + scene, null);
+}
+function loadNotice(scene){
+  const n = store.get("notice_" + scene, null);
+  // 同源下可能残留脏值：字段类型不对就当没有，别把 undefined 塞进文案里
+  if(!n || typeof n !== "object" || typeof n.msg !== "string" || !n.msg) return null;
+  return n;
+}
+
 // 系统提示条：与对话气泡区分开，不进历史、不给「存入学习库」。
 // 连不上时带上「重试」按钮——重试走的是同一条取回答的路径，不会重复插入用户气泡。
+// retry 传 {scene,text,...} 表示「这条要记进场景、（除非 noRetry）给重试键」；
+// 传 null 或省略表示纯展示（开场提示这种）。
 function addNotice(text, retry){
   const wrap = $("msgWrap");
   const div = document.createElement("div");
   div.className = "msg sys";
   // 用 textContent：服务端文案里就算带尖括号，也不会被当成 HTML 解析
   div.textContent = String(text==null?"":text);
-  if(retry){
+  // 记进存储与「给不给按钮」是两件事：503 不给按钮，但它同样必须能被重进场景放回来，
+  // 否则用户切回来看到的就是一条孤零零的问题、没有任何失败痕迹。
+  if(retry && retry.scene) saveNotice(retry.scene, {msg: text, text: retry.text, retry: !retry.noRetry, delay: retry.delay});
+  if(retry && !retry.noRetry){
     const btn = document.createElement("span");
     btn.className = "retry-btn";
-    btn.textContent = "重试";
+    /* 429 限流不能给「立即可点」的按钮：云端窗口是 10 分钟 / 40 次，连点只会一次次
+       撞在同一堵墙上，每撞一次还可能把窗口重新续上。先禁用、把「还要等多久」写在按钮上，
+       等完了再放开——用户看到的是一段有终点的等待，而不是一个看不出原因的失败按钮。
+       delay 由调用方给（429 时是云端返回的真实剩余时间），这里只负责演出来。 */
+    let left = Math.round((retry.delay || 0) / 1000);
+    if(left > 0){
+      btn.classList.add("cooling");
+      btn.textContent = "冷却中 · " + left + "s";
+      const tick = setInterval(function(){
+        left -= 1;
+        if(left > 0){ btn.textContent = "冷却中 · " + left + "s"; return; }
+        clearInterval(tick);
+        btn.classList.remove("cooling");
+        btn.textContent = "已过冷却，重试";
+      }, 1000);
+    } else {
+      btn.textContent = "重试";
+    }
     btn.onclick = function(){
+      // 冷却没走完时点了也白点——真实拦住，不是只把它画灰
+      if(btn.classList.contains("cooling")) return;
       if(pending.has(retry.scene)) return;                       // 该场景已有在途请求
       btn.remove();                                              // 防止连点留下多个按钮
       if(retry.scene !== curScene) openChat(retry.scene, true);   // 用户已经切走，先切回去
@@ -1171,8 +1312,10 @@ function asciiJSON(o){
 function pushHist(scene, q, a){
   const k = "hist_"+scene;
   let h = store.get(k, []); if(!Array.isArray(h)) h = [];
-  // 单条上限与云函数的 HISTORY_Q_MAX / HISTORY_A_MAX（2000 / 4000）必须一致。
-  // 两边一旦不一致，超长的那一轮会被云端整条丢弃——界面重放得到、模型看不到。
+  /* 单条上限与云函数的 HISTORY_Q_MAX / HISTORY_A_MAX（2000 / 4000）对齐。
+     云端对超长项是**截断保留**（不再整条丢弃，见 proxy 里那段注释），所以这里
+     先截的意义不是"防丢弃"，而是"保证进模型的就是界面里显示的这份"——
+     两边都截在同一个数上，屏幕上看到多少字，模型就看到多少字。 */
   h.push({q: String(q).slice(0,2000), a: String(a).slice(0,4000)});
   while(h.length > HIST_MAX) h.shift();    // 只留最近 HIST_MAX 轮，不让 localStorage 无限膨胀
   return store.set(k, h);
@@ -1187,10 +1330,26 @@ async function send(){
   const inp = $("chatInput"), text = inp.value.trim();
   if(!text) return;
   if(pending.has(curScene)){ toast("上一条还在等回复，请稍候"); return; }
+  /* 超长必须在**清空输入框之前**拦，而且不能再给「重试」按钮。
+     原来的路径是：粘贴 3000 字 → 原文被清掉 → 云端 400「问题过长」→ 提示条上
+     那个「重试」发的还是同一段超长文本 → 必然再撞一次 400。用户的原文已经不在了，
+     只能自己重新找回来重打一遍。这里让原文留在框里，并说清还差多少。 */
+  if(text.length > QUERY_MAX){
+    addNotice("这一条有 " + text.length + " 字，超过单次提问上限 " + QUERY_MAX +
+              " 字。请精简后再发（原文仍留在输入框里）。");
+    return;
+  }
   const blocked = guard(text);
   // 拦截文案是前端规则写的，不是模型答的——所以显示成系统提示条，
   // 不能塞进 AI 气泡里冒充满分回答（这是本页唯一的「不经过模型就出字」的地方）
-  if(blocked){ inp.value=""; addMsg("me",text); addNotice("学习提醒：" + blocked); return; }
+  /* 被拦的这一轮也要落盘（noRetry：同一段文字再发一次必然再被拦，给重试键是骗人）。
+     它不进历史——历史是"模型答过的话"的记录，把这条规则文案记进去，模型下一轮
+     会以为那句话是自己说的。所以只记提示条，重进场景时提示条连带问题气泡一起放回来。 */
+  if(blocked){
+    inp.value=""; addMsg("me",text);
+    addNotice("学习提醒：" + blocked, {scene: curScene, text: text, noRetry: true});
+    return;
+  }
   inp.value=""; addMsg("me", text);
   await requestReply(curScene, text);
 }
@@ -1202,26 +1361,39 @@ async function requestReply(scene, text){
   if(!CONFIG.apiProxy){
     // 地址没配是配置错误，不是「AI 回答不了」——说清楚，别拿别的东西冒充回答
     setMode("noconfig");
-    addNotice("未配置 AI 服务地址，无法连接讯飞星火。请在 CONFIG.apiProxy 填入云函数地址。");
+    // 同样是「这条问题没被回答」，所以同样落盘 + 不给重试键：地址没配，
+    // 重试一百次结果一样。跨场景切回来时它也该还在（openChat 会连问题气泡一起放回）。
+    addNotice("未配置 AI 服务地址，无法连接讯飞星火。请在 CONFIG.apiProxy 填入云函数地址。",
+              {scene: scene, text: text, noRetry: true});
     return;
   }
   if(pending.has(scene)){ toast("上一条还在等回复，请稍候"); return; }
   pending.set(scene, text); syncSending();
+  // 这一轮开始就把上一次的失败提示撤掉：这次的结果（成或败）会写新的上去。
+  // 不撤的话，用户重问一次并且成功了，切回来还挂着上一轮的「没连上」。
+  saveNotice(scene, null);
   const gen = viewGen;                     // 记下发起时的视图代号
   const wait = addTyping();
 
-  let reply = null, notice = null;
+  let reply = null, notice = null, status = 0, serverWait = 0;
   try{
     const r = await fetchWithTimeout(CONFIG.apiProxy, {
       method: "POST",
       headers: {"Content-Type": "application/json"},
-      body: asciiJSON({scene: scene, query: text, history: loadHist(scene).slice(-HIST_MAX)})
+      body: asciiJSON({scene: scene, query: text, history: trimHistByBudget(loadHist(scene))})
     }, CONFIG.timeoutMs);
+    status = r.status;
     // 接口约定：响应体永远是 JSON。无论 HTTP 状态码都先尝试解析并取 reply——
     // 否则云函数为 400/429/503 写好的那些「给用户看的话」一句都到不了用户眼前。
     let data = null;
     try{ data = await r.json(); }catch(e){ data = null; }
     const msg = (data && typeof data.reply === "string") ? data.reply.trim() : "";
+    /* 429 时云端会给出「还要等多久」（retryAfterMs）。限流窗口是 10 分钟，
+       拿不到这个数就只能按固定值冷却——那可能远远短于真实剩余时间，
+       按钮刚亮就又撞一次。取不到才退回 COOLDOWN_MS。上限夹到 10 分钟：
+       再长就不是在等冷却，是在等用户放弃，那种情况下不如不给按钮。 */
+    if(data && Number.isFinite(data.retryAfterMs) && data.retryAfterMs > 0)
+      serverWait = Math.min(data.retryAfterMs, 600000);
     if(r.ok && msg){ reply = msg; setMode("online"); }
     else {
       notice = msg || (r.ok
@@ -1272,9 +1444,32 @@ async function requestReply(scene, text){
     return;
   }
   if(notice){
-    if(scene !== curScene){ toast("「" + sceneName(scene) + "」这一次没有拿到回答"); return; }
+    /* 「重试」不是所有失败都该给，给了就是承诺一件做不到的事：
+       · 429 限流——云端窗口是 10 分钟 / 40 次，按钮一出现就能点，连点只会一遍遍
+         撞同一堵墙、还顺手把冷却续上。所以按云端给的剩余时间（retryAfterMs）
+         禁用倒计时；剩余时间太长（> COOLDOWN_MAX_SHOW）就干脆不给按钮——
+         让人盯一个九分钟的倒计时毫无意义，而文案里已经写明还要等多少秒。
+       · 503 配置缺失——云函数环境变量没配全，多等一会儿不会变好，
+         按钮变不出一次成功的回答。不给按钮，把话说明白。
+       · 400 / 403——请求本身没被受理（超长、被服务端的内容闸拦下）。同一段文字
+         再发一次结果逐字相同，这不是「重试」，是让用户白撞一遍。不给按钮；
+         400 另把原文还回输入框，好让「请精简后重试」有处可落。
+       · 其余（网络失败/超时 status=0、连上了却没内容 200、500/502/504）重试有意义。 */
+    const waitMs = status === 429 ? (serverWait || COOLDOWN_MS) : 0;
+    const retryable = (status === 0 || status === 200 ||
+                       (status >= 500 && status !== 503) ||
+                       (status === 429 && waitMs <= COOLDOWN_MAX_SHOW));
+    // 存要给「没切走」和「切走了」两条路都写；切走那条只有 toast，
+    // 不写存储的话用户切回来什么都看不到（见 openChat 的 held）。
+    // 只在用户还看着这个场景时还原文案——他在别的场景里，输入框是那个场景的
+    if(status === 400 && scene === curScene && !$("chatInput").value) $("chatInput").value = text;
+    if(scene !== curScene){
+      saveNotice(scene, {msg: notice, text: text, retry: retryable, delay: waitMs});
+      toast("「" + sceneName(scene) + "」这一次没有拿到回答");
+      return;
+    }
     if(gen !== viewGen) openChat(scene, true);
-    addNotice(notice, {scene: scene, text: text});
+    addNotice(notice, {scene: scene, text: text, noRetry: !retryable, delay: waitMs});
   }
 }
 
@@ -1401,8 +1596,28 @@ function toggleVoice(){
 }
 
 /* ---------- 启动：首页卡片 / NFC 与二维码可带 ?s= 场景参数直达 ---------- */
+/* 卡片是 div + role="button" + tabindex="0"（不是真 <button>）：换成真按钮要连
+   带重写 .scene-card 的一整套样式，而按钮的默认 text-align/font/color 都会变，
+   视觉要重渲、四张交付截图（08–11）也得重拍。这里用 ARIA 的等价做法，零样式改动。
+   代价是**键盘行为要自己补**——原生按钮的 Enter/Space 不会白来。 */
+function activateCard(el){
+  if(el.dataset.scene) openChat(el.dataset.scene);
+  else if(el.id === "recentCard") showLib();
+}
 document.getElementById("sceneList").addEventListener("click",e=>{
   const card=e.target.closest(".scene-card"); if(card) openChat(card.dataset.scene);
+});
+document.getElementById("sceneList").addEventListener("keydown",e=>{
+  if(e.key !== "Enter" && e.key !== " " && e.key !== "Spacebar") return;
+  const el = e.target.closest('[role="button"]'); if(!el) return;
+  e.preventDefault();     // Space 默认会滚动页面，必须挡掉
+  activateCard(el);
+});
+// 「最近存入」在 sceneList 之外，单独补一份（它只有 onclick，键盘够不着）
+const _recent = document.getElementById("recentCard");
+if(_recent) _recent.addEventListener("keydown", function(e){
+  if(e.key !== "Enter" && e.key !== " " && e.key !== "Spacebar") return;
+  e.preventDefault(); showLib();
 });
 // 回车发送。中文输入法在候选词上按回车是「上屏」，此时 keydown 的 key 也常常是 'Enter'，
 // 不判断 isComposing 就会把还没上屏的半句话当成问题发出去。
@@ -1429,6 +1644,11 @@ window.addEventListener("popstate",function(e){
 (function init(){
   try{
     setMode(CONFIG.apiProxy ? "unknown" : "noconfig");
+    /* 把初始的 aria-hidden 补齐：HTML 里只有首页带 .active（L783 `class="screen active"`），
+       不先跑一次 show() 的话，对话页与学习库在无障碍树里是「可见」的（它们只是 opacity:0）。
+       这里写死 "screen-home" 而不是去查 .screen.active：初值就是标记里那一个，
+       查一遍只是把同一个事实再推导一次，还得依赖 querySelector 在所有环境下都在。 */
+    show("screen-home");
     renderRecent();          // 首页的「最近存入」在启动时也要算一次（goHome 只管"回到首页"那条路径）
     const s = new URLSearchParams(location.search).get(CONFIG.sceneParam);
     if(Object.prototype.hasOwnProperty.call(SCENES, s)){
