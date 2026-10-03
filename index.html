@@ -973,6 +973,10 @@ const HIST_TAIL = '【过往对话结束。下面是用户的新问题】';
    前端先裁的意义是省流量：12 轮 × (q2000 + a4000) 最多约 72KB，而云端只采信这么多，
    九成以上的内容在上行路上白跑一趟（asciiJSON 转义后还会再放大）。 */
 const HIST_CHAR_BUDGET = 6000 - HIST_HEAD.length - HIST_TAIL.length;
+/* 截断标记，与云函数 buildText 里的 TRUNC_MARK **逐字相同**。
+   两边都会给「被裁掉尾巴的回答」加这个尾巴，用同一个串才能让模型看到一致的信号，
+   也让「前端裁的」和「云端裁的」在文案上分辨不出来——它们本来就该是同一件事。 */
+const TRUNC_MARK = '…（此处省略）';
 /* 429（云端限流）时重试键的冷却时长。**这是拿不到云端剩余时间时的兜底值**：
    正常路径下云端会在响应体里给 retryAfterMs，前端按那个真实剩余时间禁用。
    兜底的 15 秒只是"别让按钮一亮就立刻可点"的最小退避，不保证到时就能发出去。
@@ -1056,9 +1060,23 @@ function trimHistByBudget(list){
   let used = 0;
   for(let i = src.length - 1; i >= 0; i--){
     const t = src[i];
-    const len = String(t.q || "").length + String(t.a || "").length;
-    if(out.length && used + len > HIST_CHAR_BUDGET) break;
-    out.unshift(t); used += len;
+    let q = String(t.q || "");
+    let a = String(t.a || "");
+    let rec = t;
+    if(used + q.length + a.length > HIST_CHAR_BUDGET){
+      if(out.length) break;                 // 更近的轮次已经装下，更早的就不带了
+      /* 最近一轮**单独**就超预算：不能连它一起丢——模型连"上一句问的是什么"都看不到，
+         追问必然答非所问。q 优先保证，a 裁到剩余额度，并补上跟云端同一个省略标记。
+         这一段必须与云函数 buildText 的那几行**逐条对齐**：两边算出来不一样的话，
+         前端截过的内容云端还会再截一次，README 说的「同一口径」就成了句空话——
+         而上行体积也真的会超过预算，白跑一趟。改一边就要改另一边。 */
+      const room = Math.max(0, HIST_CHAR_BUDGET - used);
+      if(room <= q.length){ a = ""; q = q.slice(0, room); }
+      else a = a.slice(0, Math.max(0, room - q.length - TRUNC_MARK.length)) + TRUNC_MARK;
+      if(!q) break;
+      rec = {q: q, a: a};
+    }
+    out.unshift(rec); used += q.length + a.length;
   }
   return out;
 }
@@ -1147,6 +1165,7 @@ function openChat(scene, noPush){
   // class 挂上场景色，供样式里那颗 ::before 圆点取色（见 .chat-head h2 注释）。
   $("chatTitle").textContent = sc.name;
   $("chatTitle").className = sc.cls;
+  stopAllNoticeTicks();          // 整片消息区即将清空，先把挂在里面的冷却计时器停掉
   $("msgWrap").innerHTML = "";
   $("quickBar").innerHTML = "";
   // 用 createElement 而不是拼内联 onclick 字符串：以后文案里出现引号也不会把页面拼坏
@@ -1245,6 +1264,24 @@ function loadNotice(scene){
   return n;
 }
 
+/* 冷却计时器的登记表。addNotice 里那个 setInterval 的句柄原来是闭包私有的，而摘掉
+   提示条有几条路径（openChat 清空 msgWrap、requestReply 起手摘上一轮的、重试键自己
+   div.remove()）——它们都只动 DOM，够不着句柄。于是提示条已经不在文档里了，计时器
+   还在每秒一次地往那个脱了壳的按钮上写 textContent，最长空转到 COOLDOWN_MAX_SHOW。
+   登记成集合而不是「只留最近一个」：切场景/重进场景时新旧两条会短暂并存，
+   只记一个必漏先建的那条——而漏掉的那条正是会一直空转的那条。 */
+const noticeTicks = new Set();
+function stopNoticeTick(el){
+  if(!el || !el._tick) return;
+  clearInterval(el._tick);
+  noticeTicks.delete(el._tick);
+  el._tick = null;
+}
+function stopAllNoticeTicks(){
+  noticeTicks.forEach(function(t){ clearInterval(t); });
+  noticeTicks.clear();
+}
+
 // 系统提示条：与对话气泡区分开，不进历史、不给「存入学习库」。
 // 连不上时带上「重试」按钮——重试走的是同一条取回答的路径，不会重复插入用户气泡。
 // retry 传 {scene,text,...} 表示「这条要记进场景、（除非 noRetry）给重试键」；
@@ -1278,9 +1315,12 @@ function addNotice(text, retry){
         left -= 1;
         if(left > 0){ btn.textContent = "冷却中 · " + left + "s"; return; }
         clearInterval(tick);
+        noticeTicks.delete(tick);      // 自己走完也要从登记表上摘掉，否则表只增不减
         btn.classList.remove("cooling");
         btn.textContent = "已过冷却，重试";
       }, 1000);
+      div._tick = tick;                // 挂在元素上，好让摘除路径一并停掉它
+      noticeTicks.add(tick);
     } else {
       btn.textContent = "重试";
     }
@@ -1290,6 +1330,7 @@ function addNotice(text, retry){
       if(pending.has(retry.scene)) return;                       // 该场景已有在途请求
       // 连整条提示条一起摘掉，不是只摘按钮：只摘按钮的话，连着几次失败就会在
       // 消息区滚出一串「这一瞬间同时用的人有点多」，每条都还带着自己的重试键
+      stopNoticeTick(div);       // 能点到这颗键时冷却已走完，这里是结构性兜底
       div.remove();
       if(retry.scene !== curScene) openChat(retry.scene, true);   // 用户已经切走，先切回去
       requestReply(retry.scene, retry.text);
@@ -1407,7 +1448,7 @@ async function requestReply(scene, text){
      只摘带 data-retryable 的：开场白那种纯展示的 sys 条不会带这个标记，不该被误删。 */
   saveNotice(scene, null);
   const stale = $("msgWrap").querySelector('.msg.sys[data-retryable]');
-  if(stale) stale.remove();
+  if(stale){ stopNoticeTick(stale); stale.remove(); }
   const gen = viewGen;                     // 记下发起时的视图代号
   const wait = addTyping();
 
