@@ -1881,7 +1881,7 @@ window.addEventListener("popstate",function(e){
 (function init(){
   try{
     setMode(CONFIG.apiProxy ? "unknown" : "noconfig");
-    /* 把初始的 aria-hidden 补齐：HTML 里只有首页带 .active（L783 `class="screen active"`），
+    /* 把初始的 aria-hidden 补齐：HTML 里只有首页带 .active（L922 `class="screen active"`），
        不先跑一次 show() 的话，对话页与学习库在无障碍树里是「可见」的（它们只是 opacity:0）。
        这里写死 "screen-home" 而不是去查 .screen.active：初值就是标记里那一个，
        查一遍只是把同一个事实再推导一次，还得依赖 querySelector 在所有环境下都在。 */
