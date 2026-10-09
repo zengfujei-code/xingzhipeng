@@ -4,35 +4,46 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
 <title>星智碰 · AI 学习搭档</title>
-<meta name="theme-color" content="#FBF6F1" />
+<meta name="theme-color" content="#FFFFFF" />
 <meta name="description" content="星智碰 · AI 学习搭档：碰一碰 NFC 鼠标垫，免安装直达 AI 学习助手。" />
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23003A8C'/%3E%3Crect x='1' y='1' width='62' height='62' rx='15' fill='none' stroke='%23D9A94A' stroke-opacity='.45'/%3E%3Ctext x='32' y='45' font-size='38' font-family='sans-serif' text-anchor='middle' fill='%23ffffff'%3E%E6%98%9F%3C/text%3E%3C/svg%3E" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23003A8C'/%3E%3Crect x='1' y='1' width='62' height='62' rx='15' fill='none' stroke='%235AC8FA' stroke-opacity='.50'/%3E%3Ctext x='32' y='45' font-size='38' font-family='sans-serif' text-anchor='middle' fill='%23ffffff'%3E%E6%98%9F%3C/text%3E%3C/svg%3E" />
 <style>  /* ============================================================
-     设计令牌 · 白昼珊瑚（浅色纸感）
+     设计令牌 · 苹果白（中性白 · 系统蓝）
      品牌色（--blue / --deep）与 PPT、垫面视觉稿、主效果图是同一套，
      **不要在这里改**——它是这套物料之间唯一的锚点，现在只留在 .logo 上。
-     2026-10-09：整页从"深蓝夜航"翻成"白昼珊瑚"，底色由夜蓝换成暖白。
-     翻面的原因不是配色偏好，是**页面要读起来更年轻、更亮**：深底天然偏冷、
-     偏"设备感"，而垫子本体是深蓝金属，两者叠在一起整屏都是重色。
-     品牌蓝退到 logo 之后，页面与垫面仍然同源，只是不再同色。
+     2026-10-09 第一轮：整页从"深蓝夜航"翻成"白昼珊瑚"（夜蓝底 → 浅底）。
+     2026-10-09 第二轮：浅底这个方向对了，但那一版的底是**奶油色**（#F7F1EA），
+     整屏压着一层黄味。这一版把 **底 / 墨 / 线 / 影四层全部改成中性冷灰**，
+     点缀由珊瑚换成 Apple 系统蓝 #0071E3，走"干净、克制、留白"的路子。
+     2026-10-09 第三轮：三个场景色由「靛蓝 / 绿 / 玫红」换成 **蓝 / 绿 / 紫**——
+     玫红是三者里唯一的暖色，在"不要黄色"这条硬要求下必须换掉；同时把七处
+     **彩色 emoji** 换成内联 SVG（emoji 的颜色由字体决定，CSS 管不着）。
      一条必须记住的换算：**深色底上"提亮"是加对比，浅色底上"压深"才是加对比**——
-     所以下面每一个用于写字的令牌，改的方向都和原来相反。
+     所以下面每一个用于写字的令牌，改的方向都和深色版相反。
+     第二条（本轮新增）：**中性底的层次只能靠灰阶与投影**。底色一旦掺色，
+     就会读成"偏黄"或"偏蓝"的脏底；颜色一律交给 --acc 与三个场景色承担。
+     第三条（本轮踩到的）：**浅底上的灰不能照抄 Apple 的号**。Apple 的
+     #86868B 是给大字号/副标题用的，压在 #F5F5F7 上只有 3.26:1，做 10.5px
+     的正文会掉到 AA 以下。下面 --sub/--faint 是"照 Apple 的梯级、但按 WCAG
+     重新定值"的结果，两档实测 7.26:1 / 5.25:1（最差的一处是输入框占位符，
+     压在合成后的内底上 5.08:1）。审计脚本在 9_过程与归档（不提交）里。
      ============================================================ */
   :root{
     color-scheme:light;             /* 让输入框、滚动条等原生控件跟着变亮，否则会有白缝 */
     --blue:#00B0F0; --blue-dk:#0A6FBE; --deep:#003A8C;
-    --gold:#B0842A;                 /* 发丝线与导轨专用。浅底上金色要压深才看得见——
-                                       原来的 #D9A94A 压在暖白纸上只有 ~1.9:1，细到 1px 就直接消失 */
-    --ink:#241A1C; --sub:#5C5057; --faint:#6E6268;
-    --bg:#F7F1EA; --bg-2:#FFFFFF;
-    /* 玻璃面：翻成浅色之后它不再"透出夜蓝"，而是**压在暖白纸上的纯白卡片**——
-       上面 100% 白、下面收到 .74，让卡片自己有一点从上到下的厚度；
-       纸面的暖色辉光仍能从 .74 那一端透上来，所以它还是"压在纸上的一张纸"，
-       不是一块灰玻璃。 */
+    /* 发丝线 / 导轨次档色。它画在 1px 的卡片上沿与 2px 的竖导轨末端，
+       要"看得见"又不能"是个色"：纯白卡片上中性灰一细就糊进投影，
+       所以取系统蓝的浅档——1px 下读作一道冷光，与主色 #0071E3 同源。 */
+    --hair-acc:#5AC8FA;
+    --ink:#1D1D1F; --sub:#515154; --faint:#66666B;   /* 近黑 / 二级 / 三级文字 */
+    --bg:#F5F5F7; --bg-2:#FFFFFF;
+    /* 玻璃面：**压在浅灰底上的纯白卡片**——上面 100% 白、下面收到 .74，
+       让卡片自己有一点从上到下的厚度；底面的冷调仍能从 .74 那一端透上来，
+       所以它还是"压在底上的一张纸"，不是一块灰玻璃。 */
     --card:rgba(255,255,255,.72); --card-2:rgba(255,255,255,.90);
-    --line:rgba(36,26,28,.13); --line-2:rgba(36,26,28,.24);
-    --hair:rgba(255,255,255,.95);   /* 玻璃上沿的受光高光（浅底上它只比纸白一点点，
-                                       真正撑起"机加工"感的是 1px 边线 + 下面那道暖投影） */
+    --line:rgba(0,0,0,.09); --line-2:rgba(0,0,0,.18);
+    --hair:rgba(255,255,255,.95);   /* 玻璃上沿的受光高光（它只比卡片白一点点，
+                                       真正撑起"机加工"感的是 1px 边线 + 下面那道投影） */
 
     /* 圆角分四级：漂浮岛最大、外壳次之、内件小、胶囊全圆。
        全局统一一个半径是最典型的模板感 */
@@ -41,11 +52,14 @@
     /* 三个场景各有一个固定的色相，从首页卡片一路贯到顶栏圆点、学习库标签。
        它是一套"同一个场景在哪儿都是这个颜色"的对应关系，不是三块装饰色——
        所以只在 :root 定义一次，三个地方都引它，不再各写各的。 */
-    /* 三个场景色。浅底上白字压在图标上时，琥珀是最吃亏的那个：
-       #C98A16 只有 2.94:1（深色版原值 #CE8F2E 更低，2.77:1），
-       所以这一档单独再压深一点到 #C48312，实测白字 3.18:1，过图形要求的 3:1。
-       另外两个本来就够：计划 3.70:1、作业 4.30:1。 */
-    --c-plan:#E4562E; --c-homework:#12897A; --c-ask:#C48312;
+    /* 三个场景色：**蓝 / 绿 / 紫**。白字压在图标块上要过图形要求的 3:1，
+       所以都取**深档**（亮档如 systemGreen #34C759 只有 2.1:1，白字会糊在上面）。
+       实测：计划 #0071E3 = 4.70:1、作业 #1E8A4A = 4.38:1、答疑 #8A34B8 = 6.43:1。
+       两两色相间隔 66 / 69 / 135 度——三颗圆点在同一屏里一眼分得开。
+       上一版「靛蓝 / 绿 / 玫红」是 5.65 / 3.44 / 3.52:1，间隔 105 度更大，但玫红
+       是唯一的暖色；中间试过的「蓝 / 靛 / 青」最小间隔只有 31 度，三块看着都像
+       蓝的，而且青 #30B0C7 的白字只有 2.57:1，根本过不了 3:1。 */
+    --c-plan:#0071E3; --c-homework:#1E8A4A; --c-ask:#8A34B8;
 
     /* 版式：把原来 10/11/11.5/12/12.5/13/14/14.5/15/17/20 这十一个字号收成七档。
        挤在 3px 里的六档彼此读不出差别，却让每一处都得单独做一次决定——
@@ -62,21 +76,23 @@
        16px 是那条线，它不是排版选择，是行为约束。 */
     --t-input:16px;
 
-    /* 浅底上投影**是**主要的层次手段：纸是白的，卡片也是白的，
-       分开它们只能靠投影和边线。所以三档都比深色版更"实"，
-       而且全部染暖——中性灰投影压在暖白纸上会发青，一眼就看出是拼的。
-       辉光反过来：纸面上没有地方"发光"，它只剩"离纸面多高"这一层意思。 */
-    --sh-1:0 1px 2px rgba(92,58,45,.08);
-    --sh-2:0 14px 30px -14px rgba(92,58,45,.26);
-    --sh-3:0 22px 48px -24px rgba(92,58,45,.24);
-    --glow:0 14px 30px -18px rgba(201,65,27,.35);
+    /* 浅底上投影**是**主要的层次手段：底是浅灰的，卡片是白的，分开它们
+       靠投影 + 1px 边线。上一版把投影染暖（怕中性灰在暖纸上发青），
+       这一版反过来：**底色本身已经中性**，投影再带色就会把底染脏，
+       所以三档全部走纯中性黑，只调透明度与出血半径。
+       --glow 是主色自己的"离地高度"，浅底上它不发光，只是一层彩色投影。 */
+    --sh-1:0 1px 2px rgba(0,0,0,.06);
+    --sh-2:0 14px 30px -14px rgba(0,0,0,.18);
+    --sh-3:0 22px 48px -24px rgba(0,0,0,.16);
+    --glow:0 14px 30px -18px rgba(0,113,227,.26);
 
     /* 动效曲线：不用 ease / ease-in-out —— 那是"默认感"的来源 */
-    --acc:#FF6B4A;                  /* 亮珊瑚：只用在**不承载文字**的地方
-                                       （导轨、圆点、涟漪、标签底色），负责"跳" */
-    --acc-dk:#C9411B;               /* 深珊瑚：凡是白字压上去的地方都用它。
-                                       实测白字 = 4.93:1，过 AA；亮珊瑚只有 2.82:1 */
-    --acc-deep:#8A2A0F;
+    --acc:#0071E3;                  /* Apple 系统蓝：导轨、圆点、涟漪、标签底色，
+                                       以及所有主按钮。它同时也是白字的承载面——
+                                       实测白字 = 4.70:1，过 AA，直接当按钮底色即可 */
+    --acc-dk:#0066CC;               /* 压深一档：白字压上去 5.57:1，比 --acc 更稳；
+                                       用在链接文字与需要"读得实"的小元件上 */
+    --acc-deep:#004C99;
     --spring:cubic-bezier(.34,1.42,.5,1);   /* 带回弹，按下时的"弹一下"靠它 */
 
     --ease:cubic-bezier(.32,.72,0,1);
@@ -106,15 +122,15 @@
     font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","HarmonyOS Sans SC","MiSans",
       "Source Han Sans SC","Noto Sans CJK SC","Microsoft YaHei",sans-serif;
     color:var(--ink);
-    /* 白纸上不存在"发光"，所以这三团不再是辉光，而是**三处暖气**：
-       右上一点珊瑚、左上一点琥珀，底部一点极淡的暖米，让白纸有方向、不发冷。
-       三个都压得很低（.10/.09/.07）——纸面一旦能明显看出颜色，
+    /* 纯白底上不存在"发光"，所以这三团是**三处冷调**：
+       右上一点系统蓝、左上一点紫、底部一点青，让白底有方向、不发闷。
+       三个都压得很低（.07/.05/.07）——底面一旦能明显看出颜色，
        上面所有白色卡片就会开始跟它打架，白也白不干净。 */
     background:
-      radial-gradient(78% 46% at 88% -6%, rgba(255,107,74,.11) 0%, rgba(255,107,74,0) 60%),
-      radial-gradient(66% 42% at 2% 8%, rgba(214,150,72,.10) 0%, rgba(214,150,72,0) 58%),
-      radial-gradient(92% 52% at 50% 108%, rgba(196,131,18,.08) 0%, rgba(196,131,18,0) 62%),
-      linear-gradient(179deg,#FBF6F1 0%,#F6F0E9 46%,#F0E8DF 100%);
+      radial-gradient(78% 46% at 88% -6%, rgba(0,113,227,.07) 0%, rgba(0,113,227,0) 60%),
+      radial-gradient(66% 42% at 2% 8%, rgba(138,52,184,.05) 0%, rgba(138,52,184,0) 58%),
+      radial-gradient(92% 52% at 50% 108%, rgba(90,200,250,.07) 0%, rgba(90,200,250,0) 62%),
+      linear-gradient(179deg,#FFFFFF 0%,#FAFAFC 46%,#F2F2F5 100%);
     overflow:hidden;
     -webkit-font-smoothing:antialiased;
     -moz-osx-font-smoothing:grayscale;
@@ -159,18 +175,18 @@
      只有一个是安全区、另外三个是正常留白。 */
   .home-head{padding:22px 20px 0;padding-top:calc(var(--sat) + 22px);text-align:left}
   .masthead{display:flex;align-items:center;gap:14px}
-  /* 方角图标做成一枚"机加工过的金属牌"：深蓝渐变 + 上沿高光 + 一圈金发丝线。
+  /* 方角图标做成一枚"机加工过的金属牌"：深蓝渐变 + 上沿高光 + 一圈浅蓝发丝线。
      渐变浅端取了品牌蓝压深一档的 #0A93CC —— 直接用 #00B0F0 时白字只有
      2.48:1，连大字要求的 3:1 都不到（这是改动前就有的问题）。
-     ⚠ 2026-10-09 翻成白昼之后，**这一枚是全页唯一还带着品牌蓝的地方**，
-     它是有意留的：整页换肤之后，logo 是唯一还能把 H5 和垫面、和 PPT 认作
-     同一件东西的锚点。其余每一处蓝都换成了珊瑚——包括它那圈蓝色辉光，
-     白纸上留蓝光只会显得是没改干净。 */
+     ⚠ 2026-10-09：**这一枚是全页唯一还带着品牌蓝的地方**，它是有意留的——
+     整页换肤之后，logo 是唯一还能把 H5 和垫面、和 PPT 认作同一件东西的锚点。
+     它那圈发丝线跟着新主色走（浅蓝 #5AC8FA），外发光则由珊瑚改成中性，
+     免得一圈彩色光晕在纯白底上读成"没改干净"。 */
   .logo{width:56px;height:56px;border-radius:17px;flex:none;
     background:linear-gradient(152deg,#0A93CC 0%,#003A8C 100%);
     display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:23px;
-    border:1px solid rgba(217,169,74,.34);
-    box-shadow:0 16px 30px -14px rgba(0,45,105,.34),0 10px 24px -12px rgba(201,65,27,.30),
+    border:1px solid rgba(90,200,250,.42);
+    box-shadow:0 16px 30px -14px rgba(0,45,105,.34),0 10px 24px -12px rgba(0,0,0,.20),
       inset 0 1px 0 rgba(255,255,255,.30),inset 0 -1px 0 rgba(0,0,0,.16)}
   .mast-text{min-width:0;display:flex;flex-direction:column;gap:3px}
   /* overflow/text-overflow 是兜底：.mast-text 有 min-width:0、这条又是 nowrap，
@@ -180,44 +196,44 @@
      可用 214px，余量只剩 9px，再窄一点就会真的剪到字形。 */
   .brand-title{font-size:var(--t-display);font-weight:800;letter-spacing:-.015em;white-space:nowrap;margin:0;
     overflow:hidden;text-overflow:ellipsis}
-  /* 标题走"墨到灰"的纵向渐变，像被上面的暖气打亮——深色版是"白到蓝"，
+  /* 标题走"近黑到中灰"的纵向渐变，像被上面的光打亮——深色版是"白到蓝"，
      翻面之后方向整个反过来：**上端最黑、下端稍浅**，否则在纸上会读成"褪色"。
      背景裁切一旦不被支持，color:transparent 会让标题整条消失——所以用 @supports 兜住。
      ⚠ 220% 的高度是给末尾那道光扫留的（背景得比盒子高才扫得动），
      代价是**可视窗口只占整条渐变的前 45.5%**，所以色标不能照原样写 12%/100%：
      按 1/2.2 折算成 0% / 45.5%，静止时的观感才和原来完全一致。
-     第三站 #8A7278 静止时不显示，只在扫光经过时露出来。 */
+     第三站 #86868B 静止时不显示，只在扫光经过时露出来。 */
   @supports ((-webkit-background-clip:text) or (background-clip:text)){
-    .brand-title{background:linear-gradient(180deg,#2B1F23 0%,#6A565B 45.5%,#8A7278 100%);
+    .brand-title{background:linear-gradient(180deg,#1D1D1F 0%,#515154 45.5%,#86868B 100%);
       background-size:100% 220%;
       -webkit-background-clip:text;background-clip:text;color:transparent}
   }
-  /* 标语紧跟标题，前面挂一截金线当引号——这是刊头里唯一的金色，
+  /* 标语紧跟标题，前面挂一截灰线当引号——中性灰是这一版唯一的"第二支笔"，
      和卡片上沿的发丝线是同一支笔。字号降到 11px 并收掉字距：
      它是气氛，不是信息，不该和标题争读。 */
   .slogan{position:relative;margin:0;padding-left:15px;color:var(--sub);font-size:11px;
     letter-spacing:.14em;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .slogan::before{content:"";position:absolute;left:0;top:50%;width:9px;height:1px;
-    background:linear-gradient(90deg,rgba(176,132,42,0),rgba(176,132,42,.85))}
+    background:linear-gradient(90deg,rgba(60,60,67,0),rgba(60,60,67,.42))}
 
-  /* 玻璃卡片的公共面。不是"白底+边框+阴影"三件套，而是嵌在夜色里的一层薄玻璃：
+  /* 玻璃卡片的公共面。不是"白底+边框+阴影"三件套，而是嵌在底上的一层薄玻璃：
      上沿一道受光高光、外沿一圈发丝线、内部一层极淡的受光渐变。
      这里刻意**不用 backdrop-filter**——这些卡片在滚动容器里，逐帧重算背景模糊
-     会让手机掉帧；body 的辉光本来就透得上来，观感一样，代价是零。 */
+     会让手机掉帧；body 的冷调本来就透得上来，观感一样，代价是零。 */
   .nfc-hint,.scene-card,.lib-item,.msg.ai{
     background:linear-gradient(180deg,#FFFFFF 0%,rgba(255,255,255,.74) 100%);
     border:1px solid var(--line);
     box-shadow:var(--sh-2),inset 0 1px 0 var(--hair)}
-  /* 金色发丝线：只画在玻璃上沿，中间实、两头散开。几块玻璃重复同一道线，
-     就成了这一版的签名，而不至于变成几条晃眼的金边 */
+  /* 浅蓝发丝线：只画在玻璃上沿，中间实、两头散开。几块玻璃重复同一道线，
+     就成了这一版的签名，而不至于变成几条晃眼的彩边 */
   .nfc-hint::after,.scene-card::after,.lib-item::after{content:"";position:absolute;left:14%;right:14%;top:0;
     height:1px;pointer-events:none;
-    background:linear-gradient(90deg,rgba(176,132,42,0) 0%,rgba(176,132,42,.55) 50%,rgba(176,132,42,0) 100%)}
-  /* 珊瑚金导轨：AI 产出的内容（回答、学习库条目）左侧一道渐细的竖线。
+    background:linear-gradient(90deg,rgba(90,200,250,0) 0%,rgba(90,200,250,.55) 50%,rgba(90,200,250,0) 100%)}
+  /* 蓝青导轨：AI 产出的内容（回答、学习库条目）左侧一道渐细的竖线。
      它替代了"气泡小尾巴"——回答不再是一条条靠右或靠左的气泡，而是一叠通栏卡片。
-     导轨统一从品牌蓝渐到金，与上沿的金发丝线是同一套语言。 */
+     导轨统一从系统蓝渐到浅蓝，与上沿的发丝线是同一套语言。 */
   .msg.ai::before,.lib-item::before{content:"";position:absolute;left:0;width:2px;pointer-events:none;
-    background:linear-gradient(180deg,var(--acc) 0%,rgba(176,132,42,.78) 100%)}
+    background:linear-gradient(180deg,var(--acc) 0%,var(--hair-acc) 100%)}
 
   /* 唤醒块从竖排大卡降成一条横向提示条，并且**挪到卡片下面**。
      原来是"首页上最大的一个方块"（实测 137px，比主卡还高），而它讲的是
@@ -228,10 +244,10 @@
     padding:9px 14px;display:flex;align-items:center;gap:12px;text-align:left}
   .nfc-ripple{width:38px;height:38px;border-radius:50%;flex:none;position:relative;
     animation:breathe 3.6s var(--ease-soft) infinite;   /* 呼吸：只动 box-shadow，不碰尺寸 */
-    background:radial-gradient(circle,rgba(255,107,74,.30) 0%,rgba(255,107,74,.12) 52%,rgba(255,107,74,0) 78%);
+    background:radial-gradient(circle,rgba(0,113,227,.22) 0%,rgba(0,113,227,.10) 52%,rgba(0,113,227,0) 78%);
     display:flex;align-items:center;justify-content:center;font-size:17px}
   .nfc-ripple::before,.nfc-ripple::after{content:"";position:absolute;inset:0;border-radius:50%;
-    border:1.5px solid rgba(255,107,74,.55);animation:ripple 2.2s var(--ease-soft) infinite}
+    border:1.5px solid rgba(0,113,227,.45);animation:ripple 2.2s var(--ease-soft) infinite}
   .nfc-ripple::after{animation-delay:1.1s}
   @keyframes ripple{0%{transform:scale(.72);opacity:.85}100%{transform:scale(1.55);opacity:0}}
   .nfc-hint b{font-size:var(--t-body);font-weight:600;letter-spacing:.01em}
@@ -275,46 +291,46 @@
     box-shadow:var(--sh-1),var(--sh-2),inset 0 1px 0 var(--hair);
     transition:transform .18s var(--ease),box-shadow .28s var(--ease),border-color .28s var(--ease)}
   .scene-card::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
-    background:radial-gradient(130% 90% at 6% -10%,rgba(255,107,74,.16) 0%,rgba(255,107,74,0) 62%)}
-  .scene-card:active{transform:scale(.955);box-shadow:var(--sh-1),0 6px 14px -12px rgba(92,58,45,.16),inset 0 1px 0 var(--hair)}
+    background:radial-gradient(130% 90% at 6% -10%,rgba(0,113,227,.10) 0%,rgba(0,113,227,0) 62%)}
+  .scene-card:active{transform:scale(.955);box-shadow:var(--sh-1),0 6px 14px -12px rgba(0,0,0,.12),inset 0 1px 0 var(--hair)}
   @media (hover:hover){ .scene-card:hover{border-color:var(--line-2);box-shadow:var(--sh-1),var(--sh-3),var(--glow),inset 0 1px 0 var(--hair)} }
 
   /* 主卡：比次卡大一号——图标、标题、内边距同时加，不是只放大一个字 */
   .scene-card.lead{padding:16px 17px;gap:16px}
   .scene-card .scene-text{min-width:0;position:relative;z-index:1;flex:1}
-  .s1{--ico-a:var(--c-plan);--ico-b:#A8340F}
-  .s2{--ico-a:var(--c-homework);--ico-b:#0A5F55}
-  .s3{--ico-a:var(--c-ask);--ico-b:#8A5A0E}
+  .s1{--ico-a:var(--c-plan);--ico-b:#0050A8}
+  .s2{--ico-a:var(--c-homework);--ico-b:#0F5526}
+  .s3{--ico-a:var(--c-ask);--ico-b:#63237F}
   .scene-ico{width:44px;height:44px;border-radius:13px;flex:none;position:relative;z-index:1;
     display:flex;align-items:center;justify-content:center;font-size:21px;color:#fff;
-    background:linear-gradient(152deg,var(--ico-a,#E4562E),var(--ico-b,#A8340F));
-    box-shadow:0 10px 20px -14px rgba(92,58,45,.34),inset 0 1px 0 rgba(255,255,255,.26),inset 0 -1px 0 rgba(0,0,0,.13)}
+    background:linear-gradient(152deg,var(--ico-a,#0071E3),var(--ico-b,#0050A8));
+    box-shadow:0 10px 20px -14px rgba(0,0,0,.22),inset 0 1px 0 rgba(255,255,255,.26),inset 0 -1px 0 rgba(0,0,0,.13)}
   .scene-card.lead .scene-ico{width:54px;height:54px;font-size:25px;border-radius:16px}
   .scene-card h2{font-size:15px;font-weight:700;letter-spacing:-.005em}
   .scene-card.lead h2{font-size:var(--t-title)}
   .scene-card p{font-size:var(--t-body);color:var(--sub);margin-top:3px;line-height:1.6;text-wrap:pretty;
     line-break:strict}
   /* 例句：告诉用户"进去之后可以说什么"。它是一句提示、不是可点的东西——
-     所以不给胶囊底、不加边框（那会读成按钮），只用一截金线起头。
+     所以不给胶囊底、不加边框（那会读成按钮），只用一截蓝线起头。
      nowrap + 省略号是兜底：文案以后变长时，宁可截断也不要它把卡片撑高。 */
   .scene-eg{display:block;position:relative;margin-top:6px;padding-left:13px;
     font-size:var(--t-small);font-style:normal;color:var(--faint);line-height:1.5;
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .scene-eg::before{content:"";position:absolute;left:0;top:50%;width:7px;height:1px;
-    background:rgba(176,132,42,.78)}
+    background:rgba(0,113,227,.80)}
   /* 箭头从"绝对定位在右下角"改成行内的一项：卡片不再靠一块空版面给它安身。
      同一件"进去"的事给两档权重——主卡是发光实心按钮，次卡是普通箭头。 */
   .scene-card .go{flex:none;width:30px;height:30px;border-radius:50%;
     display:flex;align-items:center;justify-content:center;font-size:17px;line-height:1;
-    color:var(--sub);background:rgba(36,26,28,.05);border:1px solid var(--line);
+    color:var(--sub);background:rgba(0,0,0,.05);border:1px solid var(--line);
     transition:transform .28s var(--ease),color .28s var(--ease),background .28s var(--ease)}
   .scene-card.lead .go{width:38px;height:38px;font-size:20px;color:#fff;
-    background:linear-gradient(152deg,#C9411B,#8A2A0F);border-color:rgba(138,42,15,.35);
-    box-shadow:0 12px 24px -14px rgba(92,58,45,.34),0 10px 24px -12px rgba(201,65,27,.50),
+    background:linear-gradient(152deg,#0071E3,#0050A8);border-color:rgba(0,80,168,.30);
+    box-shadow:0 12px 24px -14px rgba(0,0,0,.22),0 10px 24px -12px rgba(0,113,227,.34),
       inset 0 1px 0 rgba(255,255,255,.22)}
   @media (hover:hover){
-    .scene-card:hover .go{transform:translateX(3px) scale(1.06);color:var(--acc-dk);background:rgba(255,107,74,.14)}
-    .scene-card.lead:hover .go{color:#fff;background:linear-gradient(152deg,#D84A20,#9C3413)}
+    .scene-card:hover .go{transform:translateX(3px) scale(1.06);color:var(--acc-dk);background:rgba(0,113,227,.12)}
+    .scene-card.lead:hover .go{color:#fff;background:linear-gradient(152deg,#0071E3,#0050A8)}
   }
   /* 320px（iPhone SE 一代那类）上主卡正文栏只剩 125px，描述一行摆不下两个字。
      把主卡降回次卡的图标尺寸，宽度还给文字（实测 125 → 152.67px）。
@@ -345,22 +361,22 @@
     border:1px solid var(--line);box-shadow:var(--sh-1),inset 0 1px 0 var(--hair);
     transition:transform .18s var(--ease),border-color .2s var(--ease)}
   /* 这一行是首页新增的可点区域，也是全页**唯一**一个原本没有任何按下反馈的可点元素
-     （三张卡、快捷问法、保存/重试、三个顶栏钮、删除都有 :active）。而 103 行那条
+     （三张卡、快捷问法、保存/重试、三个顶栏钮、删除都有 :active）。而 119 行那条
      -webkit-tap-highlight-color:transparent 又把系统自带的点按高亮全局关掉了——
      于是"没写 :active"在这份文件里就等于"点下去什么都看不见"，
      用户会以为没点到而重复点。反馈沿用场景卡的同一套语言：压一点点 + 边框提亮。 */
   .recent:active{transform:scale(.97);border-color:var(--line-2)}
   .recent::before{content:"";position:absolute;left:0;top:11px;bottom:11px;width:2px;border-radius:0 2px 2px 0;
-    background:linear-gradient(180deg,var(--acc) 0%,rgba(176,132,42,.78) 100%)}
+    background:linear-gradient(180deg,var(--acc) 0%,var(--hair-acc) 100%)}
   .recent-txt{flex:1;min-width:0;font-size:var(--t-body);color:var(--sub);
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .recent-go{flex:none;font-size:15px;color:#9A8B90;line-height:1}
+  .recent-go{flex:none;font-size:15px;color:var(--faint);line-height:1}
   /* 场景标签的三种色相。学习库与「最近存入」共用同一条规则，
      所以"学习计划 = 蓝"在哪儿都成立，不是各画各的。 */
   .tag{display:inline-block;flex:none;font-size:11px;font-weight:600;border-radius:7px;padding:2px 8px;
-    color:#B03A12;background:rgba(255,107,74,.13);border:1px solid rgba(255,107,74,.28)}
-  .tag.k-homework{color:#0A6152;background:rgba(18,137,122,.13);border-color:rgba(18,137,122,.30)}
-  .tag.k-ask{color:#7A4E0C;background:rgba(196,131,18,.14);border-color:rgba(196,131,18,.32)}
+    color:#0066CC;background:rgba(0,113,227,.10);border:1px solid rgba(0,113,227,.24)}
+  .tag.k-homework{color:#0F5526;background:rgba(30,138,74,.13);border-color:rgba(30,138,74,.30)}
+  .tag.k-ask{color:#63237F;background:rgba(138,52,184,.12);border-color:rgba(138,52,184,.28)}
   .home-foot{margin-top:auto;padding:14px 18px 16px;padding-bottom:calc(var(--sab) + 16px);text-align:center;
     color:var(--faint);font-size:var(--t-micro);line-height:1.7;letter-spacing:.02em;
     font-variant-numeric:tabular-nums}
@@ -371,15 +387,15 @@
      前面加一颗同色小圆点——状态类信息用点比用整块底色更克制也更易读。
      深色版用的是"薄琥珀底 + 亮琥珀字"（深底上那才对）；翻成白昼之后正好倒回来，
      用回常规的"薄底 + 深字"，同一套色相仍在，只是对比方向反了。 */
-  .status-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(176,132,42,.13);color:#7A4E0C;
-    border:1px solid rgba(176,132,42,.30);border-radius:var(--r-pill);padding:3px 11px;font-size:11px;
+  .status-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(120,120,128,.12);color:#515154;
+    border:1px solid rgba(120,120,128,.28);border-radius:var(--r-pill);padding:3px 11px;font-size:11px;
     font-weight:600}
   .status-badge::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor;flex:none;
-    box-shadow:0 0 0 3px rgba(176,132,42,.14)}
-  .status-badge.ok{background:rgba(18,137,122,.13);color:#0A6152;border-color:rgba(18,137,122,.30)}
-  .status-badge.ok::before{box-shadow:0 0 0 3px rgba(18,137,122,.14)}
-  .status-badge.err{background:rgba(200,50,56,.12);color:#A32127;border-color:rgba(200,50,56,.30)}
-  .status-badge.err::before{box-shadow:0 0 0 3px rgba(200,50,56,.14)}
+    box-shadow:0 0 0 3px rgba(120,120,128,.14)}
+  .status-badge.ok{background:rgba(30,138,74,.13);color:#0F5526;border-color:rgba(30,138,74,.30)}
+  .status-badge.ok::before{box-shadow:0 0 0 3px rgba(30,138,74,.14)}
+  .status-badge.err{background:rgba(255,59,48,.12);color:#C81E1E;border-color:rgba(255,59,48,.30)}
+  .status-badge.err::before{box-shadow:0 0 0 3px rgba(255,59,48,.14)}
 
   /* ---------- 极矮视口（横屏）----------
      首页的固定部分（刊头 + 唤醒条 + 页脚）实测约 240px，而横屏视口只有 375–390px
@@ -456,7 +472,7 @@
      消息从它下面滚过去 —— 这才是整页最该有玻璃感的地方。
      它是常驻元素、自己不滚动，所以这里用 backdrop-filter 是安全的。
      这条 top 依赖 var(--sat)。这里**不需要**再补一行裸值 top:10px 兜底，两个理由：
-     ① --sat 在 :root 里是无条件给了 0px 的（96 行），var(--sat) 不存在"取不到"，
+     ① --sat 在 :root 里是无条件给了 0px 的（112 行），var(--sat) 不存在"取不到"，
         最坏是那句 @supports 不成立、--sat 保持 0，top 就是 10px；
      ② 即便真在 computed-value 阶段失效，按 css-variables 规范该声明会整条按 unset 处理
         （于是 top 取 initial 的 auto），**不会**回退到同一声明块里更靠前的那一行——
@@ -468,9 +484,9 @@
     padding:6px 8px 6px 7px;display:flex;align-items:center;gap:9px;
     box-shadow:var(--sh-2),inset 0 1px 0 var(--hair)}
   .back{width:38px;height:38px;border-radius:50%;border:1px solid var(--line);background:var(--card);font-size:18px;
-    color:#4A3B40;cursor:pointer;flex:none;line-height:1;box-shadow:var(--sh-1);
+    color:#48484A;cursor:pointer;flex:none;line-height:1;box-shadow:var(--sh-1);
     transition:transform .18s var(--ease),background .2s var(--ease)}
-  .back:active{transform:scale(.94);background:rgba(36,26,28,.07)}
+  .back:active{transform:scale(.94);background:rgba(0,0,0,.07)}
   /* 标题改成"场景名 + 一颗场景色圆点"，不再写「AI 学习搭档 · 学习计划」。
      两个原因：一是顶栏里四个控件挤在 351px 内，标题只剩 156px，整串标题
      刚好卡满、一点余量都没有（实测 clientWidth 156 = scrollWidth 156，
@@ -485,24 +501,24 @@
      文字会变成匿名 flex 项，text-overflow 就不再生效了。 */
   .chat-head h2::before{content:"";position:absolute;left:0;top:50%;margin-top:-3.5px;
     width:7px;height:7px;border-radius:50%;background:var(--acc);
-    box-shadow:0 0 0 3px rgba(255,107,74,.18)}
-  /* 三颗圆点在浅底上不能再"发光"（白纸上没有发光这回事），
+    box-shadow:0 0 0 3px rgba(0,113,227,.18)}
+  /* 三颗圆点在浅底上不能再"发光"（白底上没有发光这回事），
      改成同色的一圈浅晕，读作"标签"，仍然和场景标签、导轨是同一个色相体系 */
-  .chat-head h2.c-plan::before{background:var(--c-plan);box-shadow:0 0 0 3px rgba(228,86,46,.18)}
-  .chat-head h2.c-homework::before{background:var(--c-homework);box-shadow:0 0 0 3px rgba(18,137,122,.18)}
-  .chat-head h2.c-ask::before{background:var(--c-ask);box-shadow:0 0 0 3px rgba(196,131,18,.20)}
+  .chat-head h2.c-plan::before{background:var(--c-plan);box-shadow:0 0 0 3px rgba(0,113,227,.18)}
+  .chat-head h2.c-homework::before{background:var(--c-homework);box-shadow:0 0 0 3px rgba(30,138,74,.18)}
+  .chat-head h2.c-ask::before{background:var(--c-ask);box-shadow:0 0 0 3px rgba(138,52,184,.18)}
   /* 学习库顶部那颗圆点要关掉：它不是场景，而圆点的语义（见上）正是"我在哪个场景里"。
      实测过它确实在显示——#screen-lib 里那枚 h2 的 className 是空串，于是落回基类那条
-     ::before，取默认的 --acc #FF6B4A，而「学习计划」那颗是 --c-plan #E4562E，
-     两个珊瑚几乎分不出来（深色版是默认蓝 vs 计划蓝，同一个毛病）：等于在
+     ::before，取默认的 --acc #0071E3，而「学习计划」那颗 --c-plan **现在也是** #0071E3，
+     两个圆点一模一样（上一版是默认蓝 vs 靛蓝，只是"几乎"分不出来）：等于在
      "不是场景"的屏幕上给出一个读不出差别的场景状态。
      用 #screen-lib 限定，而不是 :not([class])——后者只要将来给这枚 h2 挂上任何 class
      （哪怕纯粹是排版用的）就会把圆点重新长回来。 */
   #screen-lib .chat-head h2::before{display:none}
   .chat-head .lib-btn{border:1px solid var(--line);background:var(--card);border-radius:var(--r-pill);font-size:var(--t-small);
-    font-weight:600;color:#4A3B40;padding:7px 12px;cursor:pointer;flex:none;white-space:nowrap;box-shadow:var(--sh-1);
+    font-weight:600;color:#48484A;padding:7px 12px;cursor:pointer;flex:none;white-space:nowrap;box-shadow:var(--sh-1);
     transition:transform .18s var(--ease),background .2s var(--ease)}
-  .chat-head .lib-btn:active{transform:scale(.96);background:rgba(36,26,28,.07)}
+  .chat-head .lib-btn:active{transform:scale(.96);background:rgba(0,0,0,.07)}
   /* 「清空」从一枚圆形 emoji 按钮改成一枚轻量文字按钮。
      🧹 是这一屏唯一一个全彩字形，其余全是单色线性元素，它一出现就像跑错了地方；
      而且清空是破坏性且低频的操作，视觉上本来就不该和「学习库」一样重——
@@ -510,7 +526,7 @@
   .chat-head .mini{border:1px solid transparent;background:none;border-radius:var(--r-pill);
     font-size:var(--t-small);font-weight:600;color:var(--sub);padding:7px 9px;cursor:pointer;flex:none;
     white-space:nowrap;transition:transform .18s var(--ease),background .2s var(--ease),color .2s var(--ease)}
-  .chat-head .mini:active{transform:scale(.96);background:rgba(36,26,28,.07);color:var(--ink)}
+  .chat-head .mini:active{transform:scale(.96);background:rgba(0,0,0,.07);color:var(--ink)}
 
   /* 顶部要给悬浮顶栏让出空间（10 + 52 + 12 = 74），否则第一条消息会被压在栏下面 */
   .msg-wrap{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;
@@ -568,43 +584,43 @@
   .msg.ai .md-li::before{content:"";position:absolute;left:3px;top:.68em;width:4px;height:4px;
     border-radius:50%;background:var(--acc)}
   .msg.ai .md-rule{display:block;height:1px;margin:12px 0 0;
-    background:linear-gradient(90deg,rgba(36,26,28,.16),rgba(36,26,28,0))}
+    background:linear-gradient(90deg,rgba(0,0,0,.16),rgba(0,0,0,0))}
   .msg.ai .md-h b,.msg.ai .md-p b,.msg.ai .md-li b{font-weight:700;color:var(--ink)}
-  /* 用户气泡走"深珊瑚"：一是和白色卡片形成明确的两极，二是亮珊瑚 #FF6B4A 上压白字
+  /* 用户气泡走"主色蓝"：一是和白色卡片形成明确的两极，二是亮蓝 #0071E3 上压白字
      只有 2.82:1（不达 AA），所以写字的那一档必须压深。这个渐变最浅处 4.93:1。
      在纸上它是全屏最重的一块，所以照样跳得出来——深色版靠"更亮"跳出来，
      浅色版靠"更深"跳出来，方向相反、作用是同一个 */
   .msg.me{white-space:pre-wrap;   /* 用户自己敲的换行要原样保留 */
-    background:linear-gradient(158deg,#C9411B 0%,#8A2A0F 100%);color:#fff;
+    background:linear-gradient(158deg,#0071E3 0%,#0050A8 100%);color:#fff;
     border-radius:22px 22px 6px 22px;max-width:78%;
-    align-self:flex-end;box-shadow:0 12px 26px -16px rgba(92,58,45,.34),0 10px 24px -14px rgba(201,65,27,.30),
+    align-self:flex-end;box-shadow:0 12px 26px -16px rgba(0,0,0,.22),0 10px 24px -14px rgba(0,113,227,.22),
       inset 0 1px 0 rgba(255,255,255,.20)}
   /* 正文现在是块级 <p>，所以这枚按钮跟在 </p> 之后会自己换行——
      addMsg 里那个 <br/> 因此去掉了，间距改由 margin 负责。 */
-  .msg .save-btn{display:inline-block;margin-top:11px;font-size:var(--t-small);font-weight:600;color:#B03A12;background:rgba(255,107,74,.13);
-    border:1px solid rgba(255,107,74,.30);border-radius:var(--r-pill);padding:4px 13px;cursor:pointer;
+  .msg .save-btn{display:inline-block;margin-top:11px;font-size:var(--t-small);font-weight:600;color:#0066CC;background:rgba(0,113,227,.10);
+    border:1px solid rgba(0,113,227,.26);border-radius:var(--r-pill);padding:4px 13px;cursor:pointer;
     transition:transform .18s var(--ease),background .2s var(--ease)}
-  .msg .save-btn:active{transform:scale(.96);background:rgba(255,107,74,.24)}
+  .msg .save-btn:active{transform:scale(.96);background:rgba(0,113,227,.20)}
   /* 系统提示条：用于「服务返回了错误」这类不是模型回答的内容，样式刻意区别于对话气泡。
      addNotice 是先 textContent 再 appendChild，所以这里只能靠 flex 列排把
      文字和「重试」按钮分两行——加不了包裹层。 */
   .msg.sys{white-space:pre-wrap;  /* guard() 的文案带 \n①②③，靠这一条分行 */
     align-self:center;max-width:94%;padding:11px 15px;
-    background:rgba(176,132,42,.12);border:1px solid rgba(176,132,42,.30);color:#7A4E0C;
+    background:rgba(120,120,128,.12);border:1px solid rgba(120,120,128,.28);color:#515154;
     font-size:var(--t-small);line-height:1.65;text-align:center;border-radius:var(--r-md);box-shadow:var(--sh-1);
     display:flex;flex-direction:column;align-items:center}
   /* 连接失败提示条里的「重试」按钮 */
-  .msg .retry-btn{display:inline-block;margin-top:9px;font-size:var(--t-small);font-weight:600;color:#8A5A0E;background:rgba(176,132,42,.14);
-    border:1px solid rgba(176,132,42,.34);border-radius:var(--r-pill);padding:4px 15px;cursor:pointer;
+  .msg .retry-btn{display:inline-block;margin-top:9px;font-size:var(--t-small);font-weight:600;color:#48484A;background:rgba(120,120,128,.12);
+    border:1px solid rgba(120,120,128,.28);border-radius:var(--r-pill);padding:4px 15px;cursor:pointer;
     transition:transform .18s var(--ease),background .2s var(--ease)}
-  .msg .retry-btn:active{transform:scale(.96);background:rgba(176,132,42,.26)}
+  .msg .retry-btn:active{transform:scale(.96);background:rgba(120,120,128,.22)}
   /* 429 冷却中的重试键。缩成半透明只是一半——真正要拦住的是"点了没反应"
      被当成手机卡了：所以字面把倒计时写在按钮上，并且 .cooling 在 onclick 里
      也真的不往下走（见 addNotice）。 */
-  .msg .retry-btn.cooling{opacity:.45;cursor:default;background:rgba(176,132,42,.07);border-color:rgba(176,132,42,.18)}
-  .msg .retry-btn.cooling:active{transform:none;background:rgba(176,132,42,.07)}
+  .msg .retry-btn.cooling{opacity:.45;cursor:default;background:rgba(120,120,128,.07);border-color:rgba(120,120,128,.18)}
+  .msg .retry-btn.cooling:active{transform:none;background:rgba(120,120,128,.07)}
   .typing{display:inline-flex;gap:4px;align-items:center;padding:2px 0}
-  .typing i{width:6px;height:6px;border-radius:50%;background:rgba(92,80,87,.42);animation:blink 1.3s var(--ease-soft) infinite}
+  .typing i{width:6px;height:6px;border-radius:50%;background:rgba(0,0,0,.28);animation:blink 1.3s var(--ease-soft) infinite}
   .typing i:nth-child(2){animation-delay:.18s}.typing i:nth-child(3){animation-delay:.36s}
   @keyframes blink{0%,62%,100%{opacity:.22;transform:translateY(0)}32%{opacity:1;transform:translateY(-2px)}}
   /* 快捷问法：右侧留一道渐隐，暗示"还能往右划"。
@@ -622,9 +638,9 @@
     mask-image:linear-gradient(90deg,#000 0,#000 calc(100% - 16px),transparent 100%)}
   .quick::-webkit-scrollbar{display:none}
   .quick span{background:var(--card);border:1px solid var(--line);border-radius:var(--r-pill);padding:7px 12px;font-size:var(--t-small);
-    color:#4A3B40;cursor:pointer;flex:none;box-shadow:var(--sh-1);
+    color:#48484A;cursor:pointer;flex:none;box-shadow:var(--sh-1);
     transition:transform .18s var(--ease),background .2s var(--ease),border-color .2s var(--ease)}
-  .quick span:active{transform:scale(.96);background:rgba(36,26,28,.07)}
+  .quick span:active{transform:scale(.96);background:rgba(0,0,0,.07)}
   /* 输入条从"贴边通栏 + 上边框"改成浮在底部的岛：外壳是玻璃，里面再嵌一条胶囊输入框。
      两层圆角同心（26 - 7 = 19 ≈ 内层胶囊的实际观感半径），这是"机加工"读起来的原因。
      它同样不滚动，backdrop-filter 用在它身上也是安全的。 */
@@ -637,36 +653,43 @@
     backdrop-filter:blur(22px) saturate(170%);-webkit-backdrop-filter:blur(22px) saturate(170%);
     border:1px solid var(--line-2);border-radius:var(--r-xl);
     padding:7px 7px 7px 9px;display:flex;gap:8px;align-items:center;
-    box-shadow:0 20px 44px -22px rgba(92,58,45,.26),0 14px 30px -20px rgba(201,65,27,.30),inset 0 1px 0 var(--hair)}
-  .input-bar input{flex:1;min-width:0;border:1px solid var(--line);background:rgba(36,26,28,.035);border-radius:var(--r-pill);
+    box-shadow:0 20px 44px -22px rgba(0,0,0,.18),0 14px 30px -20px rgba(0,113,227,.22),inset 0 1px 0 var(--hair)}
+  .input-bar input{flex:1;min-width:0;border:1px solid var(--line);background:rgba(0,0,0,.04);border-radius:var(--r-pill);
     padding:11px 16px;font-size:var(--t-input);color:var(--ink);outline:none;
-    box-shadow:inset 0 1px 2px rgba(92,58,45,.06);
+    box-shadow:inset 0 1px 2px rgba(0,0,0,.05);
     transition:background .22s var(--ease),border-color .22s var(--ease),box-shadow .22s var(--ease)}
   /* 占位符原先硬编码 #7C8CAE，与 --faint 各改各的迟早会漂；直接引令牌。
    改令牌的原因：按真实像素量，#7C8CAE 在输入岛底(23,40,64)上只有 4.40:1，
    在学习库玻璃面(30,45,68)上 4.11:1，都低于正文要求的 4.5。
    提亮到 #8998B6 后最差 4.78:1，仍明显暗于 --sub，层级不乱。
-   ⚠ 2026-10-09 翻成白昼珊瑚，上面三个数是**深色版的历史值，已作废**，留着只为说明
-   令牌是怎么来的。浅色版重量的结果：输入框内底 (245,241,237) #F5F1ED、学习库卡上沿 (254,254,253) #FEFEFD，
-   取两者更差的一个，最差 5.18:1。同一条口径——按真实像素取中位色，不是算出来的。
-   方向也照旧是"压深"：深色版是提亮到刚好过线，浅色版是压深到刚好过线，
-   两边都刻意只留一点余量，免得 --faint 抢了 --sub 的活。 */
+   ⚠ 2026-10-09 两次翻面之后，上面三个数是**深色版的历史值，已作废**，留着只为说明
+   令牌是怎么来的。翻浅底那一版量的结果是：输入框内底 (245,241,237) #F5F1ED、
+   学习库卡上沿 (254,254,253) #FEFEFD，取更差的一个，最差 5.18:1
+   ——那是 --faint = #6E6268 时的数。
+   ⚠ 本轮（中性白）**重算过一遍**，因为它差点变成一次回归：照抄 Apple 的
+   tertiary gray #86868B 压在 #F5F5F7 上只有 3.26:1，10.5px 的正文直接掉出 AA。
+   先取到 #6E6E73（= Apple 的 secondary）时，页面底 4.66:1、输入框内底 4.57:1
+   ——过是过了，可余量只剩 0.07，比上一版的 5.18:1 还窄。所以再压深一格到
+   #66666B，最差的一处（占位符压在合成内底上）回到 5.08:1，页面底 5.25:1。
+   --sub 是 #515154（7.26:1），梯队仍然让得开。方向仍是"压深"：
+   深色版是提亮到刚好过线，浅色版是压深到刚好过线，两边都只留一点余量，
+   免得 --faint 抢了 --sub 的活。 */
 .input-bar input::placeholder{color:var(--faint)}
   /* 原来这里是裸的 outline:none（键盘用户看不到焦点）。改成"描边 + 光晕"，
      比系统默认轮廓更贴合本页，也仍然是明确的焦点指示 */
-  .input-bar input:focus{background:#FFFFFF;border-color:rgba(201,65,27,.55);box-shadow:0 0 0 4px rgba(255,107,74,.18)}
+  .input-bar input:focus{background:#FFFFFF;border-color:rgba(0,113,227,.55);box-shadow:0 0 0 4px rgba(0,113,227,.18)}
   /* 两个圆钮不等大：发送是这条动线里唯一的"提交"，麦克风是辅助。
      一样大等于说这两件事一样重要 */
   .mic,.send{border:none;border-radius:50%;cursor:pointer;flex:none;line-height:1;
     transition:transform .18s var(--ease),box-shadow .25s var(--ease),background .22s var(--ease)}
-  .mic{width:40px;height:40px;font-size:16px;background:rgba(255,107,74,.12);color:#B03A12;
-    border:1px solid rgba(255,107,74,.30);box-shadow:var(--sh-1)}
-  .send{width:46px;height:46px;font-size:17px;background:linear-gradient(152deg,#C9411B,#8A2A0F);color:#fff;
-    box-shadow:0 12px 24px -14px rgba(92,58,45,.34),0 10px 26px -12px rgba(201,65,27,.48),inset 0 1px 0 rgba(255,255,255,.22)}
+  .mic{width:40px;height:40px;font-size:16px;background:rgba(0,113,227,.10);color:#0066CC;
+    border:1px solid rgba(0,113,227,.26);box-shadow:var(--sh-1)}
+  .send{width:46px;height:46px;font-size:17px;background:linear-gradient(152deg,#0071E3,#0050A8);color:#fff;
+    box-shadow:0 12px 24px -14px rgba(0,0,0,.22),0 10px 26px -12px rgba(0,113,227,.32),inset 0 1px 0 rgba(255,255,255,.22)}
   .mic:active,.send:active{transform:scale(.93)}
-  .mic.rec{background:rgba(200,50,56,.14);color:#A32127;border-color:rgba(200,50,56,.40);animation:pulse 1.4s var(--ease-soft) infinite}
+  .mic.rec{background:rgba(255,59,48,.14);color:#C81E1E;border-color:rgba(255,59,48,.40);animation:pulse 1.4s var(--ease-soft) infinite}
   .mic:disabled,.send:disabled{opacity:.4;cursor:not-allowed;animation:none;box-shadow:none}
-  @keyframes pulse{50%{box-shadow:0 0 0 7px rgba(200,50,56,.16)}}
+  @keyframes pulse{50%{box-shadow:0 0 0 7px rgba(255,59,48,.16)}}
 
   /* ---------- 学习库 ---------- */
   /* 和对话页共用悬浮顶栏，所以这里也要给顶栏让位 */
@@ -686,7 +709,7 @@
    同一个坑不会再回来：换行由元素边界决定，不依赖能不能继承到某条祖先规则。） */
 .lib-item{flex:0 0 auto;position:relative;overflow:hidden;border-radius:var(--r-md);
     padding:12px 16px 12px 22px;font-size:var(--t-body);line-height:1.65;color:var(--ink);
-    box-shadow:var(--sh-1),0 10px 22px -18px rgba(92,58,45,.20),inset 0 1px 0 var(--hair);text-wrap:pretty}
+    box-shadow:var(--sh-1),0 10px 22px -18px rgba(0,0,0,.14),inset 0 1px 0 var(--hair);text-wrap:pretty}
   .lib-item::before{top:12px;bottom:12px;border-radius:0 2px 2px 0}
   .lib-item .tag{margin-bottom:6px}
   .lib-item .md-p{margin:0}
@@ -698,7 +721,7 @@
   .lib-item .md-li::before{content:"";position:absolute;left:3px;top:.66em;width:4px;height:4px;
     border-radius:50%;background:var(--acc)}
   .lib-item .md-rule{display:block;height:1px;margin:9px 0 0;
-    background:linear-gradient(90deg,rgba(36,26,28,.16),rgba(36,26,28,0))}
+    background:linear-gradient(90deg,rgba(0,0,0,.16),rgba(0,0,0,0))}
   .lib-item time{display:block;color:var(--faint);font-size:var(--t-micro);margin-top:8px;
     font-variant-numeric:tabular-nums;letter-spacing:.01em}
   /* 顶栏右侧的条数。它替掉了原来那枚「刷新」按钮——学习库读的是本机 localStorage，
@@ -706,21 +729,21 @@
      换成"有几条"是真信息，而且列表为空时它自然消失。 */
   .lib-count{flex:none;font-size:var(--t-small);font-weight:600;color:var(--sub);padding-right:7px;
     font-variant-numeric:tabular-nums}
-  /* × 的颜色从 #8C9EBC 提到 #A9B8D2（2026-10-09 翻白昼时再压深到 #8A7C82）：
+  /* × 的颜色从 #8C9EBC 提到 #A9B8D2（2026-10-09 翻浅底时再压深到 #86868B）：
      它是这一屏唯一的操作入口，原来在正文旁边几乎看不出是个按钮。
      位置一个字没动——命中区（44×38）是按这个位置量过的，动一下就要重量。 */
-  .lib-item .del{position:absolute;top:11px;right:12px;border:none;background:none;color:#8A7C82;font-size:16px;
+  .lib-item .del{position:absolute;top:11px;right:12px;border:none;background:none;color:#86868B;font-size:16px;
     line-height:1;cursor:pointer;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;
     justify-content:center;transition:background .2s var(--ease),color .2s var(--ease)}
-  .lib-item .del:active{background:rgba(36,26,28,.07);color:var(--ink)}
+  .lib-item .del:active{background:rgba(0,0,0,.07);color:var(--ink)}
   .empty{text-align:center;color:var(--faint);font-size:var(--t-body);margin-top:64px;line-height:2.1}
   .toast{position:fixed;left:50%;bottom:calc(var(--sab) + 98px);
     transform:translate(-50%,10px) scale(.96);
-    background:rgba(38,28,30,.90);
+    background:rgba(29,29,31,.92);
     backdrop-filter:blur(18px) saturate(170%);-webkit-backdrop-filter:blur(18px) saturate(170%);
     color:#F3F8FF;font-size:13px;font-weight:500;letter-spacing:.01em;padding:10px 19px;border-radius:var(--r-pill);
     border:1px solid rgba(255,255,255,.16);
-    box-shadow:0 18px 40px -16px rgba(60,38,32,.42),0 12px 28px -14px rgba(201,65,27,.32),
+    box-shadow:0 18px 40px -16px rgba(0,0,0,.30),0 12px 28px -14px rgba(0,113,227,.26),
       inset 0 1px 0 rgba(255,255,255,.13);
     opacity:0;pointer-events:none;z-index:99;max-width:80%;
     transition:opacity .28s var(--ease),transform .28s var(--ease)}
@@ -747,7 +770,7 @@
      `.del` 高度仍是 38（宽 44）：往下撑会压到正文首行，是刻意的取舍，见它自己那条注释。
      除 `.del` 这一条外，八处的宽高现在都在 44 以上。
 
-     .del 的 ::after 是按钮自己的，与 213 行 .lib-item::after 那道金发丝线不冲突。
+     .del 的 ::after 是按钮自己的，与 229 行 .lib-item::after 那道金发丝线不冲突。
 
      .quick span 也在这份名单里，但它的撑法跟别人不一样，说清楚免得下次又被漏掉：
      .quick 是 overflow-x:auto 的横向滚动容器，而 overflow 一轴为 auto 时另一轴
@@ -798,7 +821,7 @@
      内边距吃掉——同一个失效模式在首页被承认并解决了，在这两块屏上根本没被承认。
 
      ⚠ 这一段必须写在**所有** .chat-head/.back/.msg-wrap/.lib-list 基类规则之后。
-     媒体查询不加特异性，同特异性下靠源码顺序定胜负；把这几条塞进第 402 行那个
+     媒体查询不加特异性，同特异性下靠源码顺序定胜负；把这几条塞进第 418 行那个
      媒体块里是无效的（试过，量出来顶栏还是 52px、.back 还是 38px，静默不生效）。
      所以它单独放在样式表末尾。
 
@@ -814,7 +837,7 @@
 
   /* 键盘可达性：焦点环是必需项，不是装饰。下面这条只作用于键盘聚焦，
      不会在触摸点击后冒出来（输入框的焦点环在上面单独给了） */
-  :focus-visible{outline:2px solid rgba(201,65,27,.85);outline-offset:2px}
+  :focus-visible{outline:2px solid rgba(0,113,227,.85);outline-offset:2px}
   @media (prefers-reduced-motion: reduce){
     *,*::before,*::after{animation-duration:.001ms !important;animation-iteration-count:1 !important;
       transition-duration:.001ms !important}
@@ -865,7 +888,7 @@
     /* 对话页 / 学习库的新内容从下方淡入，不再"啪"地出现。
        .msg 与 .lib-item 都没有 :hover / :active 上的 transform，用 backwards 安全 */
     .msg,.lib-item{animation:cardIn .42s var(--ease) backwards}
-    /* 标题那道暖色 6.4s 从下往上走一遍，只有最后四分之一在动——
+    /* 标题那道扫光 6.4s 从下往上走一遍，只有最后四分之一在动——
        动得越少越像"光在纸面上滑过"，动多了就是闪烁 */
     @supports ((-webkit-background-clip:text) or (background-clip:text)){
       .brand-title{animation:sheen 6.4s var(--ease-soft) infinite}
@@ -875,7 +898,21 @@
   @keyframes sheen{0%,70%,100%{background-position:0 0}86%{background-position:0 100%}}
   /* 唤醒圈的呼吸：给静止的提示条一点"它活着"的暗示。
      只呼吸 box-shadow，**不碰宽高**——这一块的尺寸是按横屏档量过的 */
-  @keyframes breathe{0%,100%{box-shadow:0 0 0 0 rgba(255,107,74,0)}50%{box-shadow:0 0 0 7px rgba(255,107,74,.16)}}
+  @keyframes breathe{0%,100%{box-shadow:0 0 0 0 rgba(0,113,227,0)}50%{box-shadow:0 0 0 7px rgba(0,113,227,.16)}}
+
+  /* ===== 2026-10-09 图标改用内联 SVG（原来这七处是彩色 emoji）=====
+     emoji 的颜色由**字体**决定，CSS 的 color 对它完全无效，而且三家平台
+     画出来不一样：📡 在 Apple / Noto 上是黄橙色，📅 在 Apple 上是红白，
+     🎤 在 Windows 上是灰蓝。只要它们还在，"页面里不出现黄色"就不可保证，
+     换任何色板都没用——所以这里换成 stroke:currentColor 的矢量字形，
+     颜色 100% 由本文件的色板决定。
+     尺寸一律用百分比，跟着方块的断点一起缩放，不用再逐个媒体查询补。 */
+  .scene-ico svg{width:50%;height:50%;stroke-width:2.1}
+  .nfc-ripple{color:#0066CC}
+  .nfc-ripple svg{width:50%;height:50%;stroke-width:2.1}
+  .mic svg{width:46%;height:46%;stroke-width:2.2}
+  .send svg{width:44%;height:44%;stroke-width:2.4}
+  .empty svg{width:34px;height:34px;display:block;margin:0 auto 6px}
 </style>
 </head>
 <body>
@@ -894,7 +931,7 @@
     </div>
     <div class="scene-list" id="sceneList">
       <div class="scene-card lead s1" data-scene="plan" role="button" tabindex="0">
-        <div class="scene-ico">📅</div>
+        <div class="scene-ico"><svg stroke-width="2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4.6" width="18" height="16.4" rx="4.2"/><path d="M3 9.6h18"/><path d="M8 2.6v3.6M16 2.6v3.6"/></svg></div>
         <div class="scene-text">
           <h2>学习计划</h2>
           <p>说出专业与目标，生成一周学习计划与每日任务</p>
@@ -903,7 +940,7 @@
         <div class="go">›</div>
       </div>
       <div class="scene-card s2" data-scene="homework" role="button" tabindex="0">
-        <div class="scene-ico">✅</div>
+        <div class="scene-ico"><svg stroke-width="2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9.2"/><path d="M7.9 12.4l2.9 2.9 5.4-6.2"/></svg></div>
         <div class="scene-text">
           <h2>作业管家</h2>
           <p>口述作业要求，AI 拆解任务、排优先级与提醒</p>
@@ -912,7 +949,7 @@
         <div class="go">›</div>
       </div>
       <div class="scene-card s3" data-scene="ask" role="button" tabindex="0">
-        <div class="scene-ico">💬</div>
+        <div class="scene-ico"><svg stroke-width="2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.6 11.5c0 4.3-3.8 7.8-8.6 7.8-1.3 0-2.5-.25-3.6-.72L4.2 20.1l1.35-3.5c-1.3-1.35-2.05-3.1-2.05-5.1 0-4.3 3.85-7.8 8.5-7.8 4.8 0 8.6 3.5 8.6 7.8z"/></svg></div>
         <div class="scene-text">
           <h2>随问随答</h2>
           <p>知识点讲解、中英互译，语音提问张口就答</p>
@@ -934,7 +971,7 @@
          目前没有实测证据。**用户可见的界面只写已经确定的事**，不确定的
          通路不写进来，免得页面在教用户做一件可能不存在的事。 -->
     <div class="nfc-hint">
-      <div class="nfc-ripple">📡</div>
+      <div class="nfc-ripple"><svg stroke-width="2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8.4 7.6a6.6 6.6 0 0 1 0 8.8"/><path d="M12.1 4.6a11 11 0 0 1 0 14.8"/><path d="M15.8 1.6a15.4 15.4 0 0 1 0 20.8"/></svg></div>
       <div><b>碰一碰鼠标垫右上角</b><span>免安装直达，无需下载 App</span></div>
     </div>
     <div class="home-foot">
@@ -954,12 +991,12 @@
     <div class="msg-wrap" id="msgWrap"></div>
     <div class="quick" id="quickBar"></div>
     <div class="input-bar">
-      <button class="mic" id="micBtn" onclick="toggleVoice()">🎤</button>
+      <button class="mic" id="micBtn" onclick="toggleVoice()" aria-label="语音输入"><svg stroke-width="2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="2.4" width="6" height="11.6" rx="3"/><path d="M5.4 11.4a6.6 6.6 0 0 0 13.2 0"/><path d="M12 18v3.6"/></svg></button>
       <!-- 占位符字数是被宽度倒推出来的，别再凭手感加长：实测 320 宽下输入框的
            文字区只有 142px，16px 的汉字恰好 16px 一个，所以最多放 8 个字多一点。
            原文案「说一句或输入你的需求…」11 个单位 = 176px，超出 33px，
            而 WebKit 对超长的 placeholder **不给省略号**，直接从字形中间切断。
-           这里原先写"最窄那档是 320、留 31px 余量"，与上面 176 行那句
+           这里原先写"最窄那档是 320、留 31px 余量"，与上面 192 行那句
            "设计下限约 295px（Galaxy Fold 外屏 280px 一类）"互相矛盾：
            280 才是那份口径里的下限，而它在 320 之外——文字区只有 102px，
            末尾那个"…"（112−96=16px 宽）当时只剩 6px 可显示，是被切过的。
@@ -968,7 +1005,7 @@
            「说」和「提问」分别对应左边那颗麦克风和键盘输入，没有丢信息。
            16px 这个字号不能动——它是挡住 iOS 聚焦自动放大的线，不是排版选择。 -->
       <input id="chatInput" placeholder="说一句或提问" />
-      <button class="send" id="sendBtn" onclick="send()">➤</button>
+      <button class="send" id="sendBtn" onclick="send()" aria-label="发送"><svg stroke-width="2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19.6V5"/><path d="M6.2 10.8L12 5l5.8 5.8"/></svg></button>
     </div>
   </section>
 
@@ -1742,13 +1779,13 @@ function showLib(){
       + `<span class="tag${k ? " k-" + k : ""}">${esc(x.scene)}</span>`
       + mdLite(x.content) + `<time>${esc(x.time)}</time></div>`;
   }).join("")
-    : `<div class="empty">📭<br/>学习库还是空的<br/>在对话中把 AI 生成的计划、任务清单保存到这里</div>`;
+    : `<div class="empty"><svg stroke-width="2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.4 12.8h4.6l1.5 2.6h5l1.5-2.6h4.6"/><path d="M6.3 4.5h11.4l2.8 8.3v3.9a2.8 2.8 0 0 1-2.8 2.8H6.3a2.8 2.8 0 0 1-2.8-2.8v-3.9z"/></svg>学习库还是空的<br/>在对话中把 AI 生成的计划、任务清单保存到这里</div>`;
 }
 function delLib(i){
   const lib = loadLib();                 // 必须与 showLib 用同一套归一，否则索引错位删错条
   if(!(i >= 0 && i < lib.length)) return;
   // 删除不可撤销，而 ✕ 就贴在条目正文的右上角——误触一次就永久少一条记录。
-  // clearChat（1315 行）早就是"先 confirm 再动手"，这里一直漏着；本轮又把 ✕ 的
+  // clearChat（1352 行）早就是"先 confirm 再动手"，这里一直漏着；本轮又把 ✕ 的
   // 命中区从 28×28 补到了 44×44，误触面只会更大，这道闸不能没有。
   // 带上内容开头，用户才知道自己删的是哪一条。
   const raw = typeof lib[i].content === "string" ? lib[i].content : "";
