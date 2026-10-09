@@ -220,13 +220,13 @@
      上沿一道受光高光、外沿一圈发丝线、内部一层极淡的受光渐变。
      这里刻意**不用 backdrop-filter**——这些卡片在滚动容器里，逐帧重算背景模糊
      会让手机掉帧；body 的冷调本来就透得上来，观感一样，代价是零。 */
-  .nfc-hint,.scene-card,.lib-item,.msg.ai{
+  .nfc-hint,.scene-card,.lib-item,.msg.ai,.set-group{
     background:linear-gradient(180deg,#FFFFFF 0%,rgba(255,255,255,.74) 100%);
     border:1px solid var(--line);
     box-shadow:var(--sh-2),inset 0 1px 0 var(--hair)}
   /* 浅蓝发丝线：只画在玻璃上沿，中间实、两头散开。几块玻璃重复同一道线，
      就成了这一版的签名，而不至于变成几条晃眼的彩边 */
-  .nfc-hint::after,.scene-card::after,.lib-item::after{content:"";position:absolute;left:14%;right:14%;top:0;
+  .nfc-hint::after,.scene-card::after,.lib-item::after,.set-group::after{content:"";position:absolute;left:14%;right:14%;top:0;
     height:1px;pointer-events:none;
     background:linear-gradient(90deg,rgba(90,200,250,0) 0%,rgba(90,200,250,.55) 50%,rgba(90,200,250,0) 100%)}
   /* 蓝青导轨：AI 产出的内容（回答、学习库条目）左侧一道渐细的竖线。
@@ -352,7 +352,7 @@
      也顺带回答"存进学习库之后东西去哪了"。左侧同样走蓝金导轨，
      因为它和 AI 回答本来就是同一种东西。
      这一行必须恒占一格（哪怕没内容）：.scene-list 用的是 grid-auto-rows:max-content
-     加 align-content:space-between（213–230），并没有写死的行模板。藏掉这一行不是
+     加 align-content:space-between（264–281），并没有写死的行模板。藏掉这一行不是
      "三张卡自己涨高"，而是 space-between 把腾出来的空间摊进剩下两道行距——
      卡片间距会跳一下，下次存完东西回来又缩回去。 */
   .recent{position:relative;overflow:hidden;border-radius:var(--r-md);cursor:pointer;
@@ -678,18 +678,18 @@
   /* 原来这里是裸的 outline:none（键盘用户看不到焦点）。改成"描边 + 光晕"，
      比系统默认轮廓更贴合本页，也仍然是明确的焦点指示 */
   .input-bar input:focus{background:#FFFFFF;border-color:rgba(0,113,227,.55);box-shadow:0 0 0 4px rgba(0,113,227,.18)}
-  /* 两个圆钮不等大：发送是这条动线里唯一的"提交"，麦克风是辅助。
-     一样大等于说这两件事一样重要 */
-  .mic,.send{border:none;border-radius:50%;cursor:pointer;flex:none;line-height:1;
-    transition:transform .18s var(--ease),box-shadow .25s var(--ease),background .22s var(--ease)}
-  .mic{width:40px;height:40px;font-size:16px;background:rgba(0,113,227,.10);color:#0066CC;
-    border:1px solid rgba(0,113,227,.26);box-shadow:var(--sh-1)}
-  .send{width:46px;height:46px;font-size:17px;background:linear-gradient(152deg,#0071E3,#0050A8);color:#fff;
+  /* 2026-10-09 之前这里并排两颗钮（麦克风 + 发送），注释写着"两个圆钮不等大：
+     发送是唯一的提交，麦克风是辅助"。语音输入整块移除之后岛上只剩发送一颗，
+     "谁大谁小"这个问题消失了，但 46px、渐变实心、一圈蓝投影**一个都没动**——
+     那是"提交"这个动作该有的分量，原来就不是靠跟麦克风比出来的。
+     连带删掉的：.mic.rec 的录音态、@keyframes pulse（只有它用），
+     以及命中区那段里专给麦克风写的 ::after。 */
+  .send{border:none;border-radius:50%;cursor:pointer;flex:none;line-height:1;
+    width:46px;height:46px;font-size:17px;background:linear-gradient(152deg,#0071E3,#0050A8);color:#fff;
+    transition:transform .18s var(--ease),box-shadow .25s var(--ease),background .22s var(--ease);
     box-shadow:0 12px 24px -14px rgba(0,0,0,.22),0 10px 26px -12px rgba(0,113,227,.32),inset 0 1px 0 rgba(255,255,255,.22)}
-  .mic:active,.send:active{transform:scale(.93)}
-  .mic.rec{background:rgba(255,59,48,.14);color:#C81E1E;border-color:rgba(255,59,48,.40);animation:pulse 1.4s var(--ease-soft) infinite}
-  .mic:disabled,.send:disabled{opacity:.4;cursor:not-allowed;animation:none;box-shadow:none}
-  @keyframes pulse{50%{box-shadow:0 0 0 7px rgba(255,59,48,.16)}}
+  .send:active{transform:scale(.93)}
+  .send:disabled{opacity:.4;cursor:not-allowed;animation:none;box-shadow:none}
 
   /* ---------- 学习库 ---------- */
   /* 和对话页共用悬浮顶栏，所以这里也要给顶栏让位 */
@@ -749,10 +749,67 @@
     transition:opacity .28s var(--ease),transform .28s var(--ease)}
   .toast.show{opacity:1;transform:translate(-50%,0) scale(1)}
 
+  /* ---------- 设置页（2026-10-09 新增） ---------- */
+  /* 入口是刊头右上角那枚齿轮。它顶替的位置原来是"没有"——首页刊头只有 logo、
+     标题、标语三件，加一个通往设置的入口不会跟任何东西争版面。
+     margin-left:auto 把它推到最右，齿轮本身 38px、命中区撑到 44。 */
+  .gear{margin-left:auto;flex:none;position:relative;width:38px;height:38px;border-radius:50%;
+    border:1px solid var(--line);background:var(--card-2);color:var(--sub);cursor:pointer;
+    display:flex;align-items:center;justify-content:center;box-shadow:var(--sh-1);
+    transition:transform .18s var(--ease),color .2s var(--ease),background .2s var(--ease)}
+  .gear:active{transform:scale(.93);background:rgba(0,0,0,.06)}
+  .gear::after{content:"";position:absolute;border-radius:inherit;inset:-3px}   /* 38+6 -> 实测 44x44 */
+  .gear svg{width:20px;height:20px;stroke-width:1.9}
+
+  /* 设置页本体。和对话页、学习库共用那枚悬浮顶栏，所以同样要给顶栏让位 */
+  .set-list{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;
+    padding:74px 16px 16px;padding-top:calc(var(--sat) + 74px);
+    display:flex;flex-direction:column;gap:12px}
+  .set-group{position:relative;border-radius:var(--r-md);padding:14px 16px 16px}
+  .set-group h3{font-size:var(--t-title);font-weight:700;color:var(--ink);margin:0}
+  .set-hint{font-size:var(--t-small);color:var(--sub);line-height:1.55;margin:6px 0 0}
+  /* 一行 = 标签 + 控件。标签固定 64px，三行控件的左缘才对得齐——
+     让它跟着字数走，三行就是三个参差的起始位，读起来像没排过版。 */
+  .set-row{display:flex;align-items:center;gap:10px;margin-top:10px}
+  .set-row>span{flex:none;width:64px;font-size:var(--t-body);color:var(--sub)}
+  /* 字号 16px **不是排版选择**：iOS Safari 在聚焦时若输入框字号 < 16px 会把整页放大一次。
+     和 .input-bar input 是同一条行为约束，不是同一套版式令牌——所以这里不引 --t-*。 */
+  .set-input{flex:1;min-width:0;border:1px solid var(--line);background:rgba(0,0,0,.03);
+    border-radius:var(--r-sm);padding:10px 12px;color:var(--ink);outline:none;
+    font-family:inherit;font-size:16px;
+    transition:background .22s var(--ease),border-color .22s var(--ease),box-shadow .22s var(--ease)}
+  .set-input::placeholder{color:var(--faint)}
+  .set-input:focus{background:#FFFFFF;border-color:rgba(0,113,227,.55);box-shadow:0 0 0 4px rgba(0,113,227,.18)}
+  select.set-input{background-color:rgba(0,0,0,.03)}
+  /* 三选一/二选一：整排等宽。min-height:44px 就是命中区本身，不再另加 ::after——
+     它是真按钮，撑高不会像透明覆盖层那样"看不出来点没点中"。 */
+  .pills{display:flex;gap:8px;margin-top:10px}
+  .pill{flex:1;min-height:44px;border:1px solid var(--line);border-radius:var(--r-pill);
+    background:rgba(0,0,0,.03);color:var(--sub);cursor:pointer;font-family:inherit;
+    font-size:var(--t-small);font-weight:600;padding:0 4px;
+    transition:transform .18s var(--ease),background .22s var(--ease),
+      color .22s var(--ease),border-color .22s var(--ease)}
+  .pill:active{transform:scale(.97)}
+  /* 选中态用主色实心：白字压在 --acc 上是 4.70:1，过 AA（和 .send、logo 同一个底） */
+  .pill.on{background:linear-gradient(152deg,#0071E3,#0050A8);border-color:transparent;color:#fff;
+    box-shadow:0 10px 22px -14px rgba(0,113,227,.40)}
+  .set-foot{text-align:center;color:var(--faint);font-size:var(--t-micro);line-height:1.9;margin:2px 0 4px}
+
+  /* ---------- 字号档 ----------
+     只重写 --t-* 那一组令牌，不改任何一条具体规则——所以"大字号"能一次性覆盖
+     首页、对话、学习库、设置四屏，也不会跟任何一条已经量过的媒体查询打架。
+     --t-input **刻意不在这一组里**：它是 16px 这条行为线，不是版式档位，
+     调大会把 iOS 的聚焦放大行为一起改掉（见 .input-bar input 那段注释）。
+     六档一起抬 2px（micro 抬 1.5），档与档的间距保持不变，节奏不乱。 */
+  html.fs-large{
+    --t-display:25px; --t-title:19px; --t-lead:17px;
+    --t-body:15px; --t-small:13px; --t-micro:12px;
+  }
+
   /* ---------- 命中区（不是视觉尺寸）----------
      按真实像素量，这些控件原本都低于 44×44 的推荐点按尺寸（WCAG 2.5.8 的 24×24 是达标的，
      但 44 才是拇指在走动中点得准的线）：.back 38、.mini 44×33、.lib-btn 62×33、
-     .save-btn 106×28、重试 54×28、.del 28×28、.mic 40×40、.quick span 138.6×32。
+     .save-btn 106×28、重试 54×28、.del 28×28、.quick span 138.6×32。
      视觉一个像素都不动——用透明的 ::after 往外撑命中区，圆角 inherit 让撑出来的
      区域跟着控件走。这几条全部走合成层，没有任何背景/边框，所以渲染像素为 0 变化
      （已用冻结动效后的 A/B 像素对比核过，见 7_改动与验收）。
@@ -764,7 +821,7 @@
          真实命中区 = padding box + 2N = border box − 2×边框 + 2N
 
      这一栏最早是照"border box + 2N"写的，凡是带 1px 边框的控件就全都多算了 2px：
-     .back/.mic 其实只有 42×42、.mini 42×43、.lib-btn 60×43、.save-btn 122×46。
+     .back 其实只有 42×42、.mini 42×43、.lib-btn 60×43、.save-btn 122×46。
      用 7_改动与验收\视觉校验脚本\H5-hitarea.py 渲染出来量到之后已把 inset 补齐，
      下面每一条括号里的都是**实测值**，不是推出来的。
      `.del` 高度仍是 38（宽 44）：往下撑会压到正文首行，是刻意的取舍，见它自己那条注释。
@@ -781,15 +838,12 @@
      它的位置由自己的 margin 和 .msg-wrap 的伸缩决定，给 .quick 加高只会从
      flex:1 的 .msg-wrap 里借走那几个像素，岛一动不动（844×390 与 375×800 实测过）。 */
   .back,.chat-head .mini,.chat-head .lib-btn,.msg .save-btn,.msg .retry-btn,
-  .mic,.quick span{position:relative}
+  .quick span{position:relative}
   .back::after,.chat-head .mini::after,.chat-head .lib-btn::after,
   .msg .save-btn::after,.msg .retry-btn::after,.lib-item .del::after,
-  .mic::after,.quick span::after{
+  .quick span::after{
     content:"";position:absolute;border-radius:inherit}
   .back::after{inset:-4px}                        /* 36+8 -> 实测 44x44 */
-  /* 麦克风：padding box 38 -> 44。只撑 3px，是因为它和「发送」之间只有 8px 的缝，
-     再多就顶到发送键的命中区里，点缝上会随机命中其中一个。 */
-  .mic::after{inset:-3px}
   /* 「清空」「学习库」都由圆钮改成了文字钮，尺寸跟着变，这里按新的量补：
      两颗都是 padding box 42 / 60 × 31，所以往上各撑 7px 补高度；
      横向各撑 1px 把 42 补到 44——两颗中间有 9px 的缝，各吃掉 1px 之后还剩 7px，
@@ -832,7 +886,7 @@
     .chat-head{top:calc(var(--sat) + 6px);padding:4px 8px 4px 5px}
     .back{width:34px;height:34px}
     .back::after{inset:-6px}                     /* 32+12 -> 44x44 */
-    .msg-wrap,.lib-list{padding-top:calc(var(--sat) + 60px)}
+    .msg-wrap,.lib-list,.set-list{padding-top:calc(var(--sat) + 60px)}
   }
 
   /* 键盘可达性：焦点环是必需项，不是装饰。下面这条只作用于键盘聚焦，
@@ -850,8 +904,7 @@
         本页大量卡片在滚动容器里，动这些会让手机逐帧重排——这条没有例外。
         合成层属性（transform / opacity）是主路，绝大多数效果都走它。
         走"重绘但不动布局"的只有**两处**，都是有意留的，且都只作用在一枚很小的元素上：
-          a) 唤醒圈的呼吸，动 box-shadow。文件里本来就有同一路的先例
-             （.mic.rec 的 pulse 也是呼吸 box-shadow）。**不能碰它的宽高**——
+          a) 唤醒圈的呼吸，动 box-shadow。**不能碰它的宽高**——
              那一块的尺寸是按横屏档量过的。
           b) 标题那道扫光，动 background-position。只作用在 .brand-title 一行字上，
              且它的 background-size 是 100% 220%（见刊头那段注释），
@@ -868,7 +921,7 @@
         起始帧是 opacity:0——只改时长的话，"动画被彻底禁掉"（而不是
         "被压短"）的环境会让卡片永远停在透明上。宁可整块不上。
         ⚠ 但**无限循环的装饰动画不在此列**（.nfc-ripple 的 breathe、
-        ripple，.typing 的 blink，.mic.rec 的 pulse）——它们照本文件
+        ripple，.typing 的 blink）——它们照本文件
         原有的惯例留在块外，靠末尾那条全局规则收掉。理由：这些关键帧
         从头到尾不碰 opacity（只动 box-shadow / border / 颜色），
         被压成 .001ms 后停在的是一个**完整可见**的静止态，不会消失。
@@ -910,7 +963,6 @@
   .scene-ico svg{width:50%;height:50%;stroke-width:2.1}
   .nfc-ripple{color:#0066CC}
   .nfc-ripple svg{width:50%;height:50%;stroke-width:2.1}
-  .mic svg{width:46%;height:46%;stroke-width:2.2}
   .send svg{width:44%;height:44%;stroke-width:2.4}
   .empty svg{width:34px;height:34px;display:block;margin:0 auto 6px}
 </style>
@@ -927,6 +979,10 @@
           <h1 class="brand-title">星智碰 · AI 学习搭档</h1>
           <p class="slogan">触碰唤醒星火　阅览 AI 智慧</p>
         </div>
+        <!-- 设置入口。图形用「三横线带两个旋钮」而不是齿轮：齿轮在 20px 下齿太密，
+             缩小后读成一圈毛边；滑杆图形在任何尺寸下都还认得出是"可调的东西"。
+             和其余图标一样 stroke:currentColor，颜色 100% 由本文件色板决定。 -->
+        <button class="gear" id="gearBtn" onclick="showSet()" aria-label="设置" title="设置"><svg stroke-width="2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.6 7.2h9.2M19.2 7.2h1.2M3.6 16.8h1.2M11.2 16.8h9.2"/><circle cx="16" cy="7.2" r="2.4"/><circle cx="8" cy="16.8" r="2.4"/></svg></button>
       </div>
     </div>
     <div class="scene-list" id="sceneList">
@@ -943,7 +999,7 @@
         <div class="scene-ico"><svg stroke-width="2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9.2"/><path d="M7.9 12.4l2.9 2.9 5.4-6.2"/></svg></div>
         <div class="scene-text">
           <h2>作业管家</h2>
-          <p>口述作业要求，AI 拆解任务、排优先级与提醒</p>
+          <p>写下作业要求，AI 拆解任务、排优先级与提醒</p>
           <em class="scene-eg">例：高数 12 题，周五交</em>
         </div>
         <div class="go">›</div>
@@ -952,7 +1008,7 @@
         <div class="scene-ico"><svg stroke-width="2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.6 11.5c0 4.3-3.8 7.8-8.6 7.8-1.3 0-2.5-.25-3.6-.72L4.2 20.1l1.35-3.5c-1.3-1.35-2.05-3.1-2.05-5.1 0-4.3 3.85-7.8 8.5-7.8 4.8 0 8.6 3.5 8.6 7.8z"/></svg></div>
         <div class="scene-text">
           <h2>随问随答</h2>
-          <p>知识点讲解、中英互译，语音提问张口就答</p>
+          <p>知识点讲解、中英互译，随时提问</p>
           <em class="scene-eg">例：讲讲什么是递归</em>
         </div>
         <div class="go">›</div>
@@ -991,7 +1047,6 @@
     <div class="msg-wrap" id="msgWrap"></div>
     <div class="quick" id="quickBar"></div>
     <div class="input-bar">
-      <button class="mic" id="micBtn" onclick="toggleVoice()" aria-label="语音输入"><svg stroke-width="2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="2.4" width="6" height="11.6" rx="3"/><path d="M5.4 11.4a6.6 6.6 0 0 0 13.2 0"/><path d="M12 18v3.6"/></svg></button>
       <!-- 占位符字数是被宽度倒推出来的，别再凭手感加长：实测 320 宽下输入框的
            文字区只有 142px，16px 的汉字恰好 16px 一个，所以最多放 8 个字多一点。
            原文案「说一句或输入你的需求…」11 个单位 = 176px，超出 33px，
@@ -1002,9 +1057,11 @@
            末尾那个"…"（112−96=16px 宽）当时只剩 6px 可显示，是被切过的。
            去掉"…"之后是 6 个字 = 96px：320 下余 46px、280 下余 6px，两档都放得下，
            也不用为它单独加一条媒体查询。
-           「说」和「提问」分别对应左边那颗麦克风和键盘输入，没有丢信息。
+           2026-10-09 语音输入整块移除，原文案「说一句或提问」里的"说"没了着落，
+           改成「输入你的问题」——仍是 6 个字（96px），320 下余 46px、280 下余 6px，
+           与上面量过的口径一致。
            16px 这个字号不能动——它是挡住 iOS 聚焦自动放大的线，不是排版选择。 -->
-      <input id="chatInput" placeholder="说一句或提问" />
+      <input id="chatInput" placeholder="输入你的问题" />
       <button class="send" id="sendBtn" onclick="send()" aria-label="发送"><svg stroke-width="2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19.6V5"/><path d="M6.2 10.8L12 5l5.8 5.8"/></svg></button>
     </div>
   </section>
@@ -1017,6 +1074,48 @@
       <span class="lib-count" id="libCount"></span>
     </div>
     <div class="lib-list" id="libList"></div>
+  </section>
+
+  <!-- 设置 -->
+  <!-- 这一屏是 2026-10-09 用「设置」替掉语音输入的产物。四组里前三组会真的改行为，
+       第四组只改"打开网址时进哪一屏"——都不是装饰性开关。 -->
+  <section class="screen" id="screen-settings">
+    <div class="chat-head">
+      <button class="back" onclick="goHome()" aria-label="返回首页">‹</button>
+      <h2>设置</h2>
+    </div>
+    <div class="set-list">
+      <div class="set-group">
+        <h3>学习档案</h3>
+        <p class="set-hint">填一次就记住了。之后每次提问都会把这几句一起送给讯飞星火，回答更贴你的专业和目标。</p>
+        <label class="set-row"><span>专业</span><input id="setMajor" class="set-input" maxlength="24" placeholder="例：智能科学与技术" onchange="saveProfile()" onblur="saveProfile()"></label>
+        <label class="set-row"><span>年级</span><select id="setGrade" class="set-input" onchange="saveProfile()"><option value="">不限</option><option>大一</option><option>大二</option><option>大三</option><option>大四</option><option>研究生</option></select></label>
+        <label class="set-row"><span>学习目标</span><input id="setGoal" class="set-input" maxlength="40" placeholder="例：过四级，学好 Python" onchange="saveProfile()" onblur="saveProfile()"></label>
+      </div>
+      <div class="set-group">
+        <h3>回答风格</h3>
+        <div class="pills">
+          <button class="pill" data-v="default" onclick="setStyle('default')">默认</button>
+          <button class="pill" data-v="brief" onclick="setStyle('brief')">简洁</button>
+          <button class="pill" data-v="detail" onclick="setStyle('detail')">详细</button>
+        </div>
+        <p class="set-hint">选「简洁」或「详细」会真的改变发给讯飞星火的要求。</p>
+      </div>
+      <div class="set-group">
+        <h3>正文字号</h3>
+        <div class="pills">
+          <button class="pill" data-v="normal" onclick="setFont('normal')">常规</button>
+          <button class="pill" data-v="large" onclick="setFont('large')">大</button>
+        </div>
+        <p class="set-hint">这里只抬标题与正文六档字号，输入框保持 16px 不动。</p>
+      </div>
+      <div class="set-group">
+        <h3>碰一碰之后进哪一屏</h3>
+        <label class="set-row"><span>默认场景</span><select id="setScene" class="set-input" onchange="setScene(this.value)"><option value="">首页</option><option value="plan">学习计划</option><option value="homework">作业管家</option><option value="ask">随问随答</option></select></label>
+        <p class="set-hint">只在打开的网址没有带场景参数时生效；垫面 NFC 标签里已经写死了场景的，仍然按标签走。</p>
+      </div>
+      <p class="set-foot">星智碰 · AI 学习搭档　H5 原型 v4<br>以上设置只存在这台设备的浏览器里，不会上传。</p>
+    </div>
   </section>
 
 </div>
@@ -1056,10 +1155,10 @@ const SCENES = {
              hint:"可以这样开始：告诉我你的专业、本周课程目标或备考科目，AI 会帮你排一周计划。",
              quick:["本学期想学好Python","两周备考高数","订一份四级计划"]},
   homework: {name:"作业管家", cls:"c-homework",
-             hint:"把作业要求念给我听（科目、内容、截止时间），AI 会帮你拆成任务清单并排优先级。",
+             hint:"把作业要求写下来（科目、内容、截止时间），AI 会帮你拆成任务清单并排优先级。",
              quick:["高数12题周五交","英语作文200词","实验报告周日交"]},
   ask:      {name:"随问随答", cls:"c-ask",
-             hint:"随时提问知识点，或说一句中文/英文，AI 会帮你讲解和翻译。",
+             hint:"随时提问知识点，或输入一句中文/英文，AI 会帮你讲解和翻译。",
              quick:["讲讲什么是递归","这句翻译成英文","NFC为什么能开网页"]}
 };
 /* 场景名的反查表。学习库里存的是场景**名字**（那是人要读的），而配色按场景键走；
@@ -1132,7 +1231,7 @@ const store = {
   // set 返回是否成功：写满配额 / 隐私模式下 setItem 会抛异常，调用方需要知道
   set(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); return true; }catch(e){ return false; } }
 };
-function toast(msg){ const t=$("toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove("show"),1800); }
+function toast(msg, ms){ const t=$("toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove("show"), ms||1800); }
 function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
 function sceneName(s){ return (SCENES[s] && SCENES[s].name) ? SCENES[s].name : "该场景"; }
 
@@ -1287,9 +1386,8 @@ function modeForStatus(status, ok){
 const pending = new Map();
 function syncSending(){
   sending = pending.has(curScene);      // 只反映「当前场景」有没有在途请求
-  const b=$("sendBtn"), m=$("micBtn");
+  const b=$("sendBtn");
   if(b) b.disabled = sending;
-  if(m) m.disabled = sending;
   return sending;
 }
 
@@ -1532,11 +1630,6 @@ function pushHist(scene, q, a){
 }
 
 async function send(){
-  // 发送即结束聆听。原来这里不管录音：请求在途时 syncSending() 会把 micBtn.disabled
-  // 置真，而 .mic:disabled{animation:none} 会连带停掉「正在聆听」的脉冲——用户看到
-  // 一颗不动的灰按钮，既不知道它还在听（识别结果照样往输入框里追加），
-  // 也不知道自己能不能再点。先停掉，再走后面的流程。
-  if(recOn){ try{ rec.stop(); }catch(e){} recOn=false; $("micBtn").classList.remove("rec"); }
   const inp = $("chatInput"), text = inp.value.trim();
   if(!text) return;
   if(pending.has(curScene)){ toast("上一条还在等回复，请稍候"); return; }
@@ -1593,10 +1686,16 @@ async function requestReply(scene, text){
 
   let reply = null, notice = null, status = 0, serverWait = 0;
   try{
+    /* 学习档案与回答风格作为**最后一条 history 轮次**附上（为什么不能拼进 query，
+       见 ctxRound 那段注释）。拼在这里而不是写进 hist_*：这两句不是用户说过的话，
+       不该出现在界面的历史重放里，也不该被算进这一场景的对话记录。 */
+    const outHist = trimHistByBudget(loadHist(scene));
+    const ctx = ctxRound();
+    if(ctx) outHist.push({q: ctx, a: ""});
     const r = await fetchWithTimeout(CONFIG.apiProxy, {
       method: "POST",
       headers: {"Content-Type": "application/json"},
-      body: asciiJSON({scene: scene, query: text, history: trimHistByBudget(loadHist(scene))})
+      body: asciiJSON({scene: scene, query: text, history: outHist})
     }, CONFIG.timeoutMs);
     status = r.status;
     // 接口约定：响应体永远是 JSON。无论 HTTP 状态码都先尝试解析并取 reply——
@@ -1785,7 +1884,7 @@ function delLib(i){
   const lib = loadLib();                 // 必须与 showLib 用同一套归一，否则索引错位删错条
   if(!(i >= 0 && i < lib.length)) return;
   // 删除不可撤销，而 ✕ 就贴在条目正文的右上角——误触一次就永久少一条记录。
-  // clearChat（1352 行）早就是"先 confirm 再动手"，这里一直漏着；本轮又把 ✕ 的
+  // clearChat（1450 行）早就是"先 confirm 再动手"，这里一直漏着；本轮又把 ✕ 的
   // 命中区从 28×28 补到了 44×44，误触面只会更大，这道闸不能没有。
   // 带上内容开头，用户才知道自己删的是哪一条。
   const raw = typeof lib[i].content === "string" ? lib[i].content : "";
@@ -1798,38 +1897,119 @@ function delLib(i){
   showLib();
 }
 
-/* ---------- 语音输入（浏览器 Web Speech，不支持时优雅降级为文字） ---------- */
-const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-let rec=null, recOn=false;
-if(SR){
-  rec=new SR(); rec.lang="zh-CN"; rec.interimResults=false;
-  rec.onresult=e=>{
-    const t = (e.results[0] && e.results[0][0] ? e.results[0][0].transcript : "") || "";
-    const inp = $("chatInput");
-    inp.value = inp.value ? (inp.value + " " + t) : t;   // 追加，不覆盖已经手打的内容
-  };
-  rec.onend=()=>{ recOn=false; $("micBtn").classList.remove("rec"); };
-  // 按 e.error 区分原因：一律说「没有听到声音」会让授权被拒的用户徒劳重试
-  rec.onerror=e=>{
-    recOn=false; $("micBtn").classList.remove("rec");
-    const code = (e && e.error) || "";
-    toast(
-      (code==="not-allowed" || code==="service-not-allowed") ? "麦克风权限被拒绝，请在浏览器设置里允许后重试" :
-      (code==="audio-capture") ? "没有检测到麦克风" :
-      (code==="network")       ? "语音识别服务连不上，请检查网络" :
-      (code==="no-speech")     ? "没有听到声音，请再试一次" :
-                                 "语音输入失败，请改用文字输入");
-  };
+/* ---------- 设置页（2026-10-09 新增，顶替被整块移除的语音输入） ----------
+   这一页里有三件事是**真的会改变行为**的，不是装饰：
+     · 学习档案 + 回答风格 —— 随每次提问送给星火（见 ctxRound）
+     · 正文字号         —— 换掉 :root 里那一组 --t-* 令牌（见 html.fs-large）
+     · 默认场景         —— 只影响"网址没带场景参数"那一条入口（见 init）
+   全部存在本机 localStorage 的 settings 这一个键里，不出网。 */
+const SET_DEF = {major:"", grade:"", goal:"", style:"default", font:"normal", scene:""};
+const SET_STYLE = ["default", "brief", "detail"];
+const SET_GRADE = ["", "大一", "大二", "大三", "大四", "研究生"];
+/* 读出来的一律先归一。存储是同源可写的，旧版本、别的页面、手工改过的值都可能进来：
+   不归一的话，一个数字型的 style 会让下面每处 === 判断全部落空——界面看着"能用"，
+   但用户明明设过却不生效；而超长的 major/goal 会顶着云函数 query 上限去上送。
+   这一套和 loadHist / loadLib 是同一个理由、同一种写法。 */
+function loadSet(){
+  const raw = store.get("settings", null);
+  const s = (raw && typeof raw === "object" && !Array.isArray(raw)) ? raw : {};
+  const o = {};
+  Object.keys(SET_DEF).forEach(function(k){
+    o[k] = (typeof s[k] === "string") ? s[k] : SET_DEF[k];
+  });
+  if(SET_STYLE.indexOf(o.style) < 0) o.style = "default";
+  if(["normal", "large"].indexOf(o.font) < 0) o.font = "normal";
+  if(SET_GRADE.indexOf(o.grade) < 0) o.grade = "";
+  if(o.scene && !Object.prototype.hasOwnProperty.call(SCENES, o.scene)) o.scene = "";
+  o.major = o.major.trim().slice(0, 24);
+  o.goal = o.goal.trim().slice(0, 40);
+  return o;
 }
-function toggleVoice(){
-  if(!SR){ toast("当前浏览器不支持网页语音，请用文字输入，或使用讯飞语音SDK版本"); return; }
-  if(!recOn){
-    try{ rec.start(); }catch(e){ toast("语音输入启动失败，请稍后重试"); return; }
-    recOn=true; $("micBtn").classList.add("rec"); toast("正在聆听…");
-  }else{
-    try{ rec.stop(); }catch(e){}
-    recOn=false; $("micBtn").classList.remove("rec");
+/* 返回是否真的写进去了。写失败（配额满 / 隐私模式 / 存储被禁）时**不能**说「已保存」——
+   用户会以为下次还认，实际刷新就没了。所有调用方都看这个返回值。 */
+function saveSet(patch){
+  const s = loadSet();
+  Object.keys(patch).forEach(function(k){ if(k in SET_DEF) s[k] = String(patch[k]); });
+  return store.set("settings", s);
+}
+function applyFont(f){
+  const r = document.documentElement;
+  if(r) r.className = (f === "large") ? "fs-large" : "";
+}
+function syncPills(id, val){
+  const box = $(id); if(!box) return;
+  const kids = box.children || [];
+  for(let i = 0; i < kids.length; i++){
+    const k = kids[i];
+    if(k.classList) k.classList.toggle("on", !!(k.dataset && k.dataset.v === val));
   }
+}
+function renderSet(){
+  const s = loadSet();
+  const m = $("setMajor"), g = $("setGoal"), gr = $("setGrade"), sc = $("setScene");
+  if(m) m.value = s.major;
+  if(g) g.value = s.goal;
+  if(gr) gr.value = s.grade;
+  if(sc) sc.value = s.scene;
+  syncPills("setStyle", s.style);
+  syncPills("setFont", s.font);
+}
+function showSet(){ renderSet(); show("screen-settings"); }
+/* change 与 blur 都挂：change 只在"值变了且失焦"时来，而点返回键那一刻不一定先失焦。
+   两个都挂是幂等的——没变就直接 return，不会每失焦一次弹一句 toast。 */
+function saveProfile(){
+  const pick = function(id){ const e = $(id); return e && typeof e.value === "string" ? e.value : ""; };
+  const v = {major: pick("setMajor"), grade: pick("setGrade"), goal: pick("setGoal")};
+  const s = loadSet();
+  if(s.major === v.major.trim().slice(0, 24) && s.grade === v.grade &&
+     s.goal === v.goal.trim().slice(0, 40)) return;
+  if(saveSet(v)) toast("学习档案已记住");
+  else toast("本机存储异常，档案没能保存");
+}
+function setStyle(v){
+  if(SET_STYLE.indexOf(v) < 0) return;
+  if(!saveSet({style: v})){ toast("本机存储异常，设置没能保存"); return; }
+  syncPills("setStyle", v);
+  toast(v === "brief" ? "回答风格：简洁" : (v === "detail" ? "回答风格：详细" : "回答风格：默认"));
+}
+function setFont(v){
+  if(["normal", "large"].indexOf(v) < 0) return;
+  if(!saveSet({font: v})){ toast("本机存储异常，设置没能保存"); return; }
+  applyFont(v); syncPills("setFont", v);
+  toast(v === "large" ? "字号已调大" : "字号已恢复常规");
+}
+function setScene(v){
+  const s = String(v || "");
+  if(s && !Object.prototype.hasOwnProperty.call(SCENES, s)) return;   // 脏值当场丢掉
+  if(!saveSet({scene: s})){ toast("本机存储异常，设置没能保存"); return; }
+  toast(s ? ("碰一碰后直接进「" + sceneName(s) + "」") : "碰一碰后回到首页");
+}
+/* 档案与风格**不拼进 query，而是作为一条额外的 history 轮次送出**。三条理由：
+   ① 拼进 query 就会被云函数那道内容闸（looksLikeEssayRequest）连坐：用户自己写的
+      学习目标里若正好带「报告」这类词，和前缀里的措辞凑齐一"写"一"报告"，一次
+      完全正常的提问会被 403 拒掉，而用户根本看不出跟自己填的档案有关；
+   ② 走 history 的那一段在云函数里是先折进 user 角色再包进「过往对话」的，
+      那道闸只查 query、不查 history；
+   ③ 挂在数组**末尾**，而云函数 buildText 是从后往前累加预算的——预算再紧也裁不到它
+      （放在最前面才会被裁：它按"更早的轮次"处理）。
+   代价是模型会把这句读成"用户此前说过的话"。所以措辞写成第三人称的括注
+   （「提问者的学习档案」「回答风格要求」），让它一眼看出这是随问题一起给的背景。 */
+function ctxRound(){
+  const s = loadSet();
+  const who = [s.grade, s.major].filter(Boolean).join("");
+  const bits = [];
+  if(who || s.goal){
+    let t = "（提问者的学习档案，供你参考：";
+    if(who) t += "我在读" + who + "。";
+    if(s.goal) t += "我的学习目标：" + s.goal + "。";
+    t += "回答时请结合我的专业与目标，不必再反问我读什么专业。）";
+    bits.push(t);
+  }
+  if(s.style === "brief")
+    bits.push("（回答风格要求：简洁。先给结论，再给最多三条要点，全文控制在 200 字以内。）");
+  if(s.style === "detail")
+    bits.push("（回答风格要求：详细。结论先行，分点展开，必要时给一个具体例子。）");
+  return bits.join("\n");
 }
 
 /* ---------- 启动：首页卡片 / NFC 与二维码可带 ?s= 场景参数直达 ---------- */
@@ -1881,17 +2061,22 @@ window.addEventListener("popstate",function(e){
 (function init(){
   try{
     setMode(CONFIG.apiProxy ? "unknown" : "noconfig");
-    /* 把初始的 aria-hidden 补齐：HTML 里只有首页带 .active（L922 `class="screen active"`），
+    applyFont(loadSet().font);      // 字号必须在首屏画出来之前就挂上，否则会看到一次跳变
+    /* 把初始的 aria-hidden 补齐：HTML 里只有首页带 .active（L974 `class="screen active"`），
        不先跑一次 show() 的话，对话页与学习库在无障碍树里是「可见」的（它们只是 opacity:0）。
        这里写死 "screen-home" 而不是去查 .screen.active：初值就是标记里那一个，
        查一遍只是把同一个事实再推导一次，还得依赖 querySelector 在所有环境下都在。 */
     show("screen-home");
     renderRecent();          // 首页的「最近存入」在启动时也要算一次（goHome 只管"回到首页"那条路径）
     const s = new URLSearchParams(location.search).get(CONFIG.sceneParam);
-    if(Object.prototype.hasOwnProperty.call(SCENES, s)){
+    /* 场景来源有两处，优先级是"网址里的 ?s= 压过设置里的默认场景"：
+       NFC 标签是逐个写死了场景的（一张垫子一个场景），标签不该被本机的一个设置顶掉；
+       默认场景只服务"没有带参数就打开了网址"那种入口。 */
+    const target = Object.prototype.hasOwnProperty.call(SCENES, s) ? s : (loadSet().scene || null);
+    if(target){
       // 先把当前条目标记为首页垫在下面，返回键才有的可回
       try{ history.replaceState({home:true}, "", location.pathname); }catch(e){}
-      openChat(s);
+      openChat(target);
     }
   }catch(e){
     // 初始化出错时不要白屏：留在首页并给出可读提示
