@@ -956,6 +956,44 @@
   .nfc-ripple svg{width:50%;height:50%;stroke-width:2.1}
   .send svg{width:44%;height:44%;stroke-width:2.4}
   .empty svg{width:34px;height:34px;display:block;margin:0 auto 6px}
+  /* ===== 「加入日历」：回答下方的导出按钮 + 底部面板（2026-10-10 新增） =====
+     面板刻意放在 #app 之外（跟 toast 一样）：#app 是 max-width:480px 居中的，
+     而蒙层要铺满整个视口，才能把注意力从对话上压下来。 */
+  .msg .cal-btn{margin-left:8px}
+  .sheet{position:fixed;inset:0;z-index:40;display:none;
+    background:rgba(0,0,0,.28);-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px)}
+  .sheet.open{display:block}
+  .sheet-card{position:absolute;left:0;right:0;bottom:0;
+    background:var(--card-2);border-top:1px solid var(--hair);
+    border-radius:var(--r-xl) var(--r-xl) 0 0;box-shadow:var(--sh-3);
+    padding:18px 20px calc(16px + var(--sab));animation:sheetUp .3s var(--spring)}
+  @keyframes sheetUp{from{transform:translateY(16px);opacity:.65}to{transform:none;opacity:1}}
+  .sheet-card h3{font-size:var(--t-title);font-weight:700;color:var(--ink);letter-spacing:-.01em}
+  .sheet-sub{margin-top:6px;font-size:var(--t-small);color:var(--faint);line-height:1.6}
+  /* 条目预览：抽错了能当场看见，不必等日程落进日历才发现（最多列 4 条，多的折成一行计数） */
+  .sheet-prev{margin-top:10px;max-height:136px;overflow-y:auto;-webkit-overflow-scrolling:touch;
+    background:var(--card);border:1px solid var(--line);border-radius:var(--r-md);padding:8px 13px}
+  .sheet-prev div{font-size:var(--t-small);color:var(--sub);line-height:2;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .sheet-prev div b{color:var(--faint);font-weight:600;margin-right:7px}
+  .sheet-row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:15px}
+  .sheet-row>span{font-size:var(--t-body);color:var(--sub)}
+  /* 输入框跟着 --t-input 走（16px）：iOS Safari 聚焦时若小于 16px 会把整页放大一次 */
+  .sheet-row input{font-size:var(--t-input);font-family:inherit;color:var(--ink);
+    background:var(--card);border:1px solid var(--line);border-radius:var(--r-sm);padding:7px 11px}
+  .sheet-dur{display:flex;gap:8px;margin-top:9px}
+  .sheet-dur span{flex:1;text-align:center;font-size:var(--t-small);font-weight:600;color:#48484A;
+    background:var(--card);border:1px solid var(--line);border-radius:var(--r-pill);padding:9px 0;cursor:pointer;
+    transition:transform .18s var(--ease),background .2s var(--ease),color .2s var(--ease),border-color .2s var(--ease)}
+  .sheet-dur span.on{background:var(--acc);border-color:var(--acc);color:#fff}
+  .sheet-dur span:active{transform:scale(.96)}
+  .sheet-act{display:flex;gap:10px;margin-top:20px}
+  .sheet-act span{flex:1;text-align:center;font-size:var(--t-lead);font-weight:600;
+    border-radius:var(--r-pill);padding:11px 0;cursor:pointer;
+    transition:transform .18s var(--ease),background .2s var(--ease)}
+  .sheet-act .ghost{color:var(--sub);background:rgba(120,120,128,.10);border:1px solid rgba(120,120,128,.20)}
+  .sheet-act .go{color:#fff;background:var(--acc);box-shadow:var(--glow)}
+  .sheet-act span:active{transform:scale(.97)}
 </style>
 </head>
 <body>
@@ -1106,6 +1144,26 @@
 
 </div>
 <div class="toast" id="toast"></div>
+<!-- 「加入日历」面板：默认 display:none，点 AI 回答下方的「📅 加入日历」才 open。
+     放在 #app 之外，蒙层才铺得满视口（#app 是 480px 居中的）。 -->
+<div class="sheet" id="calSheet" onclick="calBackdrop(event,this)">
+  <div class="sheet-card">
+    <h3>把这份计划加进苹果日历</h3>
+    <p class="sheet-sub" id="calSub"></p>
+    <div class="sheet-prev" id="calPrev"></div>
+    <label class="sheet-row"><span>从哪天开始</span><input type="date" id="calDate"></label>
+    <label class="sheet-row"><span>每天几点开始</span><input type="time" id="calTime" value="20:00"></label>
+    <div class="sheet-row"><span>每段多长</span></div>
+    <div class="sheet-dur" id="calDur">
+      <span data-min="30" onclick="pickDur(this)">30 分钟</span><span data-min="45" class="on" onclick="pickDur(this)">45 分钟</span><span data-min="60" onclick="pickDur(this)">60 分钟</span><span data-min="90" onclick="pickDur(this)">90 分钟</span>
+    </div>
+    <div class="sheet-act">
+      <span class="ghost" onclick="closeCalSheet()">取消</span>
+      <span class="go" onclick="doCalExport()">生成日历文件</span>
+    </div>
+  </div>
+</div>
+
 
 <script>
 /* ============================================================
@@ -1464,6 +1522,10 @@ function addMsg(role, text, opts){
   let html = opts.raw ? div._text : (role === "ai" ? mdLite(div._text) : esc(div._text));
   // 不再拼 <br/>：正文现在是块级 <p>，按钮跟在 </p> 之后会自己换行
   if(opts.savable) html += '<span class="save-btn" onclick="saveLib(this)">⭐ 存入学习库</span>';
+  // 「加入日历」只在学习计划场景出现：另外两个场景的回答不是排期性的东西，
+  // 摆一个点了只会说"没有分条计划"的按钮，比不给更糟
+  if(opts.savable && curScene === "plan")
+    html += '<span class="save-btn cal-btn" onclick="openCalSheet(this)">📅 加入日历</span>';
   div.innerHTML = html;
   wrap.appendChild(div); wrap.scrollTop = wrap.scrollHeight;
   return div;
@@ -1848,6 +1910,169 @@ function saveLib(btn){
   if(!store.set("library", lib)){ toast("本机存储空间不足，保存失败"); return; }
   btn.textContent = "✓ 已保存"; btn.style.pointerEvents = "none"; toast("已存入我的 AI 学习库");
 }
+/* ---------- 「加入日历」：把学习计划导出成 .ics 交给苹果日历 ----------
+   为什么走 .ics：网页**拿不到** EventKit，往系统日历里写东西只有一条正规路——
+   把一份 text/calendar 文件交给浏览器，由 Safari 转交给日历 App。所以这条链全程
+   不联网、不上传，生成与下载都在本机完成（与「学习库只存 localStorage」同一立场）。
+
+   三个"做错了不报错、只出乱码"的地方，都必须照 RFC 5545 来：
+   ① 行尾必须 CRLF、编码 UTF-8。缺了有的客户端直接拒收，而报错毫无指向性；
+   ② 一行不能超过 75 **字节**，超了要在断点处补一个空格折行。**是字节不是字符**：
+      中文一个字 3 字节，25 个字就到顶；而且折行切口**绝不能落在半个汉字上**，
+      否则那一条就是一个乱码字，还很难看出是文件坏了；
+   ③ TEXT 值里的 \ ; , 和换行要转义——一个没转义的分号就能把一条日程劈成两半。 */
+
+// 最多铺多少条：星火偶尔会吐很长的清单，无上限地铺会把日历塞满
+const CAL_MAX = 30;
+let calItems = [], calMin = 45;   // 面板打开时算好条目；时长跟用户选的那枚胶囊走
+
+function pad2(n){ return (n < 10 ? "0" : "") + n; }
+
+/* 从回答原文里抽"可排期的条目"。门槛刻意收得紧：**只认显式记号**——列表符
+   （- * • / 1. 1、 1) / ①-⑳）与 # 小标题。纯段落一律不算：把一段散文按行切成
+   十条"日程"，比不给按钮更糟。排掉的：空行、--- 分隔线、以及纯加粗标签行
+   （像"**建议顺序**："这种是标签不是任务，它连列表符都不匹配，天然落选）。 */
+function planItems(text){
+  const out = [];
+  const lines = String(text == null ? "" : text).split("\n");
+  for(let i = 0; i < lines.length; i++){
+    const line = lines[i].replace(/\s+$/, "");
+    if(!line.trim()) continue;
+    if(/^\s*(?:-{3,}|\*{3,}|_{3,})\s*$/.test(line)) continue;
+    const h = line.match(/^\s{0,3}#{1,6}\s+(.*\S)\s*$/);
+    const li = line.match(/^\s*(?:[-*•]\s+|(?:\d+)[.、)]\s*|[①-⑳]\s*)(\S.*)$/);
+    let t = h ? h[1] : (li ? li[1] : null);
+    if(t === null) continue;
+    t = t.replace(/\*\*/g, "").trim();
+    // 星火常把时段写进小标题（"### 第四阶段：收尾（23:00-23:30）"）。时段由用户在
+    // 面板里定，留着它会和真实日程打架，所以只在**结尾**处剥掉这段括号时间。
+    t = t.replace(/[\s（(]*[（(]\s*\d{1,2}[:：]\d{2}\s*[-–~～]\s*\d{1,2}[:：]\d{2}\s*[)）]\s*$/, "").trim();
+    if(!t) continue;
+    out.push(t);
+    if(out.length >= CAL_MAX) break;
+  }
+  return out;
+}
+
+/* 按 75 字节折行，且**不切碎多字节字符**。做法是逐"字符"累加它的 UTF-8 字节数
+   （TextEncoder 一次编一个字符），切口天然落在字符边界上，所以不可能切出半个
+   汉字。续行以一个空格开头——这个空格也占 1 字节，算在 75 里。 */
+function icsFold(line){
+  const enc = new TextEncoder();
+  if(enc.encode(line).length <= 75) return line;
+  const out = [];
+  let cur = "", bytes = 0;
+  for(const ch of line){
+    const n = enc.encode(ch).length;
+    if(bytes + n > 75){ out.push(cur); cur = " " + ch; bytes = 1 + n; }
+    else { cur += ch; bytes += n; }
+  }
+  if(cur) out.push(cur);
+  return out.join("\r\n");
+}
+
+/* TEXT 值转义（RFC 5545 §3.3.11）。反斜杠必须**第一个**换，否则会把后面刚加上的
+   转义符再转一遍。换行统一成字面 \n —— ICS 用它表示换行，不是真换行。 */
+function icsEsc(s){
+  return String(s == null ? "" : s)
+    .replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,")
+    .replace(/\r\n|\r|\n/g, "\\n");
+}
+
+/* 生成整份 .ics。时间用**浮动本地时间**（DTSTART 不带 Z、不带 TZID、也不写
+   VTIMEZONE）：学习计划是"每天 20:00 学习"，本来就该按设备本地时区落在同一点上，
+   浮动时间正好是这个语义，还省掉一整块时区表。DTSTAMP 按规范必须是 UTC。 */
+function buildICS(items, ymd, hhmm, minutes){
+  const md = ymd.split("-").map(Number), hm = hhmm.split(":").map(Number);
+  const now = new Date();
+  const stamp = "" + now.getUTCFullYear() + pad2(now.getUTCMonth()+1) + pad2(now.getUTCDate())
+    + "T" + pad2(now.getUTCHours()) + pad2(now.getUTCMinutes()) + pad2(now.getUTCSeconds()) + "Z";
+  const tag = "" + now.getFullYear() + pad2(now.getMonth()+1) + pad2(now.getDate())
+    + pad2(now.getHours()) + pad2(now.getMinutes());
+  const L = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//星智碰//学习计划//CN",
+             "CALSCALE:GREGORIAN", "METHOD:PUBLISH", "X-WR-CALNAME:星智碰 · 学习计划"];
+  for(let i = 0; i < items.length; i++){
+    // 进位全交给 Date：跨月跨年、时长跨过午夜都由它算，不手写日历逻辑
+    const s = new Date(md[0], md[1]-1, md[2] + i, hm[0], hm[1]);
+    const e = new Date(md[0], md[1]-1, md[2] + i, hm[0], hm[1] + minutes);
+    const ds = "" + s.getFullYear() + pad2(s.getMonth()+1) + pad2(s.getDate())
+      + "T" + pad2(s.getHours()) + pad2(s.getMinutes()) + "00";
+    const de = "" + e.getFullYear() + pad2(e.getMonth()+1) + pad2(e.getDate())
+      + "T" + pad2(e.getHours()) + pad2(e.getMinutes()) + "00";
+    L.push("BEGIN:VEVENT",
+      "UID:xzb-" + tag + "-" + i + "@xingzhibeng",
+      "DTSTAMP:" + stamp,
+      "DTSTART:" + ds, "DTEND:" + de,
+      "SUMMARY:" + icsEsc(items[i]),
+      "DESCRIPTION:" + icsEsc("星智碰 · AI 学习搭档 生成的学习计划　第 " + (i+1) + " / " + items.length + " 条"),
+      "BEGIN:VALARM", "TRIGGER:-PT15M", "ACTION:DISPLAY",
+      "DESCRIPTION:" + icsEsc("星智碰 · " + items[i]), "END:VALARM",
+      "END:VEVENT");
+  }
+  L.push("END:VCALENDAR");
+  return L.map(icsFold).join("\r\n") + "\r\n";
+}
+
+/* 触发下载。Blob URL + <a download> 是 iOS Safari 上唯一一条能把 .ics 交给系统的
+   路。revokeObjectURL 拖到 60 秒后：iOS 是先"下载"再由用户点开，撤早了文件就是
+   坏的，而这 60 秒里多留一个 blob 的代价可以忽略。 */
+function saveICS(ics, filename){
+  const url = URL.createObjectURL(new Blob([ics], {type: "text/calendar;charset=utf-8"}));
+  const a = document.createElement("a");
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(function(){ URL.revokeObjectURL(url); }, 60000);
+}
+
+function defaultCalDate(){
+  const d = new Date();
+  // 默认从今天起；但若已经过了默认的 20:00，排今天等于排一个已过去的时段，顺延到明天
+  if(d.getHours() >= 20) d.setDate(d.getDate() + 1);
+  return d.getFullYear() + "-" + pad2(d.getMonth()+1) + "-" + pad2(d.getDate());
+}
+function openCalSheet(btn){
+  const msgEl = btn.closest(".msg");
+  const items = planItems(msgEl && msgEl._text ? msgEl._text : "");
+  if(!items.length){ toast("这条回答里没有分条的计划，让它先出一份分条清单再试"); return; }
+  calItems = items;
+  const sub = $("calSub");
+  if(sub) sub.textContent = "共 " + items.length + " 条，从你选的日期起每天一条，每条提前 15 分钟提醒。";
+  // 前 4 条列出来（条目名走 esc，模型输出里的尖括号不能当 HTML 解释）
+  const pv = $("calPrev");
+  if(pv){
+    const show = items.slice(0, 4);
+    pv.innerHTML = show.map(function(t, i){
+      return "<div><b>" + (i + 1) + "</b>" + esc(t) + "</div>";
+    }).join("") + (items.length > show.length
+      ? "<div><b>…</b>还有 " + (items.length - show.length) + " 条</div>" : "");
+  }
+  const dEl = $("calDate"); if(dEl) dEl.value = defaultCalDate();
+  const dur = $("calDur");
+  calMin = 45;                                   // 每次打开都回到默认档
+  if(dur) for(const x of dur.children) x.classList.toggle("on", x.dataset.min === "45");
+  const sh = $("calSheet"); if(sh) sh.classList.add("open");
+}
+function closeCalSheet(){ const sh = $("calSheet"); if(sh) sh.classList.remove("open"); }
+/* 点蒙层空白处关掉。必须判断 target 是不是蒙层自己——点卡片内部会冒泡上来，不能误关 */
+function calBackdrop(e, el){ if(e && e.target === el) closeCalSheet(); }
+function pickDur(el){
+  const box = el.parentNode;
+  for(const x of box.children){ if(x === el) x.classList.add("on"); else x.classList.remove("on"); }
+  calMin = Number(el.dataset.min) || 45;
+  if(!(calMin > 0)) calMin = 45;                 // 脏值兜底：时长绝不能是 0/NaN
+}
+function doCalExport(){
+  if(!calItems.length){ closeCalSheet(); return; }
+  const dEl = $("calDate"), tEl = $("calTime");
+  const ymd = String((dEl && dEl.value) || ""), hm = String((tEl && tEl.value) || "20:00");
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(ymd)){ toast("请选一个开始日期"); return; }
+  const m = hm.match(/^(\d{1,2}):(\d{2})$/);
+  if(!m || Number(m[1]) > 23 || Number(m[2]) > 59){ toast("请选一个开始时间"); return; }
+  saveICS(buildICS(calItems, ymd, hm, calMin), "星智碰-学习计划.ics");
+  closeCalSheet();
+  toast("已生成日历文件，在下载里点开就能加入日历");
+}
+
 function showLib(){
   show("screen-lib");
   // 只渲染 LIB_MAX 条以内、且排在最前的那批：最新的在最前，saveLib 从尾部丢，
@@ -1870,7 +2095,7 @@ function delLib(i){
   const lib = loadLib();                 // 必须与 showLib 用同一套归一，否则索引错位删错条
   if(!(i >= 0 && i < lib.length)) return;
   // 删除不可撤销，而 ✕ 就贴在条目正文的右上角——误触一次就永久少一条记录。
-  // clearChat（1436 行）早就是"先 confirm 再动手"，这里一直漏着；本轮又把 ✕ 的
+  // clearChat（1494 行）早就是"先 confirm 再动手"，这里一直漏着；本轮又把 ✕ 的
   // 命中区从 28×28 补到了 44×44，误触面只会更大，这道闸不能没有。
   // 带上内容开头，用户才知道自己删的是哪一条。
   const raw = typeof lib[i].content === "string" ? lib[i].content : "";
@@ -2048,7 +2273,7 @@ window.addEventListener("popstate",function(e){
   try{
     setMode(CONFIG.apiProxy ? "unknown" : "noconfig");
     applyFont(loadSet().font);      // 字号必须在首屏画出来之前就挂上，否则会看到一次跳变
-    /* 把初始的 aria-hidden 补齐：HTML 里只有首页带 .active（L965 `class="screen active"`），
+    /* 把初始的 aria-hidden 补齐：HTML 里只有首页带 .active（L1003 `class="screen active"`），
        不先跑一次 show() 的话，对话页与学习库在无障碍树里是「可见」的（它们只是 opacity:0）。
        这里写死 "screen-home" 而不是去查 .screen.active：初值就是标记里那一个，
        查一遍只是把同一个事实再推导一次，还得依赖 querySelector 在所有环境下都在。 */
