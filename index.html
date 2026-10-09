@@ -9,7 +9,7 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23003A8C'/%3E%3Crect x='1' y='1' width='62' height='62' rx='15' fill='none' stroke='%235AC8FA' stroke-opacity='.50'/%3E%3Ctext x='32' y='45' font-size='38' font-family='sans-serif' text-anchor='middle' fill='%23ffffff'%3E%E6%98%9F%3C/text%3E%3C/svg%3E" />
 <style>  /* ============================================================
      设计令牌 · 苹果白（中性白 · 系统蓝）
-     品牌色（--blue / --deep）与 PPT、垫面视觉稿、主效果图是同一套，
+     品牌色（#00B0F0 / #003A8C）与 PPT、垫面视觉稿、主效果图是同一套，
      **不要在这里改**——它是这套物料之间唯一的锚点，现在只留在 .logo 上。
      2026-10-09 第一轮：整页从"深蓝夜航"翻成"白昼珊瑚"（夜蓝底 → 浅底）。
      2026-10-09 第二轮：浅底这个方向对了，但那一版的底是**奶油色**（#F7F1EA），
@@ -30,13 +30,11 @@
      ============================================================ */
   :root{
     color-scheme:light;             /* 让输入框、滚动条等原生控件跟着变亮，否则会有白缝 */
-    --blue:#00B0F0; --blue-dk:#0A6FBE; --deep:#003A8C;
     /* 发丝线 / 导轨次档色。它画在 1px 的卡片上沿与 2px 的竖导轨末端，
        要"看得见"又不能"是个色"：纯白卡片上中性灰一细就糊进投影，
        所以取系统蓝的浅档——1px 下读作一道冷光，与主色 #0071E3 同源。 */
     --hair-acc:#5AC8FA;
     --ink:#1D1D1F; --sub:#515154; --faint:#66666B;   /* 近黑 / 二级 / 三级文字 */
-    --bg:#F5F5F7; --bg-2:#FFFFFF;
     /* 玻璃面：**压在浅灰底上的纯白卡片**——上面 100% 白、下面收到 .74，
        让卡片自己有一点从上到下的厚度；底面的冷调仍能从 .74 那一端透上来，
        所以它还是"压在底上的一张纸"，不是一块灰玻璃。 */
@@ -92,7 +90,6 @@
                                        实测白字 = 4.70:1，过 AA，直接当按钮底色即可 */
     --acc-dk:#0066CC;               /* 压深一档：白字压上去 5.57:1，比 --acc 更稳；
                                        用在链接文字与需要"读得实"的小元件上 */
-    --acc-deep:#004C99;
     --spring:cubic-bezier(.34,1.42,.5,1);   /* 带回弹，按下时的"弹一下"靠它 */
 
     --ease:cubic-bezier(.32,.72,0,1);
@@ -361,7 +358,7 @@
     border:1px solid var(--line);box-shadow:var(--sh-1),inset 0 1px 0 var(--hair);
     transition:transform .18s var(--ease),border-color .2s var(--ease)}
   /* 这一行是首页新增的可点区域，也是全页**唯一**一个原本没有任何按下反馈的可点元素
-     （三张卡、快捷问法、保存/重试、三个顶栏钮、删除都有 :active）。而 119 行那条
+     （三张卡、快捷问法、保存/重试、三个顶栏钮、删除都有 :active）。而 116 行那条
      -webkit-tap-highlight-color:transparent 又把系统自带的点按高亮全局关掉了——
      于是"没写 :active"在这份文件里就等于"点下去什么都看不见"，
      用户会以为没点到而重复点。反馈沿用场景卡的同一套语言：压一点点 + 边框提亮。 */
@@ -472,7 +469,7 @@
      消息从它下面滚过去 —— 这才是整页最该有玻璃感的地方。
      它是常驻元素、自己不滚动，所以这里用 backdrop-filter 是安全的。
      这条 top 依赖 var(--sat)。这里**不需要**再补一行裸值 top:10px 兜底，两个理由：
-     ① --sat 在 :root 里是无条件给了 0px 的（112 行），var(--sat) 不存在"取不到"，
+     ① --sat 在 :root 里是无条件给了 0px 的（109 行），var(--sat) 不存在"取不到"，
         最坏是那句 @supports 不成立、--sat 保持 0，top 就是 10px；
      ② 即便真在 computed-value 阶段失效，按 css-variables 规范该声明会整条按 unset 处理
         （于是 top 取 initial 的 auto），**不会**回退到同一声明块里更靠前的那一行——
@@ -678,12 +675,6 @@
   /* 原来这里是裸的 outline:none（键盘用户看不到焦点）。改成"描边 + 光晕"，
      比系统默认轮廓更贴合本页，也仍然是明确的焦点指示 */
   .input-bar input:focus{background:#FFFFFF;border-color:rgba(0,113,227,.55);box-shadow:0 0 0 4px rgba(0,113,227,.18)}
-  /* 2026-10-09 之前这里并排两颗钮（麦克风 + 发送），注释写着"两个圆钮不等大：
-     发送是唯一的提交，麦克风是辅助"。语音输入整块移除之后岛上只剩发送一颗，
-     "谁大谁小"这个问题消失了，但 46px、渐变实心、一圈蓝投影**一个都没动**——
-     那是"提交"这个动作该有的分量，原来就不是靠跟麦克风比出来的。
-     连带删掉的：.mic.rec 的录音态、@keyframes pulse（只有它用），
-     以及命中区那段里专给麦克风写的 ::after。 */
   .send{border:none;border-radius:50%;cursor:pointer;flex:none;line-height:1;
     width:46px;height:46px;font-size:17px;background:linear-gradient(152deg,#0071E3,#0050A8);color:#fff;
     transition:transform .18s var(--ease),box-shadow .25s var(--ease),background .22s var(--ease);
@@ -827,7 +818,7 @@
      `.del` 高度仍是 38（宽 44）：往下撑会压到正文首行，是刻意的取舍，见它自己那条注释。
      除 `.del` 这一条外，八处的宽高现在都在 44 以上。
 
-     .del 的 ::after 是按钮自己的，与 229 行 .lib-item::after 那道金发丝线不冲突。
+     .del 的 ::after 是按钮自己的，与 226 行 .lib-item::after 那道金发丝线不冲突。
 
      .quick span 也在这份名单里，但它的撑法跟别人不一样，说清楚免得下次又被漏掉：
      .quick 是 overflow-x:auto 的横向滚动容器，而 overflow 一轴为 auto 时另一轴
@@ -875,7 +866,7 @@
      内边距吃掉——同一个失效模式在首页被承认并解决了，在这两块屏上根本没被承认。
 
      ⚠ 这一段必须写在**所有** .chat-head/.back/.msg-wrap/.lib-list 基类规则之后。
-     媒体查询不加特异性，同特异性下靠源码顺序定胜负；把这几条塞进第 418 行那个
+     媒体查询不加特异性，同特异性下靠源码顺序定胜负；把这几条塞进第 415 行那个
      媒体块里是无效的（试过，量出来顶栏还是 52px、.back 还是 38px，静默不生效）。
      所以它单独放在样式表末尾。
 
@@ -1051,15 +1042,12 @@
            文字区只有 142px，16px 的汉字恰好 16px 一个，所以最多放 8 个字多一点。
            原文案「说一句或输入你的需求…」11 个单位 = 176px，超出 33px，
            而 WebKit 对超长的 placeholder **不给省略号**，直接从字形中间切断。
-           这里原先写"最窄那档是 320、留 31px 余量"，与上面 192 行那句
+           这里原先写"最窄那档是 320、留 31px 余量"，与上面 190 行那句
            "设计下限约 295px（Galaxy Fold 外屏 280px 一类）"互相矛盾：
            280 才是那份口径里的下限，而它在 320 之外——文字区只有 102px，
            末尾那个"…"（112−96=16px 宽）当时只剩 6px 可显示，是被切过的。
            去掉"…"之后是 6 个字 = 96px：320 下余 46px、280 下余 6px，两档都放得下，
            也不用为它单独加一条媒体查询。
-           2026-10-09 语音输入整块移除，原文案「说一句或提问」里的"说"没了着落，
-           改成「输入你的问题」——仍是 6 个字（96px），320 下余 46px、280 下余 6px，
-           与上面量过的口径一致。
            16px 这个字号不能动——它是挡住 iOS 聚焦自动放大的线，不是排版选择。 -->
       <input id="chatInput" placeholder="输入你的问题" />
       <button class="send" id="sendBtn" onclick="send()" aria-label="发送"><svg stroke-width="2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19.6V5"/><path d="M6.2 10.8L12 5l5.8 5.8"/></svg></button>
@@ -1077,8 +1065,6 @@
   </section>
 
   <!-- 设置 -->
-  <!-- 这一屏是 2026-10-09 用「设置」替掉语音输入的产物。四组里前三组会真的改行为，
-       第四组只改"打开网址时进哪一屏"——都不是装饰性开关。 -->
   <section class="screen" id="screen-settings">
     <div class="chat-head">
       <button class="back" onclick="goHome()" aria-label="返回首页">‹</button>
@@ -1884,7 +1870,7 @@ function delLib(i){
   const lib = loadLib();                 // 必须与 showLib 用同一套归一，否则索引错位删错条
   if(!(i >= 0 && i < lib.length)) return;
   // 删除不可撤销，而 ✕ 就贴在条目正文的右上角——误触一次就永久少一条记录。
-  // clearChat（1450 行）早就是"先 confirm 再动手"，这里一直漏着；本轮又把 ✕ 的
+  // clearChat（1436 行）早就是"先 confirm 再动手"，这里一直漏着；本轮又把 ✕ 的
   // 命中区从 28×28 补到了 44×44，误触面只会更大，这道闸不能没有。
   // 带上内容开头，用户才知道自己删的是哪一条。
   const raw = typeof lib[i].content === "string" ? lib[i].content : "";
@@ -1897,7 +1883,7 @@ function delLib(i){
   showLib();
 }
 
-/* ---------- 设置页（2026-10-09 新增，顶替被整块移除的语音输入） ----------
+/* ---------- 设置页（2026-10-09 新增） ----------
    这一页里有三件事是**真的会改变行为**的，不是装饰：
      · 学习档案 + 回答风格 —— 随每次提问送给星火（见 ctxRound）
      · 正文字号         —— 换掉 :root 里那一组 --t-* 令牌（见 html.fs-large）
@@ -2062,7 +2048,7 @@ window.addEventListener("popstate",function(e){
   try{
     setMode(CONFIG.apiProxy ? "unknown" : "noconfig");
     applyFont(loadSet().font);      // 字号必须在首屏画出来之前就挂上，否则会看到一次跳变
-    /* 把初始的 aria-hidden 补齐：HTML 里只有首页带 .active（L974 `class="screen active"`），
+    /* 把初始的 aria-hidden 补齐：HTML 里只有首页带 .active（L965 `class="screen active"`），
        不先跑一次 show() 的话，对话页与学习库在无障碍树里是「可见」的（它们只是 opacity:0）。
        这里写死 "screen-home" 而不是去查 .screen.active：初值就是标记里那一个，
        查一遍只是把同一个事实再推导一次，还得依赖 querySelector 在所有环境下都在。 */
