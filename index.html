@@ -964,6 +964,9 @@
     background:rgba(0,0,0,.28);-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px)}
   .sheet.open{display:block}
   .sheet-card{position:absolute;left:0;right:0;bottom:0;
+    /* 可调项加到六行之后，小屏（375x667 那一档）会顶到屏幕外，所以给一个
+       上限并允许面板内部滚动：宁可让面板滚一下，也不能让「生成」按钮被顶出屏幕 */
+    max-height:88vh;overflow-y:auto;-webkit-overflow-scrolling:touch;
     background:var(--card-2);border-top:1px solid var(--hair);
     border-radius:var(--r-xl) var(--r-xl) 0 0;box-shadow:var(--sh-3);
     padding:18px 20px calc(16px + var(--sab));animation:sheetUp .3s var(--spring)}
@@ -971,7 +974,7 @@
   .sheet-card h3{font-size:var(--t-title);font-weight:700;color:var(--ink);letter-spacing:-.01em}
   .sheet-sub{margin-top:6px;font-size:var(--t-small);color:var(--faint);line-height:1.6}
   /* 条目预览：抽错了能当场看见，不必等日程落进日历才发现（最多列 4 条，多的折成一行计数） */
-  .sheet-prev{margin-top:10px;max-height:136px;overflow-y:auto;-webkit-overflow-scrolling:touch;
+  .sheet-prev{margin-top:10px;max-height:72px;overflow-y:auto;-webkit-overflow-scrolling:touch;
     background:var(--card);border:1px solid var(--line);border-radius:var(--r-md);padding:8px 13px}
   .sheet-prev div{font-size:var(--t-small);color:var(--sub);line-height:2;
     overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -981,13 +984,22 @@
   /* 输入框跟着 --t-input 走（16px）：iOS Safari 聚焦时若小于 16px 会把整页放大一次 */
   .sheet-row input{font-size:var(--t-input);font-family:inherit;color:var(--ink);
     background:var(--card);border:1px solid var(--line);border-radius:var(--r-sm);padding:7px 11px}
-  .sheet-dur{display:flex;gap:8px;margin-top:9px}
-  .sheet-dur span{flex:1;text-align:center;font-size:var(--t-small);font-weight:600;color:#48484A;
-    background:var(--card);border:1px solid var(--line);border-radius:var(--r-pill);padding:9px 0;cursor:pointer;
+  /* 胶囊单选行。原来是「每段多长」专用的（叫 .sheet-dur），现在四个设置项共用，
+     改名 sheet-pills —— 名字里带 dur 却管着周末排不排，读代码的人会被骗。 */
+  /* 标签和胶囊排**同一行**。早先每个设置项占两行（一行标签 + 一行胶囊），四项就是
+     八行，卡片自然高冲到 678px —— 而 iPhone SE（375x667）的 88vh 只有 586px，
+     主打按钮会被顶到折线以下，用户得先在面板里滚一下才找得到。同行后的账在
+     本轮验收里实测过，不是估的。 */
+  .sheet-pick{display:flex;align-items:center;gap:11px;margin-top:12px}
+  .sheet-pick>span{flex:0 0 auto;font-size:var(--t-small);color:var(--sub);white-space:nowrap}
+  .sheet-pills{display:flex;gap:7px;flex:1;min-width:0}
+  .sheet-pills span{flex:1;min-width:0;text-align:center;font-size:var(--t-small);font-weight:600;color:#48484A;
+    background:var(--card);border:1px solid var(--line);border-radius:var(--r-pill);padding:8px 0;cursor:pointer;
+    white-space:nowrap;overflow:hidden;
     transition:transform .18s var(--ease),background .2s var(--ease),color .2s var(--ease),border-color .2s var(--ease)}
-  .sheet-dur span.on{background:var(--acc);border-color:var(--acc);color:#fff}
-  .sheet-dur span:active{transform:scale(.96)}
-  .sheet-act{display:flex;gap:10px;margin-top:20px}
+  .sheet-pills span.on{background:var(--acc);border-color:var(--acc);color:#fff}
+  .sheet-pills span:active{transform:scale(.96)}
+  .sheet-act{display:flex;gap:10px;margin-top:16px}
   .sheet-act span{flex:1;text-align:center;font-size:var(--t-lead);font-weight:600;
     border-radius:var(--r-pill);padding:11px 0;cursor:pointer;
     transition:transform .18s var(--ease),background .2s var(--ease)}
@@ -1151,11 +1163,27 @@
     <h3>把这份计划加进苹果日历</h3>
     <p class="sheet-sub" id="calSub"></p>
     <div class="sheet-prev" id="calPrev"></div>
-    <label class="sheet-row"><span>从哪天开始</span><input type="date" id="calDate"></label>
-    <label class="sheet-row"><span>每天几点开始</span><input type="time" id="calTime" value="20:00"></label>
-    <div class="sheet-row"><span>每段多长</span></div>
-    <div class="sheet-dur" id="calDur">
-      <span data-min="30" onclick="pickDur(this)">30 分钟</span><span data-min="45" class="on" onclick="pickDur(this)">45 分钟</span><span data-min="60" onclick="pickDur(this)">60 分钟</span><span data-min="90" onclick="pickDur(this)">90 分钟</span>
+    <label class="sheet-row"><span>从哪天开始</span><input type="date" id="calDate" onchange="updateCalSub()"></label>
+    <label class="sheet-row"><span>每天几点开始</span><input type="time" id="calTime" value="20:00" onchange="updateCalSub()"></label>
+    <div class="sheet-pick"><span>每段多长</span>
+      <div class="sheet-pills" id="calDur">
+        <span data-k="min" data-v="30" onclick="pickPill(this)">30 分</span><span data-k="min" data-v="45" class="on" onclick="pickPill(this)">45 分</span><span data-k="min" data-v="60" onclick="pickPill(this)">60 分</span><span data-k="min" data-v="90" onclick="pickPill(this)">90 分</span>
+      </div>
+    </div>
+    <div class="sheet-pick"><span>每天排几条</span>
+      <div class="sheet-pills" id="calPer">
+        <span data-k="per" data-v="1" class="on" onclick="pickPill(this)">1 条</span><span data-k="per" data-v="2" onclick="pickPill(this)">2 条</span><span data-k="per" data-v="3" onclick="pickPill(this)">3 条</span>
+      </div>
+    </div>
+    <div class="sheet-pick"><span>周末</span>
+      <div class="sheet-pills" id="calWeekend">
+        <span data-k="weekend" data-v="0" onclick="pickPill(this)">只排周一到周五</span><span data-k="weekend" data-v="1" class="on" onclick="pickPill(this)">周末也排</span>
+      </div>
+    </div>
+    <div class="sheet-pick"><span>提前提醒</span>
+      <div class="sheet-pills" id="calAlarm">
+        <span data-k="alarm" data-v="0" onclick="pickPill(this)">不提醒</span><span data-k="alarm" data-v="5" onclick="pickPill(this)">5 分</span><span data-k="alarm" data-v="15" class="on" onclick="pickPill(this)">15 分</span><span data-k="alarm" data-v="60" onclick="pickPill(this)">1 小时</span>
+      </div>
     </div>
     <div class="sheet-act">
       <span class="ghost" onclick="closeCalSheet()">取消</span>
@@ -1924,7 +1952,14 @@ function saveLib(btn){
 
 // 最多铺多少条：星火偶尔会吐很长的清单，无上限地铺会把日历塞满
 const CAL_MAX = 30;
-let calItems = [], calMin = 45;   // 面板打开时算好条目；时长跟用户选的那枚胶囊走
+/* 面板上可调的四项，初值就是"每次打开都回到这里"的那一档。
+   后三项（条数 / 周末 / 提醒）是用户在真机上试过之后才加的，默认值刻意选成
+   **与加它们之前的行为逐字节一致**（每天 1 条、周末照排、提前 15 分钟）——
+   这样老用例一个字不改就该照旧全绿；它们要是红了，说明我在改的途中
+   把原来的语义也动掉了，而不是"新功能还没写完"。 */
+const CAL_DEF = { min: 45, per: 1, weekend: 1, alarm: 15 };
+let calItems = [], calMin = CAL_DEF.min, calPer = CAL_DEF.per,
+    calWeekend = CAL_DEF.weekend, calAlarm = CAL_DEF.alarm;
 
 function pad2(n){ return (n < 10 ? "0" : "") + n; }
 
@@ -1979,11 +2014,55 @@ function icsEsc(s){
     .replace(/\r\n|\r|\n/g, "\\n");
 }
 
+/* 四个设置项的读写。用一张键表而不是散落的 if：键名写错时 setCalSetting
+   什么也不做、calSetting 返回 undefined，调用方一眼能看出不对。 */
+function calSetting(k){ return CAL_DEF[k] === undefined ? undefined
+  : (k === "min" ? calMin : k === "per" ? calPer : k === "weekend" ? calWeekend : calAlarm); }
+function setCalSetting(k, v){ if(CAL_DEF[k] === undefined) return false;
+  if(k === "min") calMin = v; else if(k === "per") calPer = v;
+  else if(k === "weekend") calWeekend = v; else calAlarm = v;
+  return true; }
+
+/* 排期：把 count 条摊到日历上，返回每条的起止时刻。
+   **全文件只此一处做这个计算**——.ics 生成和面板上那句"排到几号"都调它。写两遍的
+   话，两边早晚会算出不同的日子，而那种错只有用户翻日历才看得出来。
+
+   规则：每天排 per 条，同一天的第 k 条顺延 k×minutes（首尾相接，不重叠）；
+   一天排满 per 条就进下一个可用日，weekend 为假时跳过周六周日。
+   进位一律交给 Date —— 跨月、跨年、时长压过午夜它都会算，不手写日历逻辑。
+   注意**起始日永远照用户选的那天排，哪怕那天是周六**：日期是用户自己挑的，
+   替他"挪到周一"是一种不被要求的好意。 */
+function calTimes(ymd, hhmm, minutes, count, per, weekend){
+  const md = ymd.split("-").map(Number), hm = hhmm.split(":").map(Number);
+  const day = new Date(md[0], md[1] - 1, md[2]);
+  const out = [];
+  let onThisDay = 0;
+  for(let i = 0; i < count; i++){
+    if(i > 0){
+      onThisDay++;
+      if(onThisDay >= per){
+        onThisDay = 0;
+        do{ day.setDate(day.getDate() + 1); }
+        while(!weekend && (day.getDay() === 0 || day.getDay() === 6));
+      }
+    }
+    const s = new Date(day.getFullYear(), day.getMonth(), day.getDate(),
+                       hm[0], hm[1] + onThisDay * minutes);
+    out.push({ s: s, e: new Date(s.getTime() + minutes * 60000) });
+  }
+  return out;
+}
+
 /* 生成整份 .ics。时间用**浮动本地时间**（DTSTART 不带 Z、不带 TZID、也不写
    VTIMEZONE）：学习计划是"每天 20:00 学习"，本来就该按设备本地时区落在同一点上，
-   浮动时间正好是这个语义，还省掉一整块时区表。DTSTAMP 按规范必须是 UTC。 */
-function buildICS(items, ymd, hhmm, minutes){
-  const md = ymd.split("-").map(Number), hm = hhmm.split(":").map(Number);
+   浮动时间正好是这个语义，还省掉一整块时区表。DTSTAMP 按规范必须是 UTC。
+
+   后三个参数留了默认值，是为了"老调用照旧"：省略 per/weekend/alarm 时出来的字节
+   与加这三个选项之前**完全一样**。 */
+function buildICS(items, ymd, hhmm, minutes, per, weekend, alarm){
+  per = (per > 0) ? per : 1;
+  weekend = (weekend === undefined) ? 1 : (weekend ? 1 : 0);
+  alarm = (alarm === undefined) ? CAL_DEF.alarm : Math.max(0, Number(alarm) || 0);
   const now = new Date();
   const stamp = "" + now.getUTCFullYear() + pad2(now.getUTCMonth()+1) + pad2(now.getUTCDate())
     + "T" + pad2(now.getUTCHours()) + pad2(now.getUTCMinutes()) + pad2(now.getUTCSeconds()) + "Z";
@@ -1991,10 +2070,9 @@ function buildICS(items, ymd, hhmm, minutes){
     + pad2(now.getHours()) + pad2(now.getMinutes());
   const L = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//星智碰//学习计划//CN",
              "CALSCALE:GREGORIAN", "METHOD:PUBLISH", "X-WR-CALNAME:星智碰 · 学习计划"];
+  const slots = calTimes(ymd, hhmm, minutes, items.length, per, weekend);
   for(let i = 0; i < items.length; i++){
-    // 进位全交给 Date：跨月跨年、时长跨过午夜都由它算，不手写日历逻辑
-    const s = new Date(md[0], md[1]-1, md[2] + i, hm[0], hm[1]);
-    const e = new Date(md[0], md[1]-1, md[2] + i, hm[0], hm[1] + minutes);
+    const s = slots[i].s, e = slots[i].e;
     const ds = "" + s.getFullYear() + pad2(s.getMonth()+1) + pad2(s.getDate())
       + "T" + pad2(s.getHours()) + pad2(s.getMinutes()) + "00";
     const de = "" + e.getFullYear() + pad2(e.getMonth()+1) + pad2(e.getDate())
@@ -2004,10 +2082,12 @@ function buildICS(items, ymd, hhmm, minutes){
       "DTSTAMP:" + stamp,
       "DTSTART:" + ds, "DTEND:" + de,
       "SUMMARY:" + icsEsc(items[i]),
-      "DESCRIPTION:" + icsEsc("星智碰 · AI 学习搭档 生成的学习计划　第 " + (i+1) + " / " + items.length + " 条"),
-      "BEGIN:VALARM", "TRIGGER:-PT15M", "ACTION:DISPLAY",
-      "DESCRIPTION:" + icsEsc("星智碰 · " + items[i]), "END:VALARM",
-      "END:VEVENT");
+      "DESCRIPTION:" + icsEsc("星智碰 · AI 学习搭档 生成的学习计划　第 " + (i+1) + " / " + items.length + " 条"));
+    // alarm 为 0 是"不提醒"：这时**整段 VALARM 都不写**。
+    // 写成 TRIGGER:-PT0M 是在"事件开始的那一刻"响，用户选的是"不提醒"，不是"准点响"。
+    if(alarm > 0) L.push("BEGIN:VALARM", "TRIGGER:-PT" + alarm + "M", "ACTION:DISPLAY",
+      "DESCRIPTION:" + icsEsc("星智碰 · " + items[i]), "END:VALARM");
+    L.push("END:VEVENT");
   }
   L.push("END:VCALENDAR");
   return L.map(icsFold).join("\r\n") + "\r\n";
@@ -2030,13 +2110,33 @@ function defaultCalDate(){
   if(d.getHours() >= 20) d.setDate(d.getDate() + 1);
   return d.getFullYear() + "-" + pad2(d.getMonth()+1) + "-" + pad2(d.getDate());
 }
+
+/* 面板上那句摘要：把当前四个设置和条目数**算出来**讲给用户听，末尾还给出"排到几号"。
+   这一句不是装饰——"每天 2 条、跳过周末"之后到底排到哪一天，用户自己是推不出来的，
+   而这件事决定他把日历翻到哪一页才看得见全部日程。 */
+function updateCalSub(){
+  const sub = $("calSub");
+  if(!sub || !calItems.length) return;
+  const dEl = $("calDate"), tEl = $("calTime");
+  const ymd = String((dEl && dEl.value) || ""), hm = String((tEl && tEl.value) || "20:00");
+  let txt = "共 " + calItems.length + " 条，每天 " + calPer + " 条"
+    + (calWeekend ? "" : "、跳过周六周日")
+    + "，每条 " + calMin + " 分钟"
+    + (calAlarm > 0 ? "、提前 " + (calAlarm >= 60 ? (calAlarm / 60) + " 小时" : calAlarm + " 分钟") + "提醒"
+                    : "、不提醒") + "。";
+  if(/^\d{4}-\d{2}-\d{2}$/.test(ymd) && /^\d{1,2}:\d{2}$/.test(hm)){
+    const last = calTimes(ymd, hm, calMin, calItems.length, calPer, calWeekend);
+    const d = last[last.length - 1].e;      // 用**结束**时刻：一条压过午夜的日程，
+    txt += "　排到 " + (d.getMonth() + 1) + " 月 " + d.getDate() + " 日。";  // 说它"排到次日"才是实话
+  }
+  sub.textContent = txt;
+}
+
 function openCalSheet(btn){
   const msgEl = btn.closest(".msg");
   const items = planItems(msgEl && msgEl._text ? msgEl._text : "");
   if(!items.length){ toast("这条回答里没有分条的计划，让它先出一份分条清单再试"); return; }
   calItems = items;
-  const sub = $("calSub");
-  if(sub) sub.textContent = "共 " + items.length + " 条，从你选的日期起每天一条，每条提前 15 分钟提醒。";
   // 前 4 条列出来（条目名走 esc，模型输出里的尖括号不能当 HTML 解释）
   const pv = $("calPrev");
   if(pv){
@@ -2046,21 +2146,46 @@ function openCalSheet(btn){
     }).join("") + (items.length > show.length
       ? "<div><b>…</b>还有 " + (items.length - show.length) + " 条</div>" : "");
   }
+  // 每次打开都回到默认档：四个设置项连同它们的高亮一起复位，
+  // 不然上一份计划调过的档会静默套到这一份上
+  calMin = CAL_DEF.min; calPer = CAL_DEF.per;
+  calWeekend = CAL_DEF.weekend; calAlarm = CAL_DEF.alarm;
   const dEl = $("calDate"); if(dEl) dEl.value = defaultCalDate();
-  const dur = $("calDur");
-  calMin = 45;                                   // 每次打开都回到默认档
-  if(dur) for(const x of dur.children) x.classList.toggle("on", x.dataset.min === "45");
+  // id -> 设置键。键写在这里而不是从 box.children[0].dataset.k 反读：
+  // 反读等于假设"每组的第一个孩子带着键"，那是运气不是契约；
+  // 而且一旦这组还没渲染出来，反读会直接抛 TypeError。
+  [["calDur", "min"], ["calPer", "per"], ["calWeekend", "weekend"], ["calAlarm", "alarm"]]
+  .forEach(function(pair){
+    const box = $(pair[0]);
+    if(!box) return;
+    const want = String(calSetting(pair[1]));
+    for(const x of box.children) x.classList.toggle("on", x.dataset.v === want);
+  });
+  updateCalSub();
   const sh = $("calSheet"); if(sh) sh.classList.add("open");
 }
 function closeCalSheet(){ const sh = $("calSheet"); if(sh) sh.classList.remove("open"); }
 /* 点蒙层空白处关掉。必须判断 target 是不是蒙层自己——点卡片内部会冒泡上来，不能误关 */
 function calBackdrop(e, el){ if(e && e.target === el) closeCalSheet(); }
-function pickDur(el){
+
+/* 胶囊单选：一组里只能亮一个，并把 data-v 写回对应的设置项。
+   脏值一律退回默认档——时长/条数变成 0 会算出零长度的日程，变成 NaN 会让 Date
+   静默返回 Invalid Date，最后写进 .ics 的是一串 "NaNNaNNaN"，而日历那边只会说
+   "无法添加"。 */
+function pickPill(el){
+  const k = el.dataset.k;
+  if(!(k in CAL_DEF)) return;                    // 认不出的键，别动任何设置
   const box = el.parentNode;
-  for(const x of box.children){ if(x === el) x.classList.add("on"); else x.classList.remove("on"); }
-  calMin = Number(el.dataset.min) || 45;
-  if(!(calMin > 0)) calMin = 45;                 // 脏值兜底：时长绝不能是 0/NaN
+  for(const x of box.children) x.classList.toggle("on", x === el);
+  const raw = Number(el.dataset.v);
+  setCalSetting(k, isFinite(raw) ? raw : CAL_DEF[k]);
+  if(k === "min" && !(calMin > 0)) calMin = CAL_DEF.min;
+  if(k === "per" && !(calPer > 0)) calPer = CAL_DEF.per;
+  if(k === "weekend") calWeekend = calWeekend ? 1 : 0;
+  if(k === "alarm" && !(calAlarm >= 0)) calAlarm = CAL_DEF.alarm;
+  updateCalSub();
 }
+
 function doCalExport(){
   if(!calItems.length){ closeCalSheet(); return; }
   const dEl = $("calDate"), tEl = $("calTime");
@@ -2068,7 +2193,7 @@ function doCalExport(){
   if(!/^\d{4}-\d{2}-\d{2}$/.test(ymd)){ toast("请选一个开始日期"); return; }
   const m = hm.match(/^(\d{1,2}):(\d{2})$/);
   if(!m || Number(m[1]) > 23 || Number(m[2]) > 59){ toast("请选一个开始时间"); return; }
-  saveICS(buildICS(calItems, ymd, hm, calMin), "星智碰-学习计划.ics");
+  saveICS(buildICS(calItems, ymd, hm, calMin, calPer, calWeekend, calAlarm), "星智碰-学习计划.ics");
   closeCalSheet();
   toast("已生成日历文件，在下载里点开就能加入日历");
 }
@@ -2095,7 +2220,7 @@ function delLib(i){
   const lib = loadLib();                 // 必须与 showLib 用同一套归一，否则索引错位删错条
   if(!(i >= 0 && i < lib.length)) return;
   // 删除不可撤销，而 ✕ 就贴在条目正文的右上角——误触一次就永久少一条记录。
-  // clearChat（1494 行）早就是"先 confirm 再动手"，这里一直漏着；本轮又把 ✕ 的
+  // clearChat（1522 行）早就是"先 confirm 再动手"，这里一直漏着；本轮又把 ✕ 的
   // 命中区从 28×28 补到了 44×44，误触面只会更大，这道闸不能没有。
   // 带上内容开头，用户才知道自己删的是哪一条。
   const raw = typeof lib[i].content === "string" ? lib[i].content : "";
@@ -2273,7 +2398,7 @@ window.addEventListener("popstate",function(e){
   try{
     setMode(CONFIG.apiProxy ? "unknown" : "noconfig");
     applyFont(loadSet().font);      // 字号必须在首屏画出来之前就挂上，否则会看到一次跳变
-    /* 把初始的 aria-hidden 补齐：HTML 里只有首页带 .active（L1003 `class="screen active"`），
+    /* 把初始的 aria-hidden 补齐：HTML 里只有首页带 .active（L1015 `class="screen active"`），
        不先跑一次 show() 的话，对话页与学习库在无障碍树里是「可见」的（它们只是 opacity:0）。
        这里写死 "screen-home" 而不是去查 .screen.active：初值就是标记里那一个，
        查一遍只是把同一个事实再推导一次，还得依赖 querySelector 在所有环境下都在。 */
