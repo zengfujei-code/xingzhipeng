@@ -1164,18 +1164,18 @@
     <p class="sheet-sub" id="calSub"></p>
     <div class="sheet-prev" id="calPrev"></div>
     <label class="sheet-row"><span>从哪天开始</span><input type="date" id="calDate" onchange="updateCalSub()"></label>
-    <label class="sheet-row"><span>每天几点开始</span><input type="time" id="calTime" value="20:00" onchange="updateCalSub()"></label>
-    <div class="sheet-pick"><span>每段多长</span>
+    <label class="sheet-row" id="rowTime"><span>每天几点开始</span><input type="time" id="calTime" value="20:00" onchange="updateCalSub()"></label>
+    <div class="sheet-pick" id="rowDur"><span>每段多长</span>
       <div class="sheet-pills" id="calDur">
         <span data-k="min" data-v="30" onclick="pickPill(this)">30 分</span><span data-k="min" data-v="45" class="on" onclick="pickPill(this)">45 分</span><span data-k="min" data-v="60" onclick="pickPill(this)">60 分</span><span data-k="min" data-v="90" onclick="pickPill(this)">90 分</span>
       </div>
     </div>
-    <div class="sheet-pick"><span>每天排几条</span>
+    <div class="sheet-pick" id="rowPer"><span>每天排几条</span>
       <div class="sheet-pills" id="calPer">
         <span data-k="per" data-v="1" class="on" onclick="pickPill(this)">1 条</span><span data-k="per" data-v="2" onclick="pickPill(this)">2 条</span><span data-k="per" data-v="3" onclick="pickPill(this)">3 条</span>
       </div>
     </div>
-    <div class="sheet-pick"><span>周末</span>
+    <div class="sheet-pick" id="rowWk"><span>周末</span>
       <div class="sheet-pills" id="calWeekend">
         <span data-k="weekend" data-v="0" onclick="pickPill(this)">只排周一到周五</span><span data-k="weekend" data-v="1" class="on" onclick="pickPill(this)">周末也排</span>
       </div>
@@ -1960,34 +1960,176 @@ const CAL_MAX = 30;
 const CAL_DEF = { min: 45, per: 1, weekend: 1, alarm: 15 };
 let calItems = [], calMin = CAL_DEF.min, calPer = CAL_DEF.per,
     calWeekend = CAL_DEF.weekend, calAlarm = CAL_DEF.alarm;
+/* 这一份计划的结构化形态（planParse 的结果）。calItems 是它的文字投影，
+   留着是因为预览/计数/测试都按"条目"说话。 */
+let calParsed = { mode: "flat", events: [] };
 
 function pad2(n){ return (n < 10 ? "0" : "") + n; }
 
-/* 从回答原文里抽"可排期的条目"。门槛刻意收得紧：**只认显式记号**——列表符
-   （- * • / 1. 1、 1) / ①-⑳）与 # 小标题。纯段落一律不算：把一段散文按行切成
-   十条"日程"，比不给按钮更糟。排掉的：空行、--- 分隔线、以及纯加粗标签行
-   （像"**建议顺序**："这种是标签不是任务，它连列表符都不匹配，天然落选）。 */
-function planItems(text){
+/* 从回答原文里认出"可排期的计划"。星火的计划有四种常见形态，**都得认**：
+     ① 周表：Markdown 表格，列是"周一…周日"，格子自带时段；
+     ② 单日表：表格第一列是时段、其余列是内容（标题常写"明天"）；
+     ③ 分阶段清单：正文里写"第1天…第2-3天…"，天序在句子中间；
+     ④ 普通分条清单：列表符（- * • / 1. 1、 1) / ①-⑳）或 # 小标题。
+   纯散文一律不算：把一段散文按行切成十条"日程"，比不给按钮更糟。
+
+   返回 { mode, events }：
+     "week" 每条带 day（1=周一 … 7=周日）—— 表格列 / 「周一」小标题 / 行首「周一」
+     "seq"  每条带 seq（第几天，从 1 起）—— 正文里的「第N天」
+     "day"  单日表，每条带自己的 hhmm
+     "flat" 普通清单，天与时段都交给面板定
+   events[i] = { text, day?, seq?, hhmm?, mins? }
+
+   ⚠️ ①③ 这两种形态里**只留带天的那部分**：表后面的「可执行的下一步」「复习小贴士」
+   是建议、不是当天任务，混进日历就成了"那天不该干的事"——这正是加这段的起因。 */
+function calWeekOf(s){
+  const m = String(s).match(/(?:周|星期|礼拜)\s*([一二三四五六日天])/);
+  if(!m) return 0;
+  if('日天'.indexOf(m[1]) >= 0) return 7;
+  const k = '一二三四五六'.indexOf(m[1]);
+  return k < 0 ? 0 : k + 1;
+}
+/* 只认 "HH:MM-HH:MM" 这种完整区间。范围反了或长过 12 小时的，mins 记 0，
+   调用方会退回面板上的时长——宁可短一点，也不能算出负长度或大半天的日程。 */
+function calRange(s){
+  const m = String(s).match(/(\d{1,2})\s*[:：]\s*(\d{2})\s*[-–~～至]\s*(\d{1,2})\s*[:：]\s*(\d{2})/);
+  if(!m) return null;
+  const h1 = +m[1], m1 = +m[2], h2 = +m[3], m2 = +m[4];
+  if(h1 > 23 || m1 > 59 || h2 > 24 || m2 > 59) return null;
+  const d = (h2 * 60 + m2) - (h1 * 60 + m1);
+  return { hhmm: pad2(h1) + ":" + pad2(m1), mins: (d > 0 && d <= 12 * 60) ? d : 0 };
+}
+function calCells(row){
+  return String(row).trim().replace(/^\|/, "").replace(/\|+$/, "")
+    .split("|").map(function(c){ return c.trim(); });
+}
+function calIsTable(line){ return /^\s*\|.*\|\s*$/.test(line); }
+function calIsSep(cells){ return cells.length > 0 && cells.every(function(c){ return /^:?-{2,}:?$/.test(c); }); }
+
+/* 一块表格 → 计划。认两种：
+   · 表头里 ≥2 列带「周X」的 = 周表（列就是天，首列常是时段）；
+   · 第一列表头是时段类（时间/时间段/时段/时刻）的 = 单日表，内容取**第一个
+     不是"完成标准"那个**的列 —— 标准是验收口径，不是要干的事。 */
+function calTable(rows){
+  const head = rows[0], body = rows.slice(1);
+  const days = head.map(calWeekOf);
+  if(days.filter(function(d){ return d > 0; }).length >= 2){
+    const ev = [];
+    for(let c = 0; c < head.length; c++){
+      if(!days[c]) continue;
+      for(let r = 0; r < body.length; r++){
+        const cell = (body[r][c] || "").trim();
+        if(!cell || /^[-—–]+$/.test(cell)) continue;
+        const t = calRange(body[r][0] || "");
+        ev.push({ text: cell, day: days[c], hhmm: t ? t.hhmm : null, mins: t ? t.mins : 0 });
+      }
+    }
+    return ev.length ? { mode: "week", events: ev } : null;
+  }
+  if(/时\s*间|时段|时刻/.test(head[0] || "")){
+    let ci = -1;
+    for(let c = 1; c < head.length; c++){
+      if(!/完成标准|标准|备注|说明|检查/.test(head[c] || "")){ ci = c; break; }
+    }
+    if(ci < 0) ci = 1;
+    const ev = [];
+    for(let r = 0; r < body.length; r++){
+      const cell = (body[r][ci] || "").trim();
+      if(!cell || /^[-—–]+$/.test(cell)) continue;
+      const t = calRange(body[r][0] || "");
+      ev.push({ text: cell, hhmm: t ? t.hhmm : null, mins: t ? t.mins : 0 });
+    }
+    return ev.length ? { mode: "day", events: ev } : null;
+  }
+  return null;
+}
+
+/* 句子里写「第N天」/「第3-4天」：按标记切成一段段，每段就是那天的任务。
+   标记**之前**的文字（"每日任务："这种标签）丢掉——它是标签，不是任务。
+   一个「第3-4天」只落一条，排在**第 3 天**：把一句话拆成两条日程，
+   用户会以为那天有两件事。 */
+function calSeq(s){
+  const re = /第\s*(\d{1,3})\s*(?:[-–~～]\s*(\d{1,3})\s*)?天/g;
+  const marks = [];
+  let m;
+  while((m = re.exec(s))) marks.push({ at: m.index, end: re.lastIndex, n: +m[1] });
+  if(!marks.length) return null;
   const out = [];
+  for(let i = 0; i < marks.length; i++){
+    const stop = (i + 1 < marks.length) ? marks[i + 1].at : s.length;
+    const piece = s.slice(marks[i].end, stop)
+      .replace(/^[\s：:，,、；;]+/, "").replace(/[\s，,、；;。]+$/, "").trim();
+    if(piece) out.push({ text: piece, seq: marks[i].n > 0 ? marks[i].n : 1 });
+  }
+  return out.length ? out : null;
+}
+
+/* 小标题后面若跟着结构化的条目（表格行 / 列表符），它就是章节标题，不是任务。
+   反过来说：一份"全是小标题、没有列表"的计划，每个小标题都还是任务 —— 那种
+   计划真的出现过（"### 第四阶段：收尾（23:00-23:30）"），一刀切丢掉标题会把它
+   整份丢掉。j 从下一行起扫。 */
+function calHeadsASection(lines, j){
+  for(; j < lines.length; j++){
+    if(calIsTable(lines[j])) return true;
+    if(/^\s{0,3}#{1,6}\s+/.test(lines[j])) return false;
+    if(/^\s*(?:-{3,}|\*{3,}|_{3,})\s*$/.test(lines[j])) continue;
+    if(/^\s*(?:[-*•]\s+|(?:\d+)[.、)]\s*|[①-⑳]\s*)\S/.test(lines[j])) return true;
+  }
+  return false;
+}
+
+function planParse(text){
   const lines = String(text == null ? "" : text).split("\n");
-  for(let i = 0; i < lines.length; i++){
+  const flat = [];
+  let seqs = null, table = null;
+  let i = 0;
+  while(i < lines.length){
+    if(calIsTable(lines[i])){
+      const block = [];
+      while(i < lines.length && calIsTable(lines[i])){ block.push(lines[i]); i++; }
+      const rows = block.map(calCells).filter(function(r){ return r.length > 1 && !calIsSep(r); });
+      if(rows.length >= 2){
+        const t = calTable(rows);
+        // 一份回答里偶尔不止一张表：留条目最多的那张，绝不把两张表的日程拼一起
+        if(t && (!table || t.events.length > table.events.length)) table = t;
+      }
+      continue;
+    }
     const line = lines[i].replace(/\s+$/, "");
+    i++;
     if(!line.trim()) continue;
     if(/^\s*(?:-{3,}|\*{3,}|_{3,})\s*$/.test(line)) continue;
     const h = line.match(/^\s{0,3}#{1,6}\s+(.*\S)\s*$/);
-    const li = line.match(/^\s*(?:[-*•]\s+|(?:\d+)[.、)]\s*|[①-⑳]\s*)(\S.*)$/);
-    let t = h ? h[1] : (li ? li[1] : null);
-    if(t === null) continue;
-    t = t.replace(/\*\*/g, "").trim();
-    // 星火常把时段写进小标题（"### 第四阶段：收尾（23:00-23:30）"）。时段由用户在
-    // 面板里定，留着它会和真实日程打架，所以只在**结尾**处剥掉这段括号时间。
-    t = t.replace(/[\s（(]*[（(]\s*\d{1,2}[:：]\d{2}\s*[-–~～]\s*\d{1,2}[:：]\d{2}\s*[)）]\s*$/, "").trim();
-    if(!t) continue;
-    out.push(t);
-    if(out.length >= CAL_MAX) break;
+    const li = h ? null : line.match(/^\s*(?:[-*•]\s+|(?:\d+)[.、)]\s*|[①-⑳]\s*)(\S.*)$/);
+    if(!h && !li){
+      // 无标记、非标题的整行文字，正常情况下是段落（丢掉）。但星火把「第N天」
+      // 日程硬折行、让续行落到下一行时（"…第2天…，\n第3-4天…"），那一行照样是
+      // 日程。只在这条窄路上认它（必须含「第N天」），不把普通段落吸进来。
+      const cc = calSeq(line.replace(/\*\*/g, "").trim());
+      if(cc) seqs = (seqs || []).concat(cc);
+      continue;
+    }
+    let body = (h ? h[1] : li[1]).replace(/\*\*/g, "").trim();
+    // 星火常把时段写进小标题（"### 第四阶段：收尾（23:00-23:30）"）。时段由计划或
+    // 面板定，留在标题里会和真实日程打架，所以只在**结尾**处剥掉这段括号时间。
+    body = body.replace(/[\s（(]*[（(]\s*\d{1,2}[:：]\d{2}\s*[-–~～]\s*\d{1,2}[:：]\d{2}\s*[)）]\s*$/, "").trim();
+    if(!body) continue;
+    if(h && calHeadsASection(lines, i)) continue;      // 章节标题，不是任务
+    const sq = calSeq(body);
+    if(sq) seqs = (seqs || []).concat(sq);
+    else flat.push({ text: body, day: calWeekOf(body) });
   }
-  return out;
+  const p = table
+    || (flat.some(function(e){ return e.day > 0; })
+        ? { mode: "week", events: flat.filter(function(e){ return e.day > 0; }) }
+        : (seqs && seqs.length) ? { mode: "seq", events: seqs }
+        : { mode: "flat", events: flat });
+  return { mode: p.mode, events: p.events.slice(0, CAL_MAX) };
 }
+
+/* 给外面用的老接口：只取文字。契约没变（仍是字符串数组），但抽出来的东西变了：
+   表格里那些格子现在算条目了，章节标题不再算。 */
+function planItems(text){ return planParse(text).events.map(function(e){ return e.text; }); }
 
 /* 按 75 字节折行，且**不切碎多字节字符**。做法是逐"字符"累加它的 UTF-8 字节数
    （TextEncoder 一次编一个字符），切口天然落在字符边界上，所以不可能切出半个
@@ -2053,6 +2195,45 @@ function calTimes(ymd, hhmm, minutes, count, per, weekend){
   return out;
 }
 
+/* 按天落位。四种形态共用**这一处**：flat 原样交给 calTimes（老路径，一字未改），
+   其余三种按计划自己给的天/时段落位 —— 面板上的 per/weekend 不参与。计划已经
+   说清了哪天干什么，再让「跳过周末」去挪它，就成了用户报的那个 bug。
+
+   week：把计划的第一个天标签落在**起始日当天或之后的第一个那个星期几**上，
+         其余各天在那一周内按自己的星期几排。这样"起始日 = 周六、计划从周一起"
+         会排到下周一到周日；而"计划从周六起、起始日也是周六"就排在当天。
+   seq ：第 N 天 = 起始日 + (N-1) 天。
+   day ：全部落在起始日当天，用各自的 hhmm。
+
+   同一天有多条时按 minutes 首尾相接，避免叠在一起。 */
+function calSlots(plan, ymd, hhmm, minutes, per, weekend){
+  const p = (plan && plan.events) ? plan : { mode: "flat", events: [] };
+  const evs = p.events;
+  if(p.mode === "flat") return calTimes(ymd, hhmm, minutes, evs.length, per, weekend);
+  const md = ymd.split("-").map(Number), hm = hhmm.split(":").map(Number);
+  const first = new Date(md[0], md[1] - 1, md[2]);
+  if(p.mode === "week" && evs.length){
+    while(first.getDay() !== (evs[0].day % 7)) first.setDate(first.getDate() + 1);
+  }
+  const used = {}, out = [];
+  for(let i = 0; i < evs.length; i++){
+    const ev = evs[i];
+    const d = new Date(first.getTime());
+    if(p.mode === "week") d.setDate(d.getDate() + ((ev.day - evs[0].day + 7) % 7));
+    else if(p.mode === "seq") d.setDate(d.getDate() + ((ev.seq > 0 ? ev.seq : 1) - 1));
+    const key = d.getFullYear() + "-" + d.getMonth() + "-" + d.getDate();
+    const n = used[key] || 0; used[key] = n + 1;
+    let hh = hm[0], mm = hm[1] + n * minutes, dur = minutes;
+    if(ev.hhmm && /^\d{1,2}:\d{2}$/.test(ev.hhmm)){
+      const a = ev.hhmm.split(":").map(Number);
+      hh = a[0]; mm = a[1]; dur = ev.mins > 0 ? ev.mins : minutes;
+    }
+    const s = new Date(d.getFullYear(), d.getMonth(), d.getDate(), hh, mm);
+    out.push({ s: s, e: new Date(s.getTime() + dur * 60000) });
+  }
+  return out;
+}
+
 /* 生成整份 .ics。时间用**浮动本地时间**（DTSTART 不带 Z、不带 TZID、也不写
    VTIMEZONE）：学习计划是"每天 20:00 学习"，本来就该按设备本地时区落在同一点上，
    浮动时间正好是这个语义，还省掉一整块时区表。DTSTAMP 按规范必须是 UTC。
@@ -2060,6 +2241,11 @@ function calTimes(ymd, hhmm, minutes, count, per, weekend){
    后三个参数留了默认值，是为了"老调用照旧"：省略 per/weekend/alarm 时出来的字节
    与加这三个选项之前**完全一样**。 */
 function buildICS(items, ymd, hhmm, minutes, per, weekend, alarm){
+  // 旧调用传字符串数组（"一条 = 一个日程，天和时段由参数定"），新调用传 planParse
+  // 的结果。两种都收：字符串数组包成 flat 计划，走的还是同一条 calSlots，
+  // 出来的字节与加这些形态之前**完全一样**。
+  const p = (items && items.events) ? items
+    : { mode: "flat", events: (Array.isArray(items) ? items : []).map(function(t){ return { text: String(t) }; }) };
   per = (per > 0) ? per : 1;
   weekend = (weekend === undefined) ? 1 : (weekend ? 1 : 0);
   alarm = (alarm === undefined) ? CAL_DEF.alarm : Math.max(0, Number(alarm) || 0);
@@ -2070,8 +2256,8 @@ function buildICS(items, ymd, hhmm, minutes, per, weekend, alarm){
     + pad2(now.getHours()) + pad2(now.getMinutes());
   const L = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//星智碰//学习计划//CN",
              "CALSCALE:GREGORIAN", "METHOD:PUBLISH", "X-WR-CALNAME:星智碰 · 学习计划"];
-  const slots = calTimes(ymd, hhmm, minutes, items.length, per, weekend);
-  for(let i = 0; i < items.length; i++){
+  const slots = calSlots(p, ymd, hhmm, minutes, per, weekend);
+  for(let i = 0; i < p.events.length; i++){
     const s = slots[i].s, e = slots[i].e;
     const ds = "" + s.getFullYear() + pad2(s.getMonth()+1) + pad2(s.getDate())
       + "T" + pad2(s.getHours()) + pad2(s.getMinutes()) + "00";
@@ -2081,12 +2267,12 @@ function buildICS(items, ymd, hhmm, minutes, per, weekend, alarm){
       "UID:xzb-" + tag + "-" + i + "@xingzhibeng",
       "DTSTAMP:" + stamp,
       "DTSTART:" + ds, "DTEND:" + de,
-      "SUMMARY:" + icsEsc(items[i]),
-      "DESCRIPTION:" + icsEsc("星智碰 · AI 学习搭档 生成的学习计划　第 " + (i+1) + " / " + items.length + " 条"));
+      "SUMMARY:" + icsEsc(p.events[i].text),
+      "DESCRIPTION:" + icsEsc("星智碰 · AI 学习搭档 生成的学习计划　第 " + (i+1) + " / " + p.events.length + " 条"));
     // alarm 为 0 是"不提醒"：这时**整段 VALARM 都不写**。
     // 写成 TRIGGER:-PT0M 是在"事件开始的那一刻"响，用户选的是"不提醒"，不是"准点响"。
     if(alarm > 0) L.push("BEGIN:VALARM", "TRIGGER:-PT" + alarm + "M", "ACTION:DISPLAY",
-      "DESCRIPTION:" + icsEsc("星智碰 · " + items[i]), "END:VALARM");
+      "DESCRIPTION:" + icsEsc("星智碰 · " + p.events[i].text), "END:VALARM");
     L.push("END:VEVENT");
   }
   L.push("END:VCALENDAR");
@@ -2119,32 +2305,45 @@ function updateCalSub(){
   if(!sub || !calItems.length) return;
   const dEl = $("calDate"), tEl = $("calTime");
   const ymd = String((dEl && dEl.value) || ""), hm = String((tEl && tEl.value) || "20:00");
-  let txt = "共 " + calItems.length + " 条，每天 " + calPer + " 条"
-    + (calWeekend ? "" : "、跳过周六周日")
-    + "，每条 " + calMin + " 分钟"
-    + (calAlarm > 0 ? "、提前 " + (calAlarm >= 60 ? (calAlarm / 60) + " 小时" : calAlarm + " 分钟") + "提醒"
-                    : "、不提醒") + "。";
+  const alarm = calAlarm > 0
+    ? "，提前 " + (calAlarm >= 60 ? (calAlarm / 60) + " 小时" : calAlarm + " 分钟") + "提醒"
+    : "，不提醒";
+  let txt;
+  if(calParsed.mode === "flat"){
+    txt = "共 " + calItems.length + " 条，每天 " + calPer + " 条"
+      + (calWeekend ? "" : "、跳过周六周日")
+      + "，每条 " + calMin + " 分钟" + alarm + "。";
+  }else{
+    // 表/分阶段这两种形态里，天和时段（多数）都是计划自己给的，摘要得改口 ——
+    // 再说"每天 1 条"就是在描述一个本次根本没参与计算的设置。
+    txt = "共 " + calItems.length + " 条，按计划里的"
+      + (calParsed.mode === "week" ? "星期和时间" : calParsed.mode === "seq" ? "天序" : "时段")
+      + "排" + alarm + "。";
+  }
   if(/^\d{4}-\d{2}-\d{2}$/.test(ymd) && /^\d{1,2}:\d{2}$/.test(hm)){
-    const last = calTimes(ymd, hm, calMin, calItems.length, calPer, calWeekend);
-    const d = last[last.length - 1].e;      // 用**结束**时刻：一条压过午夜的日程，
-    txt += "　排到 " + (d.getMonth() + 1) + " 月 " + d.getDate() + " 日。";  // 说它"排到次日"才是实话
+    const slots = calSlots(calParsed, ymd, hm, calMin, calPer, calWeekend);
+    if(slots.length){
+      const d = slots[slots.length - 1].e;    // 用**结束**时刻：一条压过午夜的日程，
+      txt += "　排到 " + (d.getMonth() + 1) + " 月 " + d.getDate() + " 日。";  // 说它"排到次日"才是实话
+    }
   }
   sub.textContent = txt;
 }
 
 function openCalSheet(btn){
   const msgEl = btn.closest(".msg");
-  const items = planItems(msgEl && msgEl._text ? msgEl._text : "");
-  if(!items.length){ toast("这条回答里没有分条的计划，让它先出一份分条清单再试"); return; }
-  calItems = items;
-  // 前 4 条列出来（条目名走 esc，模型输出里的尖括号不能当 HTML 解释）
+  calParsed = planParse(msgEl && msgEl._text ? msgEl._text : "");
+  calItems = calParsed.events.map(function(e){ return e.text; });
+  if(!calItems.length){ toast("这条回答里没有分条的计划，让它先出一份分条清单再试"); return; }
+  // 前 4 条列出来（条目名走 esc，模型输出里的尖括号不能当 HTML 解释）。
+  // 星期/第几天/时段做前缀：抽错了、或者天对不上，用户得在**写进真日历之前**看见。
   const pv = $("calPrev");
   if(pv){
-    const show = items.slice(0, 4);
-    pv.innerHTML = show.map(function(t, i){
-      return "<div><b>" + (i + 1) + "</b>" + esc(t) + "</div>";
-    }).join("") + (items.length > show.length
-      ? "<div><b>…</b>还有 " + (items.length - show.length) + " 条</div>" : "");
+    const show = calParsed.events.slice(0, 4);
+    pv.innerHTML = show.map(function(e, i){
+      return "<div><b>" + esc(calLabel(e, i)) + "</b>" + esc(e.text) + "</div>";
+    }).join("") + (calParsed.events.length > show.length
+      ? "<div><b>…</b>还有 " + (calParsed.events.length - show.length) + " 条</div>" : "");
   }
   // 每次打开都回到默认档：四个设置项连同它们的高亮一起复位，
   // 不然上一份计划调过的档会静默套到这一份上
@@ -2161,8 +2360,33 @@ function openCalSheet(btn){
     const want = String(calSetting(pair[1]));
     for(const x of box.children) x.classList.toggle("on", x.dataset.v === want);
   });
+  calFitRows();
   updateCalSub();
   const sh = $("calSheet"); if(sh) sh.classList.add("open");
+}
+/* 面板上的行按这份计划**是否真的用得上**显隐。周表 / 单日表自带时段，「几点开始」
+   「每段多长」摆出来就是拨了没反应，比不显示更糟；只有"一份清单、天和时段都得
+   现定"（flat）才需要「每天几条」「周末」。
+   ⚠️ 用行内 style.display 而不是 hidden 属性：.sheet-row / .sheet-pick 都写着
+   display:flex，作者样式压得过 UA 的 [hidden]{display:none}，属性写法在这里
+   **根本不会隐藏**。 */
+function calFitRows(){
+  const needTime = calParsed.mode === "flat"
+    || calParsed.events.some(function(e){ return !e.hhmm; });
+  const isFlat = calParsed.mode === "flat";
+  [["rowTime", needTime], ["rowDur", needTime], ["rowPer", isFlat], ["rowWk", isFlat]]
+  .forEach(function(pair){
+    const el = $(pair[0]);
+    if(el && el.style) el.style.display = pair[1] ? "" : "none";
+  });
+}
+/* 预览里每条前面的小标签：能说出"哪天/几点"就说，说不出才退回序号。 */
+function calLabel(e, i){
+  const hm = e.hhmm ? " " + e.hhmm : "";
+  if(e.day > 0) return "周" + "一二三四五六日".charAt(e.day - 1) + hm;
+  if(e.seq > 0) return "第 " + e.seq + " 天" + hm;
+  if(e.hhmm) return e.hhmm;
+  return String(i + 1);
 }
 function closeCalSheet(){ const sh = $("calSheet"); if(sh) sh.classList.remove("open"); }
 /* 点蒙层空白处关掉。必须判断 target 是不是蒙层自己——点卡片内部会冒泡上来，不能误关 */
@@ -2193,7 +2417,7 @@ function doCalExport(){
   if(!/^\d{4}-\d{2}-\d{2}$/.test(ymd)){ toast("请选一个开始日期"); return; }
   const m = hm.match(/^(\d{1,2}):(\d{2})$/);
   if(!m || Number(m[1]) > 23 || Number(m[2]) > 59){ toast("请选一个开始时间"); return; }
-  saveICS(buildICS(calItems, ymd, hm, calMin, calPer, calWeekend, calAlarm), "星智碰-学习计划.ics");
+  saveICS(buildICS(calParsed, ymd, hm, calMin, calPer, calWeekend, calAlarm), "星智碰-学习计划.ics");
   closeCalSheet();
   toast("已生成日历文件，在下载里点开就能加入日历");
 }
