@@ -2,10 +2,38 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<!-- 视口：**不锁缩放**。此前写作 `maximum-scale=1.0, user-scalable=no`，
+     那等于禁掉双指缩放——WCAG 1.4.4（调整文字大小）明确不允许，视障用户
+     放大不了正文。本页所有版式都由 width=device-width 驱动，去掉这两个
+     上限**不改任何布局**（改动后四状态逐像素比差 0 点，见台账）。
+     viewport-fit=cover 保留：它是安全区 env() 生效的前提，与缩放无关。 -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 <title>星智碰 · AI 学习搭档</title>
 <meta name="theme-color" content="#FFFFFF" />
+<!-- 首帧就把 UA 控件定成浅色。CSS 里的 color-scheme:light 要等样式表解析完才生效，
+     这中间输入框/滚动条会按系统深色画一次（深色机上看得见一下白缝）。 -->
+<meta name="color-scheme" content="light" />
 <meta name="description" content="星智碰 · AI 学习搭档：碰一碰 NFC 鼠标垫，免安装直达 AI 学习助手。" />
+<!-- 分享与安装：本页是产品入口，链接会被转发给评委/同学。
+     缺 og:* 时微信、飞书、iMessage 的预览卡片是空白标题+裸链接。
+     ⚠ og:image 暂缺——公开仓库里只有 index.html 与 README，没有可引用的图床文件；
+     要补得先往仓库放一张 1200×630 的图，属交付件变更，不在本轮范围。 -->
+<link rel="canonical" href="https://zengfujei-code.github.io/xingzhipeng/" />
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="星智碰" />
+<meta property="og:title" content="星智碰 · AI 学习搭档" />
+<meta property="og:description" content="碰一碰 NFC 鼠标垫，免安装直达 AI 学习助手。学习计划 / 作业管家 / 随问随答。" />
+<meta property="og:url" content="https://zengfujei-code.github.io/xingzhipeng/" />
+<meta property="og:locale" content="zh_CN" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="星智碰 · AI 学习搭档" />
+<meta name="twitter:description" content="碰一碰 NFC 鼠标垫，免安装直达 AI 学习助手。" />
+<!-- iOS「添加到主屏幕」：不加这三条，图标下会是截断的网页标题、状态栏还会压住顶栏 -->
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-title" content="星智碰" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<!-- 页面里全是「45 分 / 150–500 字」这类数字，防 iOS 自作主张转成电话链接 -->
+<meta name="format-detection" content="telephone=no" />
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23003A8C'/%3E%3Crect x='1' y='1' width='62' height='62' rx='15' fill='none' stroke='%235AC8FA' stroke-opacity='.50'/%3E%3Ctext x='32' y='45' font-size='38' font-family='sans-serif' text-anchor='middle' fill='%23ffffff'%3E%E6%98%9F%3C/text%3E%3C/svg%3E" />
 <style>  /* ============================================================
      设计令牌 · 苹果白（中性白 · 系统蓝）
@@ -358,7 +386,7 @@
     border:1px solid var(--line);box-shadow:var(--sh-1),inset 0 1px 0 var(--hair);
     transition:transform .18s var(--ease),border-color .2s var(--ease)}
   /* 这一行是首页新增的可点区域，也是全页**唯一**一个原本没有任何按下反馈的可点元素
-     （三张卡、快捷问法、保存/重试、三个顶栏钮、删除都有 :active）。而 116 行那条
+     （三张卡、快捷问法、保存/重试、三个顶栏钮、删除都有 :active）。而 144 行那条
      -webkit-tap-highlight-color:transparent 又把系统自带的点按高亮全局关掉了——
      于是"没写 :active"在这份文件里就等于"点下去什么都看不见"，
      用户会以为没点到而重复点。反馈沿用场景卡的同一套语言：压一点点 + 边框提亮。 */
@@ -469,7 +497,7 @@
      消息从它下面滚过去 —— 这才是整页最该有玻璃感的地方。
      它是常驻元素、自己不滚动，所以这里用 backdrop-filter 是安全的。
      这条 top 依赖 var(--sat)。这里**不需要**再补一行裸值 top:10px 兜底，两个理由：
-     ① --sat 在 :root 里是无条件给了 0px 的（109 行），var(--sat) 不存在"取不到"，
+     ① --sat 在 :root 里是无条件给了 0px 的（137 行），var(--sat) 不存在"取不到"，
         最坏是那句 @supports 不成立、--sat 保持 0，top 就是 10px；
      ② 即便真在 computed-value 阶段失效，按 css-variables 规范该声明会整条按 unset 处理
         （于是 top 取 initial 的 auto），**不会**回退到同一声明块里更靠前的那一行——
@@ -818,7 +846,7 @@
      `.del` 高度仍是 38（宽 44）：往下撑会压到正文首行，是刻意的取舍，见它自己那条注释。
      除 `.del` 这一条外，八处的宽高现在都在 44 以上。
 
-     .del 的 ::after 是按钮自己的，与 226 行 .lib-item::after 那道金发丝线不冲突。
+     .del 的 ::after 是按钮自己的，与 254 行 .lib-item::after 那道金发丝线不冲突。
 
      .quick span 也在这份名单里，但它的撑法跟别人不一样，说清楚免得下次又被漏掉：
      .quick 是 overflow-x:auto 的横向滚动容器，而 overflow 一轴为 auto 时另一轴
@@ -866,7 +894,7 @@
      内边距吃掉——同一个失效模式在首页被承认并解决了，在这两块屏上根本没被承认。
 
      ⚠ 这一段必须写在**所有** .chat-head/.back/.msg-wrap/.lib-list 基类规则之后。
-     媒体查询不加特异性，同特异性下靠源码顺序定胜负；把这几条塞进第 415 行那个
+     媒体查询不加特异性，同特异性下靠源码顺序定胜负；把这几条塞进第 443 行那个
      媒体块里是无效的（试过，量出来顶栏还是 52px、.back 还是 38px，静默不生效）。
      所以它单独放在样式表末尾。
 
@@ -1085,14 +1113,20 @@
       <button class="mini" onclick="clearChat()" aria-label="清空本场景对话" title="清空本场景对话">清空</button>
       <button class="lib-btn" onclick="showLib()">学习库</button>
     </div>
-    <div class="msg-wrap" id="msgWrap"></div>
+    <!-- role=log + aria-live：这是全页唯一的「内容会自己长出来」的区域，此前
+         它是个哑的 div——读屏用户敲完问题后**永远等不到回答被念出来**，
+         只能自己去消息区里翻。role=log 是会话日志的标准角色，politeness
+         用 polite（不打断用户当前朗读）。
+         重进场景时的历史重放会在 openChat 里临时把它关掉，避免把整段旧对话
+         当成新消息念一遍。 -->
+    <div class="msg-wrap" id="msgWrap" role="log" aria-live="polite" aria-relevant="additions"></div>
     <div class="quick" id="quickBar"></div>
     <div class="input-bar">
       <!-- 占位符字数是被宽度倒推出来的，别再凭手感加长：实测 320 宽下输入框的
            文字区只有 142px，16px 的汉字恰好 16px 一个，所以最多放 8 个字多一点。
            原文案「说一句或输入你的需求…」11 个单位 = 176px，超出 33px，
            而 WebKit 对超长的 placeholder **不给省略号**，直接从字形中间切断。
-           这里原先写"最窄那档是 320、留 31px 余量"，与上面 190 行那句
+           这里原先写"最窄那档是 320、留 31px 余量"，与上面 218 行那句
            "设计下限约 295px（Galaxy Fold 外屏 280px 一类）"互相矛盾：
            280 才是那份口径里的下限，而它在 320 之外——文字区只有 102px，
            末尾那个"…"（112−96=16px 宽）当时只剩 6px 可显示，是被切过的。
@@ -1494,10 +1528,18 @@ function openChat(scene, noPush){
   const hist = loadHist(scene).slice(-HIST_MAX);
   if(hist.length){
     // 重进场景时把历史重放出来：模型一直「记得」这些轮，界面不能装作没聊过
+    /* 但重放期间必须把 #msgWrap 的 aria-live 关掉：这一段是「一次性把 N 轮全插进去」，
+       不关的话读屏会从第一条念到最后一条——用户只是切了个场景，不是收到了新回答。
+       插完立刻恢复，之后的实时回答才该被播报。用 setTimeout(0) 而不是同步恢复：
+       部分读屏是异步收集 DOM 变更的，同步改回去会把这一批变更算进「开」的窗口里。 */
+    const liveEl = $("msgWrap");
+    const livePrev = liveEl.getAttribute("aria-live") || "polite";
+    liveEl.setAttribute("aria-live", "off");
     hist.forEach(function(t){
       if(t.q) addMsg("me", t.q);
       if(t.a) addMsg("ai", t.a, {savable:true});
     });
+    setTimeout(function(){ liveEl.setAttribute("aria-live", livePrev); }, 0);
   }
   /* 上一次没成的那个提示条也要放回来。以前它只活在 DOM 里：在 A 提问后切到 B，
      等 A 失败时用户正在看 B，只有一句会自己消失的 toast；切回 A 看见问题孤零零挂着、
@@ -2444,7 +2486,7 @@ function delLib(i){
   const lib = loadLib();                 // 必须与 showLib 用同一套归一，否则索引错位删错条
   if(!(i >= 0 && i < lib.length)) return;
   // 删除不可撤销，而 ✕ 就贴在条目正文的右上角——误触一次就永久少一条记录。
-  // clearChat（1522 行）早就是"先 confirm 再动手"，这里一直漏着；本轮又把 ✕ 的
+  // clearChat（1564 行）早就是"先 confirm 再动手"，这里一直漏着；本轮又把 ✕ 的
   // 命中区从 28×28 补到了 44×44，误触面只会更大，这道闸不能没有。
   // 带上内容开头，用户才知道自己删的是哪一条。
   const raw = typeof lib[i].content === "string" ? lib[i].content : "";
@@ -2622,7 +2664,7 @@ window.addEventListener("popstate",function(e){
   try{
     setMode(CONFIG.apiProxy ? "unknown" : "noconfig");
     applyFont(loadSet().font);      // 字号必须在首屏画出来之前就挂上，否则会看到一次跳变
-    /* 把初始的 aria-hidden 补齐：HTML 里只有首页带 .active（L1015 `class="screen active"`），
+    /* 把初始的 aria-hidden 补齐：HTML 里只有首页带 .active（L1043 `class="screen active"`），
        不先跑一次 show() 的话，对话页与学习库在无障碍树里是「可见」的（它们只是 opacity:0）。
        这里写死 "screen-home" 而不是去查 .screen.active：初值就是标记里那一个，
        查一遍只是把同一个事实再推导一次，还得依赖 querySelector 在所有环境下都在。 */
