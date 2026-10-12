@@ -395,6 +395,52 @@
     background:linear-gradient(180deg,var(--acc) 0%,var(--hair-acc) 100%)}
   .recent-txt{flex:1;min-width:0;font-size:var(--t-body);color:var(--sub);
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+  /* ---------- 今日回顾（第 30 次新增）----------
+     刻意复用 .recent 的卡片形制（同一条左侧竖线、同一个圆角与玻璃底）——
+     首页已经有一个"能点的卡片"的视觉语言，新卡片不另造一套，区别只在
+     竖线颜色：跟随"待复习"而不是场景。 */
+  .rv-card{position:relative;overflow:hidden;border-radius:var(--r-md);cursor:pointer;
+    background:rgba(255,255,255,.74);backdrop-filter:blur(20px) saturate(1.6);
+    -webkit-backdrop-filter:blur(20px) saturate(1.6);border:1px solid var(--line);
+    box-shadow:var(--sh-1),inset 0 1px 0 var(--hair);margin:0 18px;padding:11px 14px;
+    display:flex;align-items:center;gap:12px;text-align:left;
+    transition:transform .18s var(--ease),border-color .22s var(--ease)}
+  .rv-card:active{transform:scale(.97);border-color:var(--line-2)}
+  .rv-card::before{content:"";position:absolute;left:0;top:11px;bottom:11px;width:2px;
+    border-radius:0 2px 2px 0;background:linear-gradient(180deg,var(--acc),#5AC8FA)}
+  .rv-ico{flex:none;width:38px;height:38px;border-radius:50%;display:flex;align-items:center;
+    justify-content:center;font-size:17px;color:var(--acc);
+    background:radial-gradient(circle,rgba(0,113,227,.14),rgba(0,113,227,0) 72%)}
+  .rv-main{flex:1;min-width:0}
+  .rv-main b{display:block;font-size:var(--t-body);font-weight:600;color:var(--ink);letter-spacing:.01em}
+  .rv-main span{display:block;font-size:var(--t-small);color:var(--sub);margin-top:2px;line-height:1.45}
+  .rv-go{flex:none;font-size:15px;color:var(--faint);line-height:1}
+  .rv-card[hidden]{display:none}          /* 没有待复习时整块藏掉，不是留一句空话 */
+  .rv-hero{margin:14px 18px 0;padding:13px 15px;border-radius:var(--r-md);
+    background:rgba(0,113,227,.06);border:1px solid rgba(0,113,227,.18)}
+  .rv-hero b{display:block;font-size:var(--t-lead);font-weight:700;color:var(--ink);line-height:1.45}
+  .rv-hero span{display:block;font-size:var(--t-small);color:var(--sub);margin-top:4px;line-height:1.5}
+  /* 翻卡只动 transform，绝不碰宽高——本页动效层的硬约束（见文件头动效那段） */
+  .rv-face{margin:14px 18px;border-radius:var(--r-lg);border:1px solid var(--line);
+    background:#fff;box-shadow:var(--sh-2);padding:22px 20px;min-height:236px;
+    display:flex;flex-direction:column;animation:cardIn .34s var(--spring) backwards}
+  .rv-face .rv-k{font-size:var(--t-micro);color:var(--faint);letter-spacing:.08em;font-weight:600}
+  .rv-face .rv-q{margin-top:10px;font-size:var(--t-title);font-weight:700;color:var(--ink);line-height:1.5}
+  .rv-face .rv-a{margin-top:12px;font-size:var(--t-body);color:var(--sub);line-height:1.62;
+    animation:cardIn .34s var(--ease) backwards}
+  .rv-done{margin:14px 18px;text-align:center;padding:26px 18px;border-radius:var(--r-lg);
+    background:#fff;border:1px solid var(--line);box-shadow:var(--sh-1)}
+  .rv-done b{display:block;font-size:var(--t-lead);color:var(--ink)}
+  .rv-done span{display:block;margin-top:6px;font-size:var(--t-small);color:var(--sub);line-height:1.5}
+  /* 「抽成复习卡」小钮。min-height:24 就是命中区本身（WCAG 2.5.8 的下限），
+     不另加 ::before 覆盖层——它是真按钮，撑高不会像透明层那样看不出点没点中。 */
+  .rv-btn{display:block;margin-top:8px;padding:6px 12px;min-height:24px;border:1px solid var(--line);
+    border-radius:var(--r-pill);background:rgba(0,113,227,.06);color:var(--acc);
+    font-size:var(--t-micro);font-weight:600;cursor:pointer;font-family:inherit;
+    transition:transform .18s var(--ease),background .22s var(--ease)}
+  .rv-btn:active{transform:scale(.96)}
+  .rv-btn[disabled]{opacity:.5;pointer-events:none}
   .recent-go{flex:none;font-size:15px;color:var(--faint);line-height:1}
   /* 场景标签的三种色相。学习库与「最近存入」共用同一条规则，
      所以"学习计划 = 蓝"在哪儿都成立，不是各画各的。 */
@@ -894,7 +940,7 @@
      内边距吃掉——同一个失效模式在首页被承认并解决了，在这两块屏上根本没被承认。
 
      ⚠ 这一段必须写在**所有** .chat-head/.back/.msg-wrap/.lib-list 基类规则之后。
-     媒体查询不加特异性，同特异性下靠源码顺序定胜负；把这几条塞进第 443 行那个
+     媒体查询不加特异性，同特异性下靠源码顺序定胜负；把这几条塞进第 489 行那个
      媒体块里是无效的（试过，量出来顶栏还是 52px、.back 还是 38px，静默不生效）。
      所以它单独放在样式表末尾。
 
@@ -1082,6 +1128,12 @@
         </div>
         <div class="go">›</div>
       </div>
+      <!-- 今日回顾入口：只在真有到期卡片时出现。renderReviewBadge 每回首页算一次。 -->
+      <div class="rv-card" id="rvCard" role="button" tabindex="0" onclick="showReview()" hidden>
+        <span class="rv-ico"><svg stroke-width="2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.2a8.8 8.8 0 1 0 8.8 8.8"/><path d="M12 7.4v4.8l3.4 2"/><path d="M4.6 19.4 6 15.2"/></svg></span>
+        <span class="rv-main"><b id="rvTitle">今日回顾</b><span id="rvSub"></span></span>
+        <span class="rv-go">›</span>
+      </div>
       <!-- 第四行恒在：有内容时是「最近存入」，空库时由 renderRecent 换成一句说明 -->
       <div class="recent" id="recentCard" role="button" tabindex="0" onclick="showLib()">
         <span class="tag" id="recentTag">学习库</span>
@@ -1147,6 +1199,21 @@
     </div>
     <div class="lib-list" id="libList"></div>
   </section>
+
+  <!-- 今日回顾：把学习库存下的内容变成问答卡，按遗忘曲线排期 -->
+  <section class="screen" id="screen-review">
+    <div class="chat-head">
+      <button class="back" onclick="goHome()" aria-label="返回首页">‹</button>
+      <h2 id="rvHead">今日回顾</h2>
+      <span class="lib-count" id="rvCount"></span>
+    </div>
+    <div class="rv-list" id="rvBody"></div>
+    <div class="pills" id="rvPills" hidden>
+      <span class="pill" onclick="rvGrade(false)" role="button" tabindex="0">忘了</span>
+      <span class="pill" onclick="rvGrade(true)" role="button" tabindex="0">记住了</span>
+    </div>
+  </section>
+
 
   <!-- 设置 -->
   <section class="screen" id="screen-settings">
@@ -1942,6 +2009,7 @@ function loadLib(){
 function renderRecent(){
   const el = $("recentCard"); if(!el) return;
   const tag = $("recentTag"), txt = $("recentTxt");
+  renderReviewBadge();
   const last = loadLib()[0];
   if(!last){
     if(tag){ tag.className = "tag"; tag.textContent = "学习库"; }
@@ -2478,7 +2546,8 @@ function showLib(){
     const k = SCENE_BY_NAME[x.scene];
     return `<div class="lib-item"><button class="del" onclick="delLib(${i})">×</button>`
       + `<span class="tag${k ? " k-" + k : ""}">${esc(x.scene)}</span>`
-      + mdLite(x.content) + `<time>${esc(x.time)}</time></div>`;
+      + mdLite(x.content) + `<time>${esc(x.time)}</time></div>`
+      + `<button class="rv-btn" data-lib="${i}" onclick="rvMakeCard(this)">抽成复习卡</button>`;
   }).join("")
     : `<div class="empty"><svg stroke-width="2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.4 12.8h4.6l1.5 2.6h5l1.5-2.6h4.6"/><path d="M6.3 4.5h11.4l2.8 8.3v3.9a2.8 2.8 0 0 1-2.8 2.8H6.3a2.8 2.8 0 0 1-2.8-2.8v-3.9z"/></svg>学习库还是空的<br/>在对话中把 AI 生成的计划、任务清单保存到这里</div>`;
 }
@@ -2486,7 +2555,7 @@ function delLib(i){
   const lib = loadLib();                 // 必须与 showLib 用同一套归一，否则索引错位删错条
   if(!(i >= 0 && i < lib.length)) return;
   // 删除不可撤销，而 ✕ 就贴在条目正文的右上角——误触一次就永久少一条记录。
-  // clearChat（1564 行）早就是"先 confirm 再动手"，这里一直漏着；本轮又把 ✕ 的
+  // clearChat（1631 行）早就是"先 confirm 再动手"，这里一直漏着；本轮又把 ✕ 的
   // 命中区从 28×28 补到了 44×44，误触面只会更大，这道闸不能没有。
   // 带上内容开头，用户才知道自己删的是哪一条。
   const raw = typeof lib[i].content === "string" ? lib[i].content : "";
@@ -2660,11 +2729,178 @@ window.addEventListener("popstate",function(e){
      同一份数据在两处显示，就得在两处都刷新。 */
   else { show("screen-home"); renderRecent(); }
 });
+/* ---------- 「今日回顾」：学习库 → 问答卡 → 间隔复习（第 30 次新增）----------
+   产品自己的定位是「留得下、翻得回」——靠这个跟一次性二维码拉开差距。但「翻得回」
+   只是**检索**：存完就完了，第二周不会再看见它。这一块把它补成「留得下、**记得住**」。
+
+   三个设计决定，都是省成本而不是偷工：
+   ① **不新增后端路由。** 卡片由星火生成，但走的是已有的 POST /api/chat，只把
+      query 换成一段抽卡指令。密钥不下发前端这条底线一动不动——不需要新环境变量，
+      云函数源码零改动，SCF 部署包只换包内那份 index.html。
+   ② **排期按 Leitner 五盒**（1/2/4/8/16 天），不是 SM-2。后者要四个参数（EF、
+       reps、lapse、interval），本地存得下，但为一个 MVP 引入四参数的代价是把
+      「为什么这次是 4 天不是 3 天」变成一个用户答不上来的黑箱。五盒的参数就是
+      「对几次」，用户能自己推出来。
+   ③ **卡片与笔记同生共死**：抽卡按钮挂在学习库每一条上，抽出来的卡片记下来源
+      场景，删笔记时**不级联删卡片**——卡片是用户已经花过一次「记住了」成本的资产，
+      为一条被删的笔记把这份进度一起抹掉，比留着更让人难受。
+
+   数据形状（localStorage "rv"）：
+   [{id, q, a, scene, due:"YYYY-MM-DD", box:1..5}]
+   due 是**本地日期串**，不存时间戳：跨时区/改时区都不该改变「今天该复习什么」。 */
+const RV_KEY = "rv";
+const RV_BOX_DAYS = [0, 1, 2, 4, 8, 16];   // 下标 = box；box 1 = 1 天后再见
+const RV_MAX = 200;                          // 上限与 LIB_MAX 同级的必要性：脏数组会让一次 innerHTML 拼出上万个节点
+const RV_ASK_MAX = 300;                      // 喂给模型的笔记上限，超出截断（省额度，也防超长 body）
+let rvDeck = null, rvIdx = 0, rvFlipped = false;   // 本次会话的牌堆/进度/翻面态
+
+function rvToday(offsetDays){
+  const d = new Date();
+  d.setDate(d.getDate() + (offsetDays || 0));
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return d.getFullYear() + "-" + m + "-" + day;
+}
+function loadRv(){
+  const a = store.get(RV_KEY, []);
+  return Array.isArray(a) ? a.filter(x => x && typeof x === "object" && x.q && x.a) : [];
+}
+function saveRv(list){ return store.set(RV_KEY, list.slice(0, RV_MAX)); }
+/* 到期的判定用**字符串比较**而不是转 Date：YYYY-MM-DD 是定宽零填充的，
+   字典序即时间序，省掉一次解析，也避开本地时区把「今天零点」算成昨天。 */
+function rvDueList(){
+  const t = rvToday();
+  return loadRv().filter(c => !c.due || c.due <= t);
+}
+function rvCount(list){ return (list || rvDueList()).length; }
+
+/* 首页那张卡。没有到期卡片时整块 hidden 掉——留一句「今天没有要复习的」会
+   把首页第四、第五行撑成两行空话，而 .recent 那张还占着一行。 */
+function renderReviewBadge(){
+  const card = $("rvCard"); if(!card) return;
+  const due = rvDueList(), n = due.length;
+  card.hidden = !n;
+  if(!n) return;
+  const t = $("rvTitle"), s = $("rvSub");
+  if(t) t.textContent = "今日回顾 · " + n + " 条";
+  if(s) s.textContent = n === 1 ? "1 张问答卡到期，1 分钟过一遍"
+                                : "按遗忘曲线排的，先做最近的几张";
+}
+
+function showReview(){
+  rvDeck = rvDueList(); rvIdx = 0; rvFlipped = false;
+  show("screen-review");
+  rvRender();
+}
+
+function rvRender(){
+  const body = $("rvBody"), pills = $("rvPills"), cnt = $("rvCount");
+  if(!body) return;
+  const total = rvDeck ? rvDeck.length : 0;
+  if(cnt) cnt.textContent = total ? ("剩 " + (total - rvIdx) + " 张") : "";
+  if(pills) pills.hidden = true;
+
+  if(!total){                       // 还没抽过卡
+    body.innerHTML = '<div class="rv-done"><b>还没有复习卡</b>'
+      + '<span>去「我的 AI 学习库」，在任意一条下点「抽成复习卡」，<br/>'
+      + 'AI 会把它变成一问一答，之后每天到这里过一遍。</span></div>';
+    return;
+  }
+  if(rvIdx >= total){               // 本轮过完
+    body.innerHTML = '<div class="rv-done"><b>今日复习完成</b>'
+      + '<span>过了 ' + total + ' 张。下次到期会自动排进这里。</span></div>';
+    return;
+  }
+  const c = rvDeck[rvIdx];
+  const kind = c.scene ? esc(c.scene) : "学习库";
+  if(rvFlipped){
+    body.innerHTML = '<div class="rv-face"><span class="rv-k">要点 · ' + kind + '</span>'
+      + '<div class="rv-q">' + esc(c.q) + '</div>'
+      + '<div class="rv-a">' + mdLite(c.a) + '</div></div>';
+    if(pills) pills.hidden = false;
+  } else {
+    body.innerHTML = '<div class="rv-face"><span class="rv-k">问题 · ' + kind + '</span>'
+      + '<div class="rv-q">' + esc(c.q) + '</div>'
+      + '<div class="rv-a" hidden></div></div>'
+      + '<div class="pills"><span class="pill" onclick="rvFlip()" role="button" tabindex="0">看要点</span></div>';
+  }
+}
+function rvFlip(){ rvFlipped = true; rvRender(); }
+
+/* 评分：记住了 box+1（进长间隔），忘了回 box 1。**改了就要落盘**——
+   评分只改内存的话，用户回到首页再进来进度全丢，那这套东西就等于没存在过。 */
+function rvGrade(ok){
+  if(!rvDeck || rvIdx >= rvDeck.length) return;
+  const list = loadRv();
+  const cur = rvDeck[rvIdx];
+  const i = list.findIndex(x => x.id === cur.id);
+  if(i >= 0){
+    const box = Math.max(1, Math.min(5, (list[i].box || 1) + (ok ? 1 : 0)));
+    const days = RV_BOX_DAYS[ok ? Math.min(5, (list[i].box || 1) + 1) : 1];
+    list[i].box = ok ? box : 1;
+    list[i].due = rvToday(days);
+    // 落盘失败要说出来：评分结果是用户攒出来的，静默丢掉比报错更糟
+    if(!saveRv(list)) toast("本机存储异常，这次评分没能保存");
+  }
+  rvIdx++; rvFlipped = false; rvRender(); renderReviewBadge();
+}
+
+/* 抽卡：把一条笔记喂给星火，换一张问答卡回来。
+   **不设本地兜底卡**——本页的接口约定是「拿不到模型内容就如实说」，见 requestReply。
+   解析失败同样如实说，不拿一句"已生成"糊过去。 */
+function rvParseCard(txt){
+  const q = (String(txt).match(/^\s*Q\s*[:：]\s*(.+)$/m) || [])[1];
+  const a = (String(txt).match(/^\s*A\s*[:：]\s*(.+)$/m) || [])[1];
+  if(!q || !a) return null;
+  return {q: q.trim().slice(0, 120), a: a.trim().slice(0, 240)};
+}
+async function rvAskSpark(note){
+  const prompt = '请把下面这段学习笔记抽成 1 张复习问答卡。严格只输出两行，不要任何别的内容：\n'
+    + 'Q: <一个能单独读懂的具体问题>\n'
+    + 'A: <要点，不超过 80 字>\n\n'
+    + '笔记：\n' + note;
+  const r = await fetchWithTimeout(CONFIG.apiProxy, {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: asciiJSON({scene: "ask", query: prompt, history: []})
+  }, CONFIG.timeoutMs);
+  const d = await r.json();
+  if(!d || typeof d.reply !== "string" || !d.reply.trim()) throw new Error("empty");
+  return d.reply;
+}
+async function rvMakeCard(btn){
+  if(!CONFIG.apiProxy){ toast("未配置 AI 服务地址，无法生成复习卡"); return; }
+  const i = Number(btn.getAttribute("data-lib"));
+  const lib = loadLib();                     // 与 showLib 同一套归一，否则索引错位取错条
+  if(!(i >= 0 && i < lib.length)){ toast("这条笔记已经不存在，刷新后再试"); return; }
+  const old = btn.textContent;
+  btn.disabled = true; btn.textContent = "正在生成…";
+  try{
+    const note = String(lib[i].content || "").slice(0, RV_ASK_MAX);
+    const card = rvParseCard(await rvAskSpark(note));
+    if(!card){ toast("没能解析出问答卡，换一条试试"); return; }
+    const list = loadRv();
+    // 同一来源不重复插：连点两次只会刷成一张，不会堆出两张一模一样的
+    if(!list.some(x => x.q === card.q && x.scene === lib[i].scene)){
+      list.push({id: Date.now() + "-" + Math.random().toString(36).slice(2, 7),
+                 q: card.q, a: card.a, scene: lib[i].scene || "",
+                 due: rvToday(1), box: 1});
+      if(!saveRv(list)){ toast("本机存储空间不足，卡片没能保存"); return; }
+    }
+    btn.textContent = "✓ 已生成复习卡";
+    toast("已加入今日回顾 · 明天再见它一次");
+    renderReviewBadge();
+  }catch(e){
+    // 失败不误解成"已生成"：把按钮还回去，让用户能原样再试一次
+    btn.disabled = false; btn.textContent = old;
+    toast("没能连上 AI，稍后重试");
+  }
+}
 (function init(){
   try{
     setMode(CONFIG.apiProxy ? "unknown" : "noconfig");
     applyFont(loadSet().font);      // 字号必须在首屏画出来之前就挂上，否则会看到一次跳变
-    /* 把初始的 aria-hidden 补齐：HTML 里只有首页带 .active（L1043 `class="screen active"`），
+    /* 把初始的 aria-hidden 补齐：HTML 里只有首页带 .active（L1089 `class="screen active"`），
        不先跑一次 show() 的话，对话页与学习库在无障碍树里是「可见」的（它们只是 opacity:0）。
        这里写死 "screen-home" 而不是去查 .screen.active：初值就是标记里那一个，
        查一遍只是把同一个事实再推导一次，还得依赖 querySelector 在所有环境下都在。 */
@@ -2687,6 +2923,7 @@ window.addEventListener("popstate",function(e){
     if(window.console) console.error("init failed:", e);
   }
 })();
+
 </script>
 </body>
 </html>
