@@ -462,6 +462,20 @@
     background:#fff;border:1px solid var(--line);box-shadow:var(--sh-1)}
   .rv-done b{display:block;font-size:var(--t-lead);color:var(--ink)}
   .rv-done span{display:block;margin-top:6px;font-size:var(--t-small);color:var(--sub);line-height:1.5}
+  /* 这一屏的滚动容器（第 32 次补）。**刻意不给左右内边距**——.rv-card/.rv-hero/
+     .rv-face/.rv-done 四件各自带着 margin:…18px（见上面各条），容器再加 16px
+     就成了双层内缩，卡片比顶栏窄一大截。左右交给子元素自己缩，容器只管纵向。
+     ⚠ 上内边距必须自己给：.chat-head 是 position:absolute，**不占流内高度**。
+     缺了它 #rvBody 从 y=0 起排，整段问答压在悬浮顶栏底下——就是"文字位置不对"。
+     （对话/学习库/设置三屏的 .msg-wrap/.lib-list/.set-list 都写着这一条，
+     唯独本屏漏了；本屏的容器一直不存在，内容是裸排的。） */
+  .rv-list{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;
+    padding:0 0 16px;padding-top:calc(var(--sat) + 74px);
+    display:flex;flex-direction:column}
+  /* 动作条钉在屏幕底部（靠上面那条 flex:1 把它顶下去）。它是 .rv-list 的**兄弟**
+     节点，拿不到容器的左右尺寸，18px 缩进必须自带——与 .rv-face 对齐。
+     底部走安全区：它是全屏最下面那一行。 */
+  #rvPills{margin:10px 18px calc(var(--sab) + 14px)}
   /* 「抽成复习卡」小钮。min-height:24 就是命中区本身（WCAG 2.5.8 的下限），
      不另加 ::before 覆盖层——它是真按钮，撑高不会像透明层那样看不出点没点中。
      ⚠ 它**不是通栏 CTA**（第 31 次特意改回来的）：做成 block + 等宽的那一版，
@@ -977,7 +991,7 @@
      内边距吃掉——同一个失效模式在首页被承认并解决了，在这两块屏上根本没被承认。
 
      ⚠ 这一段必须写在**所有** .chat-head/.back/.msg-wrap/.lib-list 基类规则之后。
-     媒体查询不加特异性，同特异性下靠源码顺序定胜负；把这几条塞进第 526 行那个
+     媒体查询不加特异性，同特异性下靠源码顺序定胜负；把这几条塞进第 540 行那个
      媒体块里是无效的（试过，量出来顶栏还是 52px、.back 还是 38px，静默不生效）。
      所以它单独放在样式表末尾。
 
@@ -988,7 +1002,7 @@
     .chat-head{top:calc(var(--sat) + 6px);padding:4px 8px 4px 5px}
     .back{width:34px;height:34px}
     .back::after{inset:-6px}                     /* 32+12 -> 44x44 */
-    .msg-wrap,.lib-list,.set-list{padding-top:calc(var(--sat) + 60px)}
+    .msg-wrap,.lib-list,.set-list,.rv-list{padding-top:calc(var(--sat) + 60px)}
   }
 
   /* 键盘可达性：焦点环是必需项，不是装饰。下面这条只作用于键盘聚焦，
@@ -1243,10 +1257,16 @@
       <span class="lib-count" id="rvCount"></span>
     </div>
     <div class="rv-list" id="rvBody"></div>
-    <div class="pills" id="rvPills" hidden>
-      <span class="pill" onclick="rvGrade(false)" role="button" tabindex="0">忘了</span>
-      <span class="pill" onclick="rvGrade(true)" role="button" tabindex="0">记住了</span>
-    </div>
+    <!-- 动作条是**一条**，内容由 rvRenderPills() 按当前状态换：
+         未翻面 = 「看要点」一颗，翻面后 = 「忘了/记住了」两颗。
+         以前这两态是两处各画各的（翻前那颗由 rvRender 拼进 #rvBody 里），
+         结果同一个按钮在翻面时从卡片下方跳到屏幕底部。这里留空交给 JS，
+         避免两处手写、迟早漂移。
+         用真 <button> 而不是 <span role="button">：设置屏那两组胶囊
+         （样式/字号）就是 button——Enter/Space 是白来的，文字也自带居中。
+         span 那条路要自己补 keydown，而本页的委托只绑在 #sceneList 和
+         #recentCard 上，够不着这里（聚焦得到、按下去没反应）。 -->
+    <div class="pills" id="rvPills" hidden></div>
   </section>
 
 
@@ -3066,7 +3086,9 @@ function rvRender(){
   if(!body) return;
   const total = rvDeck ? rvDeck.length : 0;
   if(cnt) cnt.textContent = total ? ("剩 " + (total - rvIdx) + " 张") : "";
-  if(pills) pills.hidden = true;
+  // 藏起来的同时必须清空：下面两条提前返回的路径（无卡 / 本轮过完）不经过
+  // rvRenderPills，只 hidden 会留下上一态的按钮在 DOM 里变成死节点。
+  if(pills){ pills.hidden = true; pills.innerHTML = ""; }
 
   if(!total){                       // 还没抽过卡
     body.innerHTML = '<div class="rv-done"><b>还没有复习卡</b>'
@@ -3081,17 +3103,32 @@ function rvRender(){
   }
   const c = rvDeck[rvIdx];
   const kind = c.scene ? esc(c.scene) : "学习库";
-  if(rvFlipped){
-    body.innerHTML = '<div class="rv-face"><span class="rv-k">要点 · ' + kind + '</span>'
+  // 翻面前后**只有卡片内容不同**，动作条交给 rvRenderPills 单独刷。
+  // 以前「看要点」是拼在 body 里的：那条路径下它不是 .rv-list 的兄弟，
+  // 于是同一个位置上的按钮在翻面时会整块跳走。
+  body.innerHTML = rvFlipped
+    ? '<div class="rv-face"><span class="rv-k">要点 · ' + kind + '</span>'
       + '<div class="rv-q">' + esc(c.q) + '</div>'
-      + '<div class="rv-a">' + mdLite(c.a) + '</div></div>';
-    if(pills) pills.hidden = false;
-  } else {
-    body.innerHTML = '<div class="rv-face"><span class="rv-k">问题 · ' + kind + '</span>'
+      + '<div class="rv-a">' + mdLite(c.a) + '</div></div>'
+    : '<div class="rv-face"><span class="rv-k">问题 · ' + kind + '</span>'
       + '<div class="rv-q">' + esc(c.q) + '</div>'
-      + '<div class="rv-a" hidden></div></div>'
-      + '<div class="pills"><span class="pill" onclick="rvFlip()" role="button" tabindex="0">看要点</span></div>';
-  }
+      + '<div class="rv-a" hidden></div></div>';
+  rvRenderPills();
+}
+
+/* 动作条：未翻面一颗「看要点」，翻面后换成「忘了/记住了」两颗。
+   用真 <button>，不是 <span role="button">——设置屏那两组胶囊就是 button，
+   Enter/Space 是白来的，文字也自带居中；span 得自己补 keydown，而本页的
+   键盘委托只挂在 #sceneList / #recentCard 上，够不着这里。 */
+function rvRenderPills(){
+  const p = $("rvPills"); if(!p) return;
+  const total = rvDeck ? rvDeck.length : 0;
+  if(!total || rvIdx >= total){ p.hidden = true; p.innerHTML = ""; return; }
+  p.innerHTML = rvFlipped
+    ? '<button class="pill" onclick="rvGrade(false)">忘了</button>'
+      + '<button class="pill" onclick="rvGrade(true)">记住了</button>'
+    : '<button class="pill" onclick="rvFlip()">看要点</button>';
+  p.hidden = false;
 }
 function rvFlip(){ rvFlipped = true; rvRender(); }
 
@@ -3168,7 +3205,7 @@ async function rvMakeCard(btn){
   try{
     setMode(CONFIG.apiProxy ? "unknown" : "noconfig");
     applyFont(loadSet().font);      // 字号必须在首屏画出来之前就挂上，否则会看到一次跳变
-    /* 把初始的 aria-hidden 补齐：HTML 里只有首页带 .active（L1124 `class="screen active"`），
+    /* 把初始的 aria-hidden 补齐：HTML 里只有首页带 .active（L1138 `class="screen active"`），
        不先跑一次 show() 的话，对话页与学习库在无障碍树里是「可见」的（它们只是 opacity:0）。
        这里写死 "screen-home" 而不是去查 .screen.active：初值就是标记里那一个，
        查一遍只是把同一个事实再推导一次，还得依赖 querySelector 在所有环境下都在。 */
