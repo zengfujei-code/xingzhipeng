@@ -1346,7 +1346,7 @@
  * API Key/Secret 只存在云函数后台，绝不写进本文件。
  * ============================================================ */
 const CONFIG = {
-  apiProxy: "https://1491306416-dv2u0ynvjn.ap-guangzhou.tencentscf.com/api/chat",  // 星火助手 API 后端代理（两个形态只有这一行的取值不同）
+  apiProxy: "https://1491306416-cmt1s3xy4b.ap-guangzhou.tencentscf.com/api/chat",  // 星火助手 API 后端代理（两个形态只有这一行的取值不同）
   sceneParam: "s",       // NFC 标签可写入 https://域名/?s=plan 直达场景
   timeoutMs: 70000       // 前端等待上限：必须大于云函数内部超时（50 秒），否则会先于后端放弃
 };
@@ -1682,6 +1682,27 @@ function clearChat(){
 }
 function quickAsk(q){ $("chatInput").value=q; send(); }
 
+/* ---------- AI 气泡下方的动作按钮 ----------
+   原先这段 HTML 是在 addMsg 里现拼、直接写进 innerHTML 的。问题出在**后面还会
+   重写一次 innerHTML 的两个地方**：打字机 typeIn（每帧整块覆盖正文）和流式收尾
+   fillStreamMsg。现拼的那份被覆盖掉，按钮就没了。
+
+   这不是推测：2026-10-15 用包内自带的 h5test.js 实测，改造前的那一版
+   （打字机上线的版本）在「学习计划 / 随问随答」两个场景下，
+   ⭐ 存入学习库 与 📅 加入日历 **一个都不显示**，4 条断言挂掉；
+   把同一份测试拿去跑 10-09 的备份（打字机之前）则是全绿。
+
+   改法：把按钮挂到气泡元素自己的 _acts 上，凡是重写正文的地方一律写成
+   "正文 + (div._acts || '')"。按钮从此不跟正文一起被冲掉。 */
+function actsHTML(savable){
+  if(!savable) return "";
+  let html = '<span class="save-btn" onclick="saveLib(this)">⭐ 存入学习库</span>';
+  // 「加入日历」只在学习计划场景出现：另外两个场景的回答不是排期性的东西，
+  // 摆一个点了只会说"没有分条计划"的按钮，比不给更糟
+  if(curScene === "plan")
+    html += '<span class="save-btn cal-btn" onclick="openCalSheet(this)">📅 加入日历</span>';
+  return html;
+}
 function addMsg(role, text, opts){
   opts = opts || {};
   const wrap = $("msgWrap");
@@ -1693,16 +1714,83 @@ function addMsg(role, text, opts){
   // opts.raw 用于本页自己生成的 HTML 片段（打字指示器），那条路径不经转义。
   let html = opts.raw ? div._text : (role === "ai" ? mdLite(div._text) : esc(div._text));
   // 不再拼 <br/>：正文现在是块级 <p>，按钮跟在 </p> 之后会自己换行
-  if(opts.savable) html += '<span class="save-btn" onclick="saveLib(this)">⭐ 存入学习库</span>';
-  // 「加入日历」只在学习计划场景出现：另外两个场景的回答不是排期性的东西，
-  // 摆一个点了只会说"没有分条计划"的按钮，比不给更糟
-  if(opts.savable && curScene === "plan")
-    html += '<span class="save-btn cal-btn" onclick="openCalSheet(this)">📅 加入日历</span>';
-  div.innerHTML = html;
+  div._acts = actsHTML(opts.savable);
+  div.innerHTML = html + div._acts;
   wrap.appendChild(div); wrap.scrollTop = wrap.scrollHeight;
   return div;
 }
 function addTyping(){ return addMsg("ai", '<span class="typing"><i></i><i></i><i></i></span>', {raw:true}); }
+
+/* ---------- 流式气泡（2026-10-15 新增，主路径） ----------
+   云函数现在会把星火吐出来的字**边到边转发**（SSE），所以气泡的做法变了：
+   先建一个空的 AI 气泡，每收到一块就**就地重写**它的正文——用户看到的是
+   「同一段话在长」，而不是一行行冒出新气泡。
+
+   为什么不直接往 innerHTML 后面 append 新片段：Markdown 的结构是整体性的。
+   「**加粗**」跨了两次分块、列表项分两批到、代码块的 ``` 在不同块里——只追加
+   会出现半截的星号和露在外面的 ```。每次用**已收到的全文**重跑一遍 mdLite，
+   拿到的永远是当下能排出的最正确形态，代价只是重排一个气泡，手机上也够快。
+
+   `_text` 每帧都跟着更新：它是落历史、存学习库的依据（pushHist 读的就是它）。 */
+function addStreamMsg(){
+  const wrap = $("msgWrap");
+  const div = document.createElement("div");
+  div.className = "msg ai";
+  div._text = "";
+  div.innerHTML = '<span class="typing"><i></i><i></i><i></i></span>';
+  wrap.appendChild(div); wrap.scrollTop = wrap.scrollHeight;
+  return div;
+}
+
+/* 把流式气泡刷成 `text` 的样子。savable=true 是「收尾」——回答已经完整，
+   这时才把 ⭐/📅 两个按钮挂上去（生成到一半挂按钮，点下去存的是半截话）。 */
+function fillStreamMsg(div, text, savable){
+  if(!div || !div.isConnected) return;
+  div._text = String(text==null?"":text);
+  if(savable) div._acts = actsHTML(true);
+  div.innerHTML = mdLite(div._text) + (div._acts || "");
+  const wrap = $("msgWrap"); if(wrap) wrap.scrollTop = wrap.scrollHeight;
+}
+
+/* ---------- 打字机渐进显示（回退路径） ----------
+   只在**拿不到流式**时使用（浏览器不支持 getReader，或云函数异常退回了一次性
+   JSON，见 requestReply 的流式分支）。那种情况下回答仍是一次性拿回来的，
+   于是把已经到手的整段文字「吐」出来，让用户在回答开始的那一刻就能读。
+
+   刻意保持的几条底线：
+   · 只是显示节奏，不改内容：_text 从一开始就是完整回答，落盘用的是它，
+     不因打字机被打断而丢字（pushHist 读的就是 div._text）。
+   · 遇到 <pre> / 表格这类块级内容不做逐字，直接整段落定——逐字插进去会让
+     每次重排都把版面抖一下，比不逐字还难看。用「先整段、再按需逐字」的判据：
+     只要回答里出现块级标签就整段显示。
+   · 用户切走场景、或视图被重建（gen 变了）时立刻停手，不往已经不存在的
+     元素里写。定时器用元素自身兜底：元素被 remove 后 offsetParent 为 null。 */
+function typeIn(div, fullText){
+  if(!div) return;
+  // 逐字只换正文，**按钮必须跟着接回来**：下面每一处都在整块重写 innerHTML，
+  // 漏一处就等于把这个气泡的 ⭐/📅 抹掉（改造前就是这么丢的，见 actsHTML 的注释）。
+  const paint = function(t){
+    div.innerHTML = mdLite(t) + (div._acts || "");
+    const wrap = $("msgWrap"); if(wrap) wrap.scrollTop = wrap.scrollHeight;
+  };
+  // 块级内容（代码块、表格、多段）整段落定，不做逐字——见上面第 2 条
+  const hasBlock = /<(pre|table|ul|ol|blockquote|h[1-6])\b/i.test(mdLite(fullText));
+  if(hasBlock){ paint(fullText); return; }
+  const total = fullText.length;
+  // 节奏：短回答（<80 字）一口气出来，长了才逐字；否则短回答也被拖成慢动作
+  if(total <= 80){ paint(fullText); return; }
+  let i = 0;
+  // 每帧步长按总长自适应：整段大约 0.9–1.4 秒吐完，不随回答长度线性变慢
+  const step = Math.max(2, Math.ceil(total / 45));
+  const timer = setInterval(function(){
+    // 元素已不在文档里（场景切走 / 视图重建）→ 停手
+    if(!div.isConnected){ clearInterval(timer); return; }
+    i += step;
+    if(i >= total){ clearInterval(timer); paint(fullText); return; }
+    paint(fullText.slice(0, i));
+  }, 22);
+}
+
 /* 每个场景只留最近一条失败提示，供「重进场景」时放回来（见 openChat）。
    存成 null 就是清掉：store.get 解析出 null 会退回默认值，不必真去 removeItem。 */
 /* 返回是否真的写进了本机存储。调用方需要知道——写失败时「切回来还能看到这条失败」
@@ -1835,6 +1923,45 @@ function asciiJSON(o){
     c=>"\\u"+c.charCodeAt(0).toString(16).padStart(4,"0"));
 }
 
+/* ---------- 保活预热 ----------
+   冷启动是首字延迟里最不可控的一段：云函数实例闲置一会儿就被回收，
+   下一个请求要重新加载 node_modules、建 TLS 连接，动辄多吃 2–5 秒，
+   而这几秒里用户什么都看不到。
+   办法是「提前把实例叫醒」：页面一打开就打一发 /warm（不碰星火、不耗额度、
+   返回体只有几十字节），等用户读完开场白、把问题敲完时，函数已经是热的。
+   再在页面切回前台时补一发——手机用户切去别的应用再回来是常态，
+   那期间实例很可能已经被回收了。
+
+   为什么用 GET /warm 而不是直接打 /api/chat：/api/chat 是 POST、
+   要过限流计数、还要带完整 JSON 体，拿它预热等于替用户先消耗一次额度。
+   /warm 是独立路由，只走「加载实例 + 返回 JSON」这条最短路径。
+
+   失败一律吞掉：预热是锦上添花，它出任何问题都不该让用户看到报错，
+   更不该影响真正的提问流程。 */
+let warmFired = false;
+let warmAt = 0;
+const WARM_MIN_GAP = 3 * 60 * 1000;   // 两次预热至少隔 3 分钟；手机用户频繁切前后台，不节流会一路刷请求
+function warmUp(){
+  if(!CONFIG.apiProxy) return;
+  const now = Date.now();
+  if(now - warmAt < WARM_MIN_GAP) return;
+  let base;
+  try{
+    // apiProxy 形如 https://xxx/api/chat ——取出 origin + /warm。
+    // 用 try 包住：CONFIG 被填成相对路径时 new URL 会抛，那时静默跳过预热即可。
+    base = new URL(CONFIG.apiProxy, location.href);
+  }catch(e){ return; }
+  if(base.pathname !== "/api/chat") return;   // 形态不是已知的那两种，别乱猜路径
+  warmAt = now;
+  const url = base.origin + "/warm";
+  try{
+    fetch(url, {method:"GET", cache:"no-store", keepalive:true})
+      .catch(function(){});
+    warmFired = true;
+  }catch(e){}
+}
+
+
 // 返回是否真的写进了本机存储。调用方必须据此决定怎么跟用户说话：写失败时
 // 「切回去就能看到」是句假话——那一轮只在内存里，切回去重放的是存储里的旧内容。
 function pushHist(scene, q, a){
@@ -1877,6 +2004,51 @@ async function send(){
   await requestReply(curScene, text);
 }
 
+/* ---------- 读 SSE 流 ----------
+   云函数在 Accept: text/event-stream 时按 SSE 协议回：每条事件一行
+   `data: {...}`，事件之间空行分隔，另有以 ':' 开头的心跳注释行。
+
+   ⚠️ 这里**刻意不用** `for await (const chunk of resp.body)`：那是 ReadableStream
+   的异步迭代器，Safari 到 26.4 才有；iPhone 上绝大多数系统版本会当场抛
+   "resp.body is not async iterable"。getReader() 从 iOS 10.3 起就有，是这里唯一
+   能用的写法。TextDecoder 的 {stream:true} 同样必要——一个中文字 3 字节，
+   分块边界砍在字中间时，不加它会解出两个 U+FFFD 方块。
+
+   返回 { text, error }：text 是模型完整回答，error 是**带内**失败（HTTP 早已是
+   200，改不了状态码，云函数把失败当成一条事件送过来）。 */
+async function readSSE(body, onPartial){
+  const reader = body.getReader();
+  const dec = new TextDecoder("utf-8");
+  let buf = "", full = "", error = null;
+  try{
+    for(;;){
+      const step = await reader.read();
+      if(step.done) break;
+      buf += dec.decode(step.value, {stream:true});
+      let cut;
+      while((cut = buf.indexOf("\n\n")) >= 0){
+        const raw = buf.slice(0, cut); buf = buf.slice(cut + 2);
+        for(const line of raw.split("\n")){
+          if(line.indexOf("data: ") !== 0) continue;      // 心跳注释行在这里被跳过
+          let ev; try{ ev = JSON.parse(line.slice(6)); }catch(e){ continue; }
+          if(ev.type === "delta"){
+            full += (ev.t || "");
+            onPartial(full);
+          }else if(ev.type === "done"){
+            // done 带的是完整回答，以它为准：万一分块丢了一两个，这里能纠回来
+            if(typeof ev.reply === "string" && ev.reply) full = ev.reply;
+          }else if(ev.type === "error"){
+            error = String(ev.reply || "");
+          }
+        }
+      }
+    }
+  }finally{
+    try{ reader.cancel(); }catch(e){}     // 提前 return / 抛错时别把连接晾着
+  }
+  return {text: full, error: error};
+}
+
 // 取回答：只管「发请求 + 渲染结果」，不插用户气泡——所以提示条上的「重试」可以直接复用它，
 // 不会在界面上重复出现一条一模一样的提问。
 // 这里没有任何本地写死的兜底回答：连不上就如实说连不上，并给一个「重试」按钮。
@@ -1905,6 +2077,8 @@ async function requestReply(scene, text){
   const wait = addTyping();
 
   let reply = null, notice = null, status = 0, serverWait = 0;
+  let streamDiv = null;      // 流式气泡：第一个字到达时才真正建起来
+  let partialCut = false;    // 流到一半断了（见 catch）
   try{
     /* 学习档案与回答风格作为**最后一条 history 轮次**附上（为什么不能拼进 query，
        见 ctxRound 那段注释）。拼在这里而不是写进 hist_*：这两句不是用户说过的话，
@@ -1912,12 +2086,45 @@ async function requestReply(scene, text){
     const outHist = trimHistByBudget(loadHist(scene));
     const ctx = ctxRound();
     if(ctx) outHist.push({q: ctx, a: ""});
+    /* 流式能力探测：要 getReader() 与 TextDecoder 的流式解码。
+       iOS 10.3 起的 Safari 都满足；真遇到不满足的老浏览器就走下面的一次性 JSON——
+       云函数那边没有收到 Accept 就会照老契约回整段，功能不降级，只是慢。 */
+    const canStream = !!(window.fetch && window.TextDecoder && window.AbortController);
     const r = await fetchWithTimeout(CONFIG.apiProxy, {
       method: "POST",
-      headers: {"Content-Type": "application/json"},
+      // Accept 属于 CORS 安全列表头，加上它不会多一次预检；云函数只认它来切流式
+      headers: canStream
+        ? {"Content-Type": "application/json", "Accept": "text/event-stream"}
+        : {"Content-Type": "application/json"},
       body: asciiJSON({scene: scene, query: text, history: outHist})
     }, CONFIG.timeoutMs);
     status = r.status;
+    const ctype = (r.headers && r.headers.get) ? (r.headers.get("content-type") || "") : "";
+    if(r.ok && canStream && /text\/event-stream/i.test(ctype)){
+      /* ---------- 真流式：一个字一个字地显示 ----------
+         接口约定：走到这里 HTTP 已经是 200，后续的成败只能靠**带内事件**区分
+         （云函数把失败包成 {type:"error"}）。所以这里不按状态码判断，
+         只看 readSSE 交回来的 error / text。 */
+      const out = await readSSE(r.body, function(partial){
+        // 用户已经切走场景、或视图重建过：不要再往屏幕上刷（元素已经不在文档里）
+        if(scene !== curScene || gen !== viewGen) return;
+        if(!streamDiv){
+          if(wait) wait.remove();        // 第一个字到了，把「正在输入」让位给真正的内容
+          streamDiv = addStreamMsg();
+        }
+        fillStreamMsg(streamDiv, partial, false);
+      });
+      if(out.error){
+        notice = out.error;
+        status = 0;                      // 归到「网络/服务失败」那一类，重试有意义
+        setMode("offline");
+      }else if(out.text.trim()){
+        reply = out.text.trim();
+        setMode("online");
+      }else{
+        notice = "服务返回异常（HTTP 200），这次没有拿到回答，请重试。";
+      }
+    }else{
     // 接口约定：响应体永远是 JSON。无论 HTTP 状态码都先尝试解析并取 reply——
     // 否则云函数为 400/429/503 写好的那些「给用户看的话」一句都到不了用户眼前。
     let data = null;
@@ -1936,15 +2143,21 @@ async function requestReply(scene, text){
         // 归到「没连上」里去——服务明明连上了，只是这次没答出东西。
         ? "服务返回异常（HTTP 200），这次没有拿到回答，请重试。"
         // 432 的响应体里没有 reply（是平台写的，不是云函数写的），落到这里。
-        // 别把裸的「HTTP 432」端给用户：它既不像人话，也说不清「要不要重打一遍」。
+        // 别把裸的「HTTP 432」甩给用户：它既不像人话，也说不清「要不要重打一遍」。
         : r.status === 432
         ? "这一瞬间同时用的人有点多，请求被挡在服务外面了，问题本身没有问题。3 秒后可直接重试。"
         : "服务暂时不可用（HTTP " + r.status + "），请稍后重试。");
       setMode(modeForStatus(r.status, r.ok));
     }
+    }
   }catch(e){
     // 网络失败 / 超时 / 跨域被拦：如实告诉用户这次没连上，不编内容
-    if(e && (e.name === "AbortError" || e.name === "TimeoutError"))
+    if(streamDiv && streamDiv._text && streamDiv._text.trim()){
+      /* 已经吐出一部分字才断的。那部分确实是模型说的，丢掉可惜，所以照样落成回答；
+         但绝不能让它看起来像一句完整的回答——所以额外挂一条「没传完」的说明。 */
+      reply = streamDiv._text.trim();
+      partialCut = true;
+    }else if(e && (e.name === "AbortError" || e.name === "TimeoutError"))
       notice = "等待讯飞星火回复超时（超过 " + Math.round(CONFIG.timeoutMs/1000) + " 秒），本次没有收到回答。";
     else
       notice = "没能连上 AI 服务，请检查网络后重试。";
@@ -1965,11 +2178,30 @@ async function requestReply(scene, text){
     // 所以凡是「切回去就能看到」的说法都不成立；能显示的路径要先把回答显示出来，
     // 不让它无声消失。
     const saved = pushHist(scene, text, reply);
+    if(partialCut && scene === curScene && gen === viewGen){
+      // 流到一半断的：先把话说清楚，免得半截回答被当成完整的
+      addNotice("回答传到一半连接断了，下面这段是已经收到的部分，可以点重发补全。",
+                {scene: scene, text: text, noRetry: false});
+    }
     if(scene === curScene && gen === viewGen){
-      addMsg("ai", reply, {savable:true});
+      // 流式：气泡从第一个字起就在屏幕上了，这里只是把它**就地落定**成最终形态
+      // （补上 ⭐ / 📅 两个按钮）。再 addMsg 一次会多出一个几乎一样的气泡。
+      if(streamDiv && streamDiv.isConnected){
+        fillStreamMsg(streamDiv, reply, true);
+        if(!saved) toast("本机存储异常，这条回答没能保存");
+        return;
+      }
+      // 回退路径（浏览器不支持流式 / 云函数回了一次性 JSON）：
+      // 打字机渐进显示：addMsg 先把完整回答挂上（_text 完整，落盘/存库都正确依赖它），
+      // 再把正文按节奏「吐」出来。中断也只是显示层，不影响已存内容。
+      const div = addMsg("ai", reply, {savable:true});
+      typeIn(div, reply);
       if(!saved) toast("本机存储异常，这条回答没能保存");
       return;
     }
+    // 视图换过了：按历史整体重放，保证「提问在前、回答在后」的顺序。
+    // 流式气泡属于被换掉的那个视图，先摘掉，免得重放里又多一份。
+    if(streamDiv && streamDiv.isConnected) streamDiv.remove();
     // 视图换过了：按历史整体重放，保证「提问在前、回答在后」的顺序
     if(scene === curScene){
       if(saved){ openChat(scene, true); toast("回答已到达"); }
@@ -2942,6 +3174,11 @@ async function rvMakeCard(btn){
        查一遍只是把同一个事实再推导一次，还得依赖 querySelector 在所有环境下都在。 */
     show("screen-home");
     renderRecent();          // 首页的「最近存入」在启动时也要算一次（goHome 只管"回到首页"那条路径）
+    // 冷启动预热：见 warmUp()。放在首屏渲染之后，不跟首屏抢资源。
+    warmUp();
+    document.addEventListener("visibilitychange", function(){
+      if(document.visibilityState === "visible") warmUp();   // 切回前台时实例可能已被回收，补一发
+    });
     const s = new URLSearchParams(location.search).get(CONFIG.sceneParam);
     /* 场景来源有两处，优先级是"网址里的 ?s= 压过设置里的默认场景"：
        NFC 标签是逐个写死了场景的（一张垫子一个场景），标签不该被本机的一个设置顶掉；
