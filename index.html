@@ -759,10 +759,10 @@
     -webkit-mask-image:linear-gradient(90deg,#000 0,#000 calc(100% - 16px),transparent 100%);
     mask-image:linear-gradient(90deg,#000 0,#000 calc(100% - 16px),transparent 100%)}
   .quick::-webkit-scrollbar{display:none}
-  .quick span{background:var(--card);border:1px solid var(--line);border-radius:var(--r-pill);padding:7px 12px;font-size:var(--t-small);
+  .quick button{background:var(--card);border:1px solid var(--line);border-radius:var(--r-pill);padding:7px 12px;font-size:var(--t-small);
     color:#48484A;cursor:pointer;flex:none;box-shadow:var(--sh-1);
     transition:transform .18s var(--ease),background .2s var(--ease),border-color .2s var(--ease)}
-  .quick span:active{transform:scale(.96);background:rgba(0,0,0,.07)}
+  .quick button:active{transform:scale(.96);background:rgba(0,0,0,.07)}
   /* 输入条从"贴边通栏 + 上边框"改成浮在底部的岛：外壳是玻璃，里面再嵌一条胶囊输入框。
      两层圆角同心（26 - 7 = 19 ≈ 内层胶囊的实际观感半径），这是"机加工"读起来的原因。
      它同样不滚动，backdrop-filter 用在它身上也是安全的。 */
@@ -925,7 +925,7 @@
   /* ---------- 命中区（不是视觉尺寸）----------
      按真实像素量，这些控件原本都低于 44×44 的推荐点按尺寸（WCAG 2.5.8 的 24×24 是达标的，
      但 44 才是拇指在走动中点得准的线）：.back 38、.mini 44×33、.lib-btn 62×33、
-     .save-btn 106×28、重试 54×28、.del 28×28、.quick span 138.6×32。
+     .save-btn 106×28、重试 54×28、.del 28×28、.quick button 138.6×32。
      视觉一个像素都不动——用透明的 ::after 往外撑命中区，圆角 inherit 让撑出来的
      区域跟着控件走。这几条全部走合成层，没有任何背景/边框，所以渲染像素为 0 变化
      （已用冻结动效后的 A/B 像素对比核过，见 7_改动与验收）。
@@ -945,7 +945,7 @@
 
      .del 的 ::after 是按钮自己的，与 273 行 .lib-item::after 那道金发丝线不冲突。
 
-     .quick span 也在这份名单里，但它的撑法跟别人不一样，说清楚免得下次又被漏掉：
+     .quick button 也在这份名单里，但它的撑法跟别人不一样，说清楚免得下次又被漏掉：
      .quick 是 overflow-x:auto 的横向滚动容器，而 overflow 一轴为 auto 时另一轴
      的 visible 会被算成 auto——所以竖直方向的 ::after 会被容器自己裁掉，**光写
      ::after 是没用的**，得先让容器有地方接着它。给 .quick 的上内边距加了 7px，
@@ -954,10 +954,10 @@
      它的位置由自己的 margin 和 .msg-wrap 的伸缩决定，给 .quick 加高只会从
      flex:1 的 .msg-wrap 里借走那几个像素，岛一动不动（844×390 与 375×800 实测过）。 */
   .back,.chat-head .mini,.chat-head .lib-btn,.msg .save-btn,.msg .retry-btn,
-  .quick span{position:relative}
+  .quick button{position:relative}
   .back::after,.chat-head .mini::after,.chat-head .lib-btn::after,
   .msg .save-btn::after,.msg .retry-btn::after,.lib-item .del::after,
-  .quick span::after{
+  .quick button::after{
     content:"";position:absolute;border-radius:inherit}
   .back::after{inset:-4px}                        /* 36+8 -> 实测 44x44 */
   /* 「清空」「学习库」都由圆钮改成了文字钮，尺寸跟着变，这里按新的量补：
@@ -983,7 +983,7 @@
      只有 8px 缝，横着撑必然互相重叠，而这三枚本来就长得够宽（实测 137 / 97 / 109px），
      短板只在高度上。上 7 下 7 正好落在 .quick 新给的 7px 上内边距里。
      （.quick 的上内边距一改小，这里立刻会被 overflow-x:auto 裁掉，两者必须一起动。） */
-  .quick span::after{inset:-7px 0}                /* 30+14 -> 实测 136.6x44 */
+  .quick button::after{inset:-7px 0}                /* 30+14 -> 实测 136.6x44 */
 
   /* ---------- 极矮档（≤560px 高）里的对话页与学习库 ----------
      上面那条 max-height:560px 只管首页。对话页/学习库在同一档下仍按竖屏的 74px
@@ -1116,19 +1116,29 @@
   .sheet-pick{display:flex;align-items:center;gap:11px;margin-top:12px}
   .sheet-pick>span{flex:0 0 auto;font-size:var(--t-small);color:var(--sub);white-space:nowrap}
   .sheet-pills{display:flex;gap:7px;flex:1;min-width:0}
-  .sheet-pills span{flex:1;min-width:0;text-align:center;font-size:var(--t-small);font-weight:600;color:#48484A;
+  .sheet-pills button{flex:1;min-width:0;text-align:center;font-size:var(--t-small);font-weight:600;color:#48484A;
     background:var(--card);border:1px solid var(--line);border-radius:var(--r-pill);padding:8px 0;cursor:pointer;
     white-space:nowrap;overflow:hidden;
     transition:transform .18s var(--ease),background .2s var(--ease),color .2s var(--ease),border-color .2s var(--ease)}
-  .sheet-pills span.on{background:var(--acc);border-color:var(--acc);color:#fff}
-  .sheet-pills span:active{transform:scale(.96)}
+  .sheet-pills button.on{background:var(--acc);border-color:var(--acc);color:#fff}
+  .sheet-pills button:active{transform:scale(.96)}
   .sheet-act{display:flex;gap:10px;margin-top:16px}
-  .sheet-act span{flex:1;text-align:center;font-size:var(--t-lead);font-weight:600;
+  .sheet-act button{flex:1;text-align:center;font-size:var(--t-lead);font-weight:600;
     border-radius:var(--r-pill);padding:11px 0;cursor:pointer;
     transition:transform .18s var(--ease),background .2s var(--ease)}
   .sheet-act .ghost{color:var(--sub);background:rgba(120,120,128,.10);border:1px solid rgba(120,120,128,.20)}
   .sheet-act .go{color:#fff;background:var(--acc);box-shadow:var(--glow)}
-  .sheet-act span:active{transform:scale(.97)}
+  .sheet-act button:active{transform:scale(.97)}
+  /* 原生按钮沿用现有视觉；不可见页面也从旧浏览器的键盘顺序移除。 */
+  .screen[aria-hidden="true"]{visibility:hidden}
+  button{font-family:inherit}
+  .set-row input[type="checkbox"]{width:22px;height:22px;margin-left:auto;accent-color:var(--acc)}
+  .sheet-act button{border:0}
+  .sheet-card{max-height:94vh;overflow:auto}
+  .sheet-prev{max-height:min(24vh,180px)}
+  .sheet-prev div b{display:block}
+  .quick button{flex-shrink:0}
+  button:focus-visible,[role="button"]:focus-visible{outline:3px solid var(--acc);outline-offset:3px}
 </style>
 </head>
 <body>
@@ -1246,6 +1256,7 @@
       <h2>我的 AI 学习库</h2>
       <span class="lib-count" id="libCount"></span>
     </div>
+    <div style="padding:8px 18px"><button class="pill" onclick="rvManage()">管理复习卡</button></div>
     <div class="lib-list" id="libList"></div>
   </section>
 
@@ -1279,23 +1290,29 @@
     <div class="set-list">
       <div class="set-group">
         <h3>学习档案</h3>
-        <p class="set-hint">填一次就记住了。之后每次提问都会把这几句一起送给讯飞星火，回答更贴你的专业和目标。</p>
+        <p class="set-hint">档案保存在本机。仅在你打开「提问时附带背景」后，才随提问发送给代理服务和讯飞星火。请勿填写敏感信息。</p>
         <label class="set-row"><span>专业</span><input id="setMajor" class="set-input" maxlength="24" placeholder="例：智能科学与技术" onchange="saveProfile()" onblur="saveProfile()"></label>
         <label class="set-row"><span>年级</span><select id="setGrade" class="set-input" onchange="saveProfile()"><option value="">不限</option><option>大一</option><option>大二</option><option>大三</option><option>大四</option><option>研究生</option></select></label>
         <label class="set-row"><span>学习目标</span><input id="setGoal" class="set-input" maxlength="40" placeholder="例：过四级，学好 Python" onchange="saveProfile()" onblur="saveProfile()"></label>
       </div>
       <div class="set-group">
+        <h3>背景发送</h3>
+        <label class="set-row"><span>提问时附带背景</span><input type="checkbox" id="setShare" onchange="setShare(this.checked)"></label>
+        <p class="set-hint">默认关闭。开启后，学习档案和回答风格会发送给代理服务与讯飞星火，用于本次回答；关闭后不再附带。</p>
+        <button class="pill" onclick="clearProfile()">清空学习背景</button>
+      </div>
+      <div class="set-group">
         <h3>回答风格</h3>
-        <div class="pills">
+        <div class="pills" id="setStyle">
           <button class="pill" data-v="default" onclick="setStyle('default')">默认</button>
           <button class="pill" data-v="brief" onclick="setStyle('brief')">简洁</button>
           <button class="pill" data-v="detail" onclick="setStyle('detail')">详细</button>
         </div>
-        <p class="set-hint">选「简洁」或「详细」会真的改变发给讯飞星火的要求。</p>
+        <p class="set-hint">打开附带背景后，所选风格会随提问发送。</p>
       </div>
       <div class="set-group">
         <h3>正文字号</h3>
-        <div class="pills">
+        <div class="pills" id="setFont">
           <button class="pill" data-v="normal" onclick="setFont('normal')">常规</button>
           <button class="pill" data-v="large" onclick="setFont('large')">大</button>
         </div>
@@ -1306,7 +1323,8 @@
         <label class="set-row"><span>默认场景</span><select id="setScene" class="set-input" onchange="setScene(this.value)"><option value="">首页</option><option value="plan">学习计划</option><option value="homework">作业管家</option><option value="ask">随问随答</option></select></label>
         <p class="set-hint">只在打开的网址没有带场景参数时生效；垫面 NFC 标签里已经写死了场景的，仍然按标签走。</p>
       </div>
-      <p class="set-foot">星智碰 · AI 学习搭档　H5 原型 v4<br>以上设置只存在这台设备的浏览器里，不会上传。</p>
+      <p class="set-hint">请遵守学术诚信。关键词提醒不能保证识别所有代写请求；AI 内容仍需核实，作业请独立完成。</p>
+      <p class="set-foot">星智碰 · AI 学习搭档　H5 原型 v4<br>显示设置与记录保存在本机浏览器。提问内容与相关对话会发送给代理服务和讯飞星火；抽复习卡会发送所选笔记的前 300 字。学习背景仅在开启附带背景时发送。清除浏览器数据可能丢失本机记录。</p>
     </div>
   </section>
 
@@ -1314,36 +1332,36 @@
 <div class="toast" id="toast"></div>
 <!-- 「加入日历」面板：默认 display:none，点 AI 回答下方的「📅 加入日历」才 open。
      放在 #app 之外，蒙层才铺得满视口（#app 是 480px 居中的）。 -->
-<div class="sheet" id="calSheet" onclick="calBackdrop(event,this)">
-  <div class="sheet-card">
-    <h3>把这份计划加进苹果日历</h3>
+<div class="sheet" id="calSheet" aria-hidden="true" inert onclick="calBackdrop(event,this)">
+  <div class="sheet-card" role="dialog" aria-modal="true" aria-labelledby="calTitle" tabindex="-1">
+    <h3 id="calTitle">确认计划并生成日历文件</h3>
     <p class="sheet-sub" id="calSub"></p>
     <div class="sheet-prev" id="calPrev"></div>
     <label class="sheet-row"><span>从哪天开始</span><input type="date" id="calDate" onchange="updateCalSub()"></label>
     <label class="sheet-row" id="rowTime"><span>每天几点开始</span><input type="time" id="calTime" value="20:00" onchange="updateCalSub()"></label>
     <div class="sheet-pick" id="rowDur"><span>每段多长</span>
       <div class="sheet-pills" id="calDur">
-        <span data-k="min" data-v="30" onclick="pickPill(this)">30 分</span><span data-k="min" data-v="45" class="on" onclick="pickPill(this)">45 分</span><span data-k="min" data-v="60" onclick="pickPill(this)">60 分</span><span data-k="min" data-v="90" onclick="pickPill(this)">90 分</span>
+        <button type="button" data-k="min" data-v="30" onclick="pickPill(this)">30 分</button><button type="button" data-k="min" data-v="45" class="on" onclick="pickPill(this)">45 分</button><button type="button" data-k="min" data-v="60" onclick="pickPill(this)">60 分</button><button type="button" data-k="min" data-v="90" onclick="pickPill(this)">90 分</button>
       </div>
     </div>
     <div class="sheet-pick" id="rowPer"><span>每天排几条</span>
       <div class="sheet-pills" id="calPer">
-        <span data-k="per" data-v="1" class="on" onclick="pickPill(this)">1 条</span><span data-k="per" data-v="2" onclick="pickPill(this)">2 条</span><span data-k="per" data-v="3" onclick="pickPill(this)">3 条</span>
+        <button type="button" data-k="per" data-v="1" class="on" onclick="pickPill(this)">1 条</button><button type="button" data-k="per" data-v="2" onclick="pickPill(this)">2 条</button><button type="button" data-k="per" data-v="3" onclick="pickPill(this)">3 条</button>
       </div>
     </div>
     <div class="sheet-pick" id="rowWk"><span>周末</span>
       <div class="sheet-pills" id="calWeekend">
-        <span data-k="weekend" data-v="0" onclick="pickPill(this)">只排周一到周五</span><span data-k="weekend" data-v="1" class="on" onclick="pickPill(this)">周末也排</span>
+        <button type="button" data-k="weekend" data-v="0" onclick="pickPill(this)">只排周一到周五</button><button type="button" data-k="weekend" data-v="1" class="on" onclick="pickPill(this)">周末也排</button>
       </div>
     </div>
     <div class="sheet-pick"><span>提前提醒</span>
       <div class="sheet-pills" id="calAlarm">
-        <span data-k="alarm" data-v="0" onclick="pickPill(this)">不提醒</span><span data-k="alarm" data-v="5" onclick="pickPill(this)">5 分</span><span data-k="alarm" data-v="15" class="on" onclick="pickPill(this)">15 分</span><span data-k="alarm" data-v="60" onclick="pickPill(this)">1 小时</span>
+        <button type="button" data-k="alarm" data-v="0" onclick="pickPill(this)">不提醒</button><button type="button" data-k="alarm" data-v="5" onclick="pickPill(this)">5 分</button><button type="button" data-k="alarm" data-v="15" class="on" onclick="pickPill(this)">15 分</button><button type="button" data-k="alarm" data-v="60" onclick="pickPill(this)">1 小时</button>
       </div>
     </div>
     <div class="sheet-act">
-      <span class="ghost" onclick="closeCalSheet()">取消</span>
-      <span class="go" onclick="doCalExport()">生成日历文件</span>
+      <button type="button" class="ghost" onclick="closeCalSheet()">取消</button>
+      <button type="button" class="go" onclick="doCalExport()">生成日历文件</button>
     </div>
   </div>
 </div>
@@ -1404,11 +1422,18 @@ Object.keys(SCENES).forEach(function(k){ SCENE_BY_NAME[SCENES[k].name] = k; });
    「在服务端」就更硬——它只是让人改不动前端也没法直接绕过去而已。
    真正兜底的是云端系统提示词里的自觉约束。
    所以：对外说明时不要把它讲成可靠的完整防护。 */
+function normalizeIntegrityText(text){
+  // 仅去掉明确否定代写的措辞；句中其余正向索取答案仍参与检查。
+  return String(text).replace(/\s+/g, "").replace(/(?:不是|并非|不得|不能)?(?:不要|不需要|无需|拒绝|不)代写/g, function(m){
+    return /^(不是|并非|不得|不能)/.test(m) ? m : "";
+  });
+}
+
 function guard(text){
-  const t = text.replace(/\s+/g,'');
+  const t = normalizeIntegrityText(text);
   const verb = /(帮我写|替我写|给我写|帮我做|帮我弄|帮我整|写一篇|写个|写一份|写段|生成一篇|生成一份|生成个|凑字数|凑一篇|直接给我|给我一份|来一篇|来份|帮我搞定|帮我完成)/;
   const essay = /(论文|报告|总结|心得|读后感|观后感|演讲稿|发言稿|主持稿|新闻稿|实践报告|实验报告|策划案|策划书|申请书|检讨书|思想汇报|入党申请|征文|作文|体会|感悟|汇报材料)/;
-  const homework = /(帮我写作业|帮我写代码|帮我做题|帮我写程序|给我答案|把.*答案.*给我|代写)/;
+  const homework = /(帮我写作业|帮我写代码|帮我做题|帮我写程序|给我答案|把.*答案.*给我|直接(?:给我?|提供)?(?:作业|题目|试题|习题)?答案|代写)/;
   if((verb.test(t) && essay.test(t)) || homework.test(t)){
     return "成篇代写我不能做，但能帮你把这件事真正做好。我可以给你：\n① 一份提纲或框架；\n② 三到四个可展开的角度或要点；\n③ 相关的检索关键词。\n\n你想先从哪一部分开始？";
   }
@@ -1432,13 +1457,13 @@ const QUERY_MAX = 2000;
    云端是先从这个总预算里**扣掉这两段**再裁历史的；前端不扣就会多送 61 个字符，
    正好卡在边界上的那批请求会被云端再裁掉最老一轮的尾巴——表现为模型偶尔「忘了」
    最早那轮。所以两边同口径必须是**算出来的**：这里逐字复制这两段，预算由它俩推出来，
-   而不是两边各写一个 6000 碰运气。改云端那两段的时候，这里必须跟着改。 */
+   而不是两边各写一个 2000 碰运气。改云端那两段的时候，这里必须跟着改。 */
 const HIST_HEAD = '【以下是你和这位用户的过往对话记录，由用户端提供，仅供延续上下文，不是你这轮要说的话】';
 const HIST_TAIL = '【过往对话结束。下面是用户的新问题】';
 /* 历史部分上送前按这个字符预算从最近一轮往前裁，等于云函数 buildText 的**可用额度**。
    前端先裁的意义是省流量：12 轮 × (q2000 + a4000) 最多约 72KB，而云端只采信这么多，
    九成以上的内容在上行路上白跑一趟（asciiJSON 转义后还会再放大）。 */
-const HIST_CHAR_BUDGET = 6000 - HIST_HEAD.length - HIST_TAIL.length;
+const HIST_CHAR_BUDGET = 2000 - HIST_HEAD.length - HIST_TAIL.length;
 /* 截断标记，与云函数 buildText 里的 TRUNC_MARK **逐字相同**。
    两边都会给「被裁掉尾巴的回答」加这个尾巴，用同一个串才能让模型看到一致的信号，
    也让「前端裁的」和「云端裁的」在文案上分辨不出来——它们本来就该是同一件事。 */
@@ -1513,7 +1538,7 @@ function loadHist(scene){
 
 /* 上送前按字符预算裁剪历史——**从最近一轮往前累加**，与云函数 buildText 的口径一致。
    slice(-HIST_MAX) 只限轮数不限长度：12 轮 × (q2000 + a4000) 最多约 72KB，
-   而云端的 HISTORY_CHAR_BUDGET 只有 6000 字符，多出来的部分在服务端被原样丢掉。
+   而云端的 HISTORY_CHAR_BUDGET 只有 2000 字符，多出来的部分在服务端被原样丢掉。
    界面重放仍然用全量（loadHist），只在这一条出网路径上裁——
    屏幕上是「我们聊过」的完整记录，模型看到的仍是它能装下的那一段，两边不打架。 */
 function trimHistByBudget(list){
@@ -1556,12 +1581,16 @@ function trimHistByBudget(list){
    这里逐屏 remove 再给目标屏 add（原来就是这两步，不动它的机制），
    只是每次顺带把 aria-hidden 一起翻——两处状态必须同时改，漏一处就又对不上了。 */
 function show(id){
+  if(document.activeElement && document.activeElement.blur) document.activeElement.blur();
   document.querySelectorAll(".screen").forEach(function(s){
-    s.classList.remove("active");
-    s.setAttribute("aria-hidden", "true");
+    s.classList.remove("active"); s.setAttribute("aria-hidden","true"); s.inert=true;
   });
-  const el = $(id);
-  if(el){ el.classList.add("active"); el.removeAttribute("aria-hidden"); }
+  const el=$(id);
+  if(el){
+    el.classList.add("active"); el.removeAttribute("aria-hidden"); el.inert=false;
+    const target=el.querySelector("h1,h2,button,input,[tabindex]");
+    if(target){ if(!/^(BUTTON|INPUT|SELECT|TEXTAREA|A)$/.test(target.tagName)) target.setAttribute("tabindex","-1"); target.focus({preventScroll:true}); }
+  }
 }
 let goingHome=false;
 function goHome(){
@@ -1635,7 +1664,8 @@ function openChat(scene, noPush){
   $("quickBar").innerHTML = "";
   // 用 createElement 而不是拼内联 onclick 字符串：以后文案里出现引号也不会把页面拼坏
   sc.quick.forEach(function(q){
-    const s = document.createElement("span");
+    const s = document.createElement("button");
+    s.type = "button";
     s.textContent = q;
     s.onclick = function(){ quickAsk(q); };
     $("quickBar").appendChild(s);
@@ -1659,7 +1689,8 @@ function openChat(scene, noPush){
     liveEl.setAttribute("aria-live", "off");
     hist.forEach(function(t){
       if(t.q) addMsg("me", t.q);
-      if(t.a) addMsg("ai", t.a, {savable:true});
+      if(t.a) addMsg("ai", t.a, {savable:!t.incomplete});
+      if(t.incomplete) addNotice("上一条回答未传完，仅保留收到的部分。", {scene:scene, text:t.q, noRetry:false});
     });
     setTimeout(function(){ liveEl.setAttribute("aria-live", livePrev); }, 0);
   }
@@ -1716,11 +1747,11 @@ function quickAsk(q){ $("chatInput").value=q; send(); }
    "正文 + (div._acts || '')"。按钮从此不跟正文一起被冲掉。 */
 function actsHTML(savable){
   if(!savable) return "";
-  let html = '<span class="save-btn" onclick="saveLib(this)">⭐ 存入学习库</span>';
+  let html = '<button type="button" class="save-btn" onclick="saveLib(this)">⭐ 存入学习库</button>';
   // 「加入日历」只在学习计划场景出现：另外两个场景的回答不是排期性的东西，
   // 摆一个点了只会说"没有分条计划"的按钮，比不给更糟
   if(curScene === "plan")
-    html += '<span class="save-btn cal-btn" onclick="openCalSheet(this)">📅 加入日历</span>';
+    html += '<button type="button" class="save-btn cal-btn" onclick="openCalSheet(this)">📅 加入日历</button>';
   return html;
 }
 function addMsg(role, text, opts){
@@ -1866,7 +1897,8 @@ function addNotice(text, retry){
   if(retry && !retry.noRetry){
     // 打上标记：requestReply 起手会按它把上一轮的旧提示条整条摘掉（见那里的注释）
     div.dataset.retryable = "1";
-    const btn = document.createElement("span");
+    const btn = document.createElement("button");
+    btn.type = "button";
     btn.className = "retry-btn";
     /* 429 限流不能给「立即可点」的按钮：云端窗口是 10 分钟 / 40 次，连点只会一次次
        撞在同一堵墙上，每撞一次还可能把窗口重新续上。先禁用、把「还要等多久」写在按钮上，
@@ -1910,29 +1942,26 @@ function addNotice(text, retry){
 // 打字动画就会一直转、用户以为「AI 不理我」，所以自己加一道兜底。
 function fetchWithTimeout(url, opts, ms){
   const limit = ms || CONFIG.timeoutMs;
-  if(typeof AbortController === "undefined"){
-    // 老浏览器没有 AbortController。以前这里直接返回裸 fetch，等于把超时兜底整条
-    // 去掉：连接被中间设备吞掉（既不 resolve 也不 reject）时 await 永不返回，
-    // 发送键会被永久禁用，用户只能刷新页面。用 Promise.race 至少保证会退出。
-    /* 注意这条分支里**不能用 Promise.prototype.finally**：它和 AbortController
-       基本是同一代特性（Safari 11.1 / Chrome 63 同年落地），所以「缺前者、有后者」
-       这个组合几乎不存在。真写在这里，万一套上的是一个缺 finally 的极老内核，
-       就会在 fetchWithTimeout 内部抛 TypeError，被外层 catch 当成网络失败，
-       用户被引去「检查网络后重试」——而坏掉的其实是超时兜底本身。用 then 的双回调显式清。 */
-    let tid;
-    const guard = new Promise(function(_, reject){
-      tid = setTimeout(function(){
-        const e = new Error("timeout"); e.name = "TimeoutError"; reject(e);
-      }, limit);
-    });
-    return Promise.race([fetch(url, opts), guard]).then(
-      function(v){ clearTimeout(tid); return v; },
-      function(e){ clearTimeout(tid); throw e; });
-  }
-  const ctl = new AbortController();
-  const tid = setTimeout(function(){ ctl.abort(); }, limit);
-  return fetch(url, Object.assign({}, opts, {signal: ctl.signal}))
-    .finally(function(){ clearTimeout(tid); });
+  const ctl = typeof AbortController !== "undefined" ? new AbortController() : null;
+  let tid, released = false;
+  const release = function(){ if(!released){ released = true; clearTimeout(tid); } };
+  const deadline = new Promise(function(_, reject){
+    tid = setTimeout(function(){
+      const e = new Error("response body timeout"); e.name = "TimeoutError";
+      if(ctl) ctl.abort(); reject(e);
+    }, limit);
+  });
+  // 定时器必须一直覆盖正文读取；调用方在读完 SSE 或提前放弃时释放。
+  return Promise.race([fetch(url, Object.assign({}, opts, ctl ? {signal: ctl.signal} : {})), deadline])
+    .then(function(r){
+      r.releaseTimeout = release;
+      ["json", "text", "blob"].forEach(function(k){
+        if(typeof r[k] !== "function") return;
+        const read = r[k].bind(r);
+        r[k] = function(){ return Promise.race([read(), deadline]).finally(release); };
+      });
+      return r;
+    }, function(e){ release(); throw e; });
 }
 
 // 请求体转纯 ASCII：中文一律用 \uXXXX 转义。
@@ -1984,14 +2013,14 @@ function warmUp(){
 
 // 返回是否真的写进了本机存储。调用方必须据此决定怎么跟用户说话：写失败时
 // 「切回去就能看到」是句假话——那一轮只在内存里，切回去重放的是存储里的旧内容。
-function pushHist(scene, q, a){
+function pushHist(scene, q, a, incomplete){
   const k = "hist_"+scene;
   let h = store.get(k, []); if(!Array.isArray(h)) h = [];
   /* 单条上限与云函数的 HISTORY_Q_MAX / HISTORY_A_MAX（2000 / 4000）对齐。
      云端对超长项是**截断保留**（不再整条丢弃，见 proxy 里那段注释），所以这里
      先截的意义不是"防丢弃"，而是"保证进模型的就是界面里显示的这份"——
      两边都截在同一个数上，屏幕上看到多少字，模型就看到多少字。 */
-  h.push({q: String(q).slice(0,2000), a: String(a).slice(0,4000)});
+  h.push({q: String(q).slice(0,2000), a: String(a).slice(0,4000), incomplete: !!incomplete});
   while(h.length > HIST_MAX) h.shift();    // 只留最近 HIST_MAX 轮，不让 localStorage 无限膨胀
   return store.set(k, h);
 }
@@ -2037,36 +2066,39 @@ async function send(){
    返回 { text, error }：text 是模型完整回答，error 是**带内**失败（HTTP 早已是
    200，改不了状态码，云函数把失败当成一条事件送过来）。 */
 async function readSSE(body, onPartial){
-  const reader = body.getReader();
-  const dec = new TextDecoder("utf-8");
-  let buf = "", full = "", error = null;
+  if(!body || typeof body.getReader !== "function") throw new Error("浏览器不支持流读取");
+  const reader = body.getReader(), dec = new TextDecoder("utf-8");
+  let buf = "", full = "", error = null, complete = false;
   try{
     for(;;){
       const step = await reader.read();
       if(step.done) break;
-      buf += dec.decode(step.value, {stream:true});
+      buf = (buf + dec.decode(step.value, {stream:true})).replace(/\r\n/g, "\n");
       let cut;
       while((cut = buf.indexOf("\n\n")) >= 0){
         const raw = buf.slice(0, cut); buf = buf.slice(cut + 2);
         for(const line of raw.split("\n")){
-          if(line.indexOf("data: ") !== 0) continue;      // 心跳注释行在这里被跳过
-          let ev; try{ ev = JSON.parse(line.slice(6)); }catch(e){ continue; }
-          if(ev.type === "delta"){
-            full += (ev.t || "");
-            onPartial(full);
+          if(!/^data:\s?/.test(line)) continue;
+          let ev; try{ ev = JSON.parse(line.replace(/^data:\s?/, "")); }catch(e){ continue; }
+          if(ev.type === "delta" && typeof ev.t === "string"){
+            full += ev.t; onPartial(full);
           }else if(ev.type === "done"){
-            // done 带的是完整回答，以它为准：万一分块丢了一两个，这里能纠回来
-            if(typeof ev.reply === "string" && ev.reply) full = ev.reply;
-          }else if(ev.type === "error"){
-            error = String(ev.reply || "");
-          }
+            if(typeof ev.reply === "string") full = ev.reply;
+            complete = true;
+          }else if(ev.type === "error") error = String(ev.reply || "AI 服务返回错误");
         }
+        if(complete || error) break;
       }
+      if(complete || error) break;
     }
+  }catch(e){
+    if(!full) throw e;
+    error = "回答传输中断，当前仅保留已经收到的部分。";
   }finally{
-    try{ reader.cancel(); }catch(e){}     // 提前 return / 抛错时别把连接晾着
+    try{ await reader.cancel(); }catch(e){}
   }
-  return {text: full, error: error};
+  if(!complete && !error) error = "回答未传完，连接已经结束。";
+  return {text: full, error: error, complete: complete && !error};
 }
 
 // 取回答：只管「发请求 + 渲染结果」，不插用户气泡——所以提示条上的「重试」可以直接复用它，
@@ -2097,15 +2129,14 @@ async function requestReply(scene, text){
   const wait = addTyping();
 
   let reply = null, notice = null, status = 0, serverWait = 0;
+  let response = null;
   let streamDiv = null;      // 流式气泡：第一个字到达时才真正建起来
   let partialCut = false;    // 流到一半断了（见 catch）
   try{
-    /* 学习档案与回答风格作为**最后一条 history 轮次**附上（为什么不能拼进 query，
-       见 ctxRound 那段注释）。拼在这里而不是写进 hist_*：这两句不是用户说过的话，
-       不该出现在界面的历史重放里，也不该被算进这一场景的对话记录。 */
+    // 最近真实对话与可选学习背景分别裁剪，互不占轮次。
     const outHist = trimHistByBudget(loadHist(scene));
     const ctx = ctxRound();
-    if(ctx) outHist.push({q: ctx, a: ""});
+    // 背景有独立的 500 字符预算，不占真实对话轮次。
     /* 流式能力探测：要 getReader() 与 TextDecoder 的流式解码。
        iOS 10.3 起的 Safari 都满足；真遇到不满足的老浏览器就走下面的一次性 JSON——
        云函数那边没有收到 Accept 就会照老契约回整段，功能不降级，只是慢。 */
@@ -2116,8 +2147,9 @@ async function requestReply(scene, text){
       headers: canStream
         ? {"Content-Type": "application/json", "Accept": "text/event-stream"}
         : {"Content-Type": "application/json"},
-      body: asciiJSON({scene: scene, query: text, history: outHist})
+      body: asciiJSON({scene: scene, query: text, history: outHist, background: ctx})
     }, CONFIG.timeoutMs);
+    response = r;
     status = r.status;
     const ctype = (r.headers && r.headers.get) ? (r.headers.get("content-type") || "") : "";
     if(r.ok && canStream && /text\/event-stream/i.test(ctype)){
@@ -2135,7 +2167,8 @@ async function requestReply(scene, text){
         fillStreamMsg(streamDiv, partial, false);
       });
       if(out.error){
-        notice = out.error;
+        if(out.text.trim()){ reply = out.text.trim(); partialCut = true; }
+        else notice = out.error;
         status = 0;                      // 归到「网络/服务失败」那一类，重试有意义
         setMode("offline");
       }else if(out.text.trim()){
@@ -2182,6 +2215,8 @@ async function requestReply(scene, text){
     else
       notice = "没能连上 AI 服务，请检查网络后重试。";
     setMode("offline");
+  }finally{
+    if(response && response.releaseTimeout) response.releaseTimeout();
   }
 
   if(wait) wait.remove();
@@ -2197,7 +2232,7 @@ async function requestReply(scene, text){
     // saved=false 表示本机存储写不进去（配额满 / 存储被禁）。这一轮只在内存里，
     // 所以凡是「切回去就能看到」的说法都不成立；能显示的路径要先把回答显示出来，
     // 不让它无声消失。
-    const saved = pushHist(scene, text, reply);
+    const saved = pushHist(scene, text, reply, partialCut);
     if(partialCut && scene === curScene && gen === viewGen){
       // 流到一半断的：先把话说清楚，免得半截回答被当成完整的
       addNotice("回答传到一半连接断了，下面这段是已经收到的部分，可以点重发补全。",
@@ -2207,14 +2242,14 @@ async function requestReply(scene, text){
       // 流式：气泡从第一个字起就在屏幕上了，这里只是把它**就地落定**成最终形态
       // （补上 ⭐ / 📅 两个按钮）。再 addMsg 一次会多出一个几乎一样的气泡。
       if(streamDiv && streamDiv.isConnected){
-        fillStreamMsg(streamDiv, reply, true);
+        fillStreamMsg(streamDiv, reply, !partialCut);
         if(!saved) toast("本机存储异常，这条回答没能保存");
         return;
       }
       // 回退路径（浏览器不支持流式 / 云函数回了一次性 JSON）：
       // 打字机渐进显示：addMsg 先把完整回答挂上（_text 完整，落盘/存库都正确依赖它），
       // 再把正文按节奏「吐」出来。中断也只是显示层，不影响已存内容。
-      const div = addMsg("ai", reply, {savable:true});
+      const div = addMsg("ai", reply, {savable:!partialCut});
       typeIn(div, reply);
       if(!saved) toast("本机存储异常，这条回答没能保存");
       return;
@@ -2226,7 +2261,7 @@ async function requestReply(scene, text){
     if(scene === curScene){
       if(saved){ openChat(scene, true); toast("回答已到达"); }
       // 存不下就别重放（重放里没有这一轮，回答会无声消失），直接补一条上去
-      else { addMsg("ai", reply, {savable:true}); toast("本机存储异常，这条回答没能保存"); }
+      else { addMsg("ai", reply, {savable:!partialCut}); toast("本机存储异常，这条回答没能保存"); }
       return;
     }
     toast(saved
@@ -2443,20 +2478,20 @@ function calTable(rows){
 
 /* 句子里写「第N天」/「第3-4天」：按标记切成一段段，每段就是那天的任务。
    标记**之前**的文字（"每日任务："这种标签）丢掉——它是标签，不是任务。
-   一个「第3-4天」只落一条，排在**第 3 天**：把一句话拆成两条日程，
-   用户会以为那天有两件事。 */
+   「第3-4天」展开到第 3、4 天；所有日期均在导出面板中逐项确认。 */
 function calSeq(s){
-  const re = /第\s*(\d{1,3})\s*(?:[-–~～]\s*(\d{1,3})\s*)?天/g;
-  const marks = [];
-  let m;
-  while((m = re.exec(s))) marks.push({ at: m.index, end: re.lastIndex, n: +m[1] });
+  const re = /第\s*(\d{1,3})\s*(?:[-–~～至]\s*(\d{1,3})\s*)?天/g;
+  const marks = []; let m;
+  while((m = re.exec(s))) marks.push({at:m.index, end:re.lastIndex, n:+m[1], last:+(m[2] || m[1])});
   if(!marks.length) return null;
   const out = [];
-  for(let i = 0; i < marks.length; i++){
-    const stop = (i + 1 < marks.length) ? marks[i + 1].at : s.length;
-    const piece = s.slice(marks[i].end, stop)
-      .replace(/^[\s：:，,、；;]+/, "").replace(/[\s，,、；;。]+$/, "").trim();
-    if(piece) out.push({ text: piece, seq: marks[i].n > 0 ? marks[i].n : 1 });
+  for(let i=0; i<marks.length; i++){
+    const stop = i+1<marks.length ? marks[i+1].at : s.length;
+    const piece = s.slice(marks[i].end, stop).replace(/^[\s：:，,、；;]+/, "").replace(/[\s，,、；;。]+$/, "").trim();
+    if(!piece) continue;
+    const first = Math.max(1,marks[i].n), last = Math.min(first + CAL_MAX - 1, Math.max(first,marks[i].last));
+    const t = calRange(piece);
+    for(let day=first; day<=last; day++) out.push({text:piece, seq:day, hhmm:t ? t.hhmm:null, mins:t ? t.mins:0});
   }
   return out.length ? out : null;
 }
@@ -2477,51 +2512,47 @@ function calHeadsASection(lines, j){
 
 function planParse(text){
   const lines = String(text == null ? "" : text).split("\n");
-  const flat = [];
-  let seqs = null, table = null;
-  let i = 0;
-  while(i < lines.length){
+  const flat = [], seqs = [], weeks = [], tables = [];
+  let section = null, i=0;
+  while(i<lines.length){
     if(calIsTable(lines[i])){
-      const block = [];
-      while(i < lines.length && calIsTable(lines[i])){ block.push(lines[i]); i++; }
-      const rows = block.map(calCells).filter(function(r){ return r.length > 1 && !calIsSep(r); });
-      if(rows.length >= 2){
-        const t = calTable(rows);
-        // 一份回答里偶尔不止一张表：留条目最多的那张，绝不把两张表的日程拼一起
-        if(t && (!table || t.events.length > table.events.length)) table = t;
-      }
+      const block=[];
+      while(i<lines.length && calIsTable(lines[i])) block.push(lines[i++]);
+      const rows=block.map(calCells).filter(r=>r.length>1 && !calIsSep(r));
+      const t=rows.length>=2 ? calTable(rows):null;
+      if(t) tables.push(t);
       continue;
     }
-    const line = lines[i].replace(/\s+$/, "");
-    i++;
-    if(!line.trim()) continue;
-    if(/^\s*(?:-{3,}|\*{3,}|_{3,})\s*$/.test(line)) continue;
-    const h = line.match(/^\s{0,3}#{1,6}\s+(.*\S)\s*$/);
-    const li = h ? null : line.match(/^\s*(?:[-*•]\s+|(?:\d+)[.、)]\s*|[①-⑳]\s*)(\S.*)$/);
-    if(!h && !li){
-      // 无标记、非标题的整行文字，正常情况下是段落（丢掉）。但星火把「第N天」
-      // 日程硬折行、让续行落到下一行时（"…第2天…，\n第3-4天…"），那一行照样是
-      // 日程。只在这条窄路上认它（必须含「第N天」），不把普通段落吸进来。
-      const cc = calSeq(line.replace(/\*\*/g, "").trim());
-      if(cc) seqs = (seqs || []).concat(cc);
-      continue;
-    }
-    let body = (h ? h[1] : li[1]).replace(/\*\*/g, "").trim();
-    // 星火常把时段写进小标题（"### 第四阶段：收尾（23:00-23:30）"）。时段由计划或
-    // 面板定，留在标题里会和真实日程打架，所以只在**结尾**处剥掉这段括号时间。
-    body = body.replace(/[\s（(]*[（(]\s*\d{1,2}[:：]\d{2}\s*[-–~～]\s*\d{1,2}[:：]\d{2}\s*[)）]\s*$/, "").trim();
+    const line=lines[i++].replace(/\s+$/, "");
+    if(!line.trim() || /^\s*(?:-{3,}|\*{3,}|_{3,})\s*$/.test(line)) continue;
+    const head=line.match(/^\s{0,3}#{1,6}\s+(.*\S)\s*$/);
+    const li=head ? null : line.match(/^\s*(?:[-*•]\s+|(?:\d+)[.、)]\s*|[①-⑳]\s*)(\S.*)$/);
+    const body=(head ? head[1] : li ? li[1]:line).replace(/\*\*/g, "").trim();
     if(!body) continue;
-    if(h && calHeadsASection(lines, i)) continue;      // 章节标题，不是任务
-    const sq = calSeq(body);
-    if(sq) seqs = (seqs || []).concat(sq);
-    else flat.push({ text: body, day: calWeekOf(body) });
+    const day=calWeekOf(body), seq=calSeq(body), time=calRange(body);
+    if(head && calHeadsASection(lines,i)){
+      const seqMark=body.match(/第\s*(\d{1,3})\s*(?:[-–~～至]\s*(\d{1,3})\s*)?天/);
+      section=day ? {day:day,time:time} : seqMark ? {seq:+seqMark[1],last:+(seqMark[2]||seqMark[1]),time:time}:null;
+      continue;
+    }
+    if(!head && !li && !seq) continue;
+    if(seq){ seqs.push(...seq); continue; }
+    const t=time || (section && section.time), ev={text:body,hhmm:t ? t.hhmm:null,mins:t ? t.mins:0};
+    if(day || (section && section.day)){ weeks.push(Object.assign(ev,{day:day || section.day})); }
+    else if(section && section.seq){
+      const last=Math.min(section.seq+CAL_MAX-1,section.last);
+      for(let n=section.seq;n<=last;n++) seqs.push(Object.assign({},ev,{seq:n}));
+    }else flat.push(ev);
   }
-  const p = table
-    || (flat.some(function(e){ return e.day > 0; })
-        ? { mode: "week", events: flat.filter(function(e){ return e.day > 0; }) }
-        : (seqs && seqs.length) ? { mode: "seq", events: seqs }
-        : { mode: "flat", events: flat });
-  return { mode: p.mode, events: p.events.slice(0, CAL_MAX) };
+  let p;
+  if(tables.length){
+    const mode=tables[0].mode;
+    // 同一种表格形态合并，避免后一张计划表无声消失。
+    p={mode:mode,events:tables.filter(t=>t.mode===mode).reduce((a,t)=>a.concat(t.events),[])};
+  }else if(weeks.length) p={mode:"week",events:weeks};
+  else if(seqs.length) p={mode:"seq",events:seqs};
+  else p={mode:flat.some(e=>e.hhmm) ? "day":"flat",events:flat};
+  return {mode:p.mode,events:p.events.slice(0,CAL_MAX),omitted:Math.max(0,p.events.length-CAL_MAX)};
 }
 
 /* 给外面用的老接口：只取文字。契约没变（仍是字符串数组），但抽出来的东西变了：
@@ -2649,8 +2680,9 @@ function buildICS(items, ymd, hhmm, minutes, per, weekend, alarm){
   const now = new Date();
   const stamp = "" + now.getUTCFullYear() + pad2(now.getUTCMonth()+1) + pad2(now.getUTCDate())
     + "T" + pad2(now.getUTCHours()) + pad2(now.getUTCMinutes()) + pad2(now.getUTCSeconds()) + "Z";
-  const tag = "" + now.getFullYear() + pad2(now.getMonth()+1) + pad2(now.getDate())
-    + pad2(now.getHours()) + pad2(now.getMinutes());
+  if(!p.uid) p.uid = (typeof crypto !== "undefined" && crypto.randomUUID)
+    ? crypto.randomUUID() : Date.now().toString(36) + "-" + Math.random().toString(36).slice(2);
+  const tag = p.uid;
   const L = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//星智碰//学习计划//CN",
              "CALSCALE:GREGORIAN", "METHOD:PUBLISH", "X-WR-CALNAME:星智碰 · 学习计划"];
   const slots = calSlots(p, ymd, hhmm, minutes, per, weekend);
@@ -2698,6 +2730,7 @@ function defaultCalDate(){
    这一句不是装饰——"每天 2 条、跳过周末"之后到底排到哪一天，用户自己是推不出来的，
    而这件事决定他把日历翻到哪一页才看得见全部日程。 */
 function updateCalSub(){
+  renderCalPreview();
   const sub = $("calSub");
   if(!sub || !calItems.length) return;
   const dEl = $("calDate"), tEl = $("calTime");
@@ -2727,21 +2760,23 @@ function updateCalSub(){
   sub.textContent = txt;
 }
 
+function renderCalPreview(){
+  const pv=$("calPrev"), d=$("calDate"), t=$("calTime");
+  if(!pv || !d || !/^\d{4}-\d{2}-\d{2}$/.test(d.value)) return;
+  const slots=calSlots(calParsed,d.value,(t && t.value)||"20:00",calMin,calPer,calWeekend);
+  const fmt=function(v){ return v.getFullYear()+"-"+pad2(v.getMonth()+1)+"-"+pad2(v.getDate())+" "+pad2(v.getHours())+":"+pad2(v.getMinutes()); };
+  pv.innerHTML=calParsed.events.map(function(e,i){
+    return '<div><b>'+esc(fmt(slots[i].s)+" 至 "+fmt(slots[i].e))+'</b>'+esc(e.text)+'</div>';
+  }).join("")+(calParsed.omitted ? '<div>原计划超过 '+CAL_MAX+' 项，本次仅导出前 '+CAL_MAX+' 项；请拆分计划后分别导出。</div>':"");
+}
+
+let calReturnFocus=null;
 function openCalSheet(btn){
+  calReturnFocus=btn;
   const msgEl = btn.closest(".msg");
   calParsed = planParse(msgEl && msgEl._text ? msgEl._text : "");
   calItems = calParsed.events.map(function(e){ return e.text; });
   if(!calItems.length){ toast("这条回答里没有分条的计划，让它先出一份分条清单再试"); return; }
-  // 前 4 条列出来（条目名走 esc，模型输出里的尖括号不能当 HTML 解释）。
-  // 星期/第几天/时段做前缀：抽错了、或者天对不上，用户得在**写进真日历之前**看见。
-  const pv = $("calPrev");
-  if(pv){
-    const show = calParsed.events.slice(0, 4);
-    pv.innerHTML = show.map(function(e, i){
-      return "<div><b>" + esc(calLabel(e, i)) + "</b>" + esc(e.text) + "</div>";
-    }).join("") + (calParsed.events.length > show.length
-      ? "<div><b>…</b>还有 " + (calParsed.events.length - show.length) + " 条</div>" : "");
-  }
   // 每次打开都回到默认档：四个设置项连同它们的高亮一起复位，
   // 不然上一份计划调过的档会静默套到这一份上
   calMin = CAL_DEF.min; calPer = CAL_DEF.per;
@@ -2755,11 +2790,16 @@ function openCalSheet(btn){
     const box = $(pair[0]);
     if(!box) return;
     const want = String(calSetting(pair[1]));
-    for(const x of box.children) x.classList.toggle("on", x.dataset.v === want);
+    for(const x of box.children){ x.classList.toggle("on", x.dataset.v === want); x.setAttribute("aria-pressed",String(x.dataset.v === want)); }
   });
   calFitRows();
   updateCalSub();
-  const sh = $("calSheet"); if(sh) sh.classList.add("open");
+  const sh=$("calSheet");
+  if(sh){
+    sh.inert=false; sh.removeAttribute("aria-hidden"); sh.classList.add("open");
+    const app=$("app"); if(app) app.inert=true;
+    const first=sh.querySelector("input,button,[tabindex]"); if(first) first.focus({preventScroll:true});
+  }
 }
 /* 面板上的行按这份计划**是否真的用得上**显隐。周表 / 单日表自带时段，「几点开始」
    「每段多长」摆出来就是拨了没反应，比不显示更糟；只有"一份清单、天和时段都得
@@ -2785,26 +2825,34 @@ function calLabel(e, i){
   if(e.hhmm) return e.hhmm;
   return String(i + 1);
 }
-function closeCalSheet(){ const sh = $("calSheet"); if(sh) sh.classList.remove("open"); }
-/* 点蒙层空白处关掉。必须判断 target 是不是蒙层自己——点卡片内部会冒泡上来，不能误关 */
+function closeCalSheet(){
+  const sh=$("calSheet"); if(sh){ sh.classList.remove("open"); sh.inert=true; sh.setAttribute("aria-hidden","true"); }
+  const app=$("app"); if(app) app.inert=false;
+  if(calReturnFocus && calReturnFocus.isConnected) calReturnFocus.focus({preventScroll:true});
+}
 function calBackdrop(e, el){ if(e && e.target === el) closeCalSheet(); }
-
-/* 胶囊单选：一组里只能亮一个，并把 data-v 写回对应的设置项。
-   脏值一律退回默认档——时长/条数变成 0 会算出零长度的日程，变成 NaN 会让 Date
-   静默返回 Invalid Date，最后写进 .ics 的是一串 "NaNNaNNaN"，而日历那边只会说
-   "无法添加"。 */
 function pickPill(el){
-  const k = el.dataset.k;
-  if(!(k in CAL_DEF)) return;                    // 认不出的键，别动任何设置
-  const box = el.parentNode;
-  for(const x of box.children) x.classList.toggle("on", x === el);
-  const raw = Number(el.dataset.v);
-  setCalSetting(k, isFinite(raw) ? raw : CAL_DEF[k]);
-  if(k === "min" && !(calMin > 0)) calMin = CAL_DEF.min;
-  if(k === "per" && !(calPer > 0)) calPer = CAL_DEF.per;
-  if(k === "weekend") calWeekend = calWeekend ? 1 : 0;
-  if(k === "alarm" && !(calAlarm >= 0)) calAlarm = CAL_DEF.alarm;
+  const box=el.parentElement, k=el.dataset.k;
+  if(!box || CAL_DEF[k] === undefined) return;
+  const raw=Number(el.dataset.v);
+  setCalSetting(k,Number.isFinite(raw) ? raw:CAL_DEF[k]);
+  if(k === "min" && !(calMin>0)) calMin=CAL_DEF.min;
+  if(k === "per" && !(calPer>0)) calPer=CAL_DEF.per;
+  if(k === "weekend") calWeekend=calWeekend ? 1:0;
+  if(k === "alarm" && !(calAlarm>=0)) calAlarm=CAL_DEF.alarm;
+  for(const x of box.children){x.classList.toggle("on",x===el);x.setAttribute("aria-pressed",String(x===el));}
   updateCalSub();
+}
+
+function trapCalFocus(e){
+  const sh=$("calSheet"); if(!sh || !sh.classList.contains("open")) return;
+  if(e.key === "Escape"){ e.preventDefault(); closeCalSheet(); return; }
+  if(e.key !== "Tab") return;
+  const nodes=Array.from(sh.querySelectorAll('button,input,select,textarea,[tabindex]')).filter(x=>!x.disabled && x.tabIndex>=0 && x.getClientRects().length);
+  if(!nodes.length){ e.preventDefault(); sh.querySelector('[role="dialog"]').focus(); return; }
+  const first=nodes[0],last=nodes[nodes.length-1];
+  if(e.shiftKey && (document.activeElement===first || !sh.contains(document.activeElement))){e.preventDefault();last.focus();}
+  else if(!e.shiftKey && (document.activeElement===last || !sh.contains(document.activeElement))){e.preventDefault();first.focus();}
 }
 
 function doCalExport(){
@@ -2861,8 +2909,8 @@ function delLib(i){
      · 学习档案 + 回答风格 —— 随每次提问送给星火（见 ctxRound）
      · 正文字号         —— 换掉 :root 里那一组 --t-* 令牌（见 html.fs-large）
      · 默认场景         —— 只影响"网址没带场景参数"那一条入口（见 init）
-   全部存在本机 localStorage 的 settings 这一个键里，不出网。 */
-const SET_DEF = {major:"", grade:"", goal:"", style:"default", font:"normal", scene:""};
+   设置保存在本机 settings；share 为 on 时档案与风格以 background 发送，字号和默认场景不发送。 */
+const SET_DEF = {share: "off", major:"", grade:"", goal:"", style:"default", font:"normal", scene:""};
 const SET_STYLE = ["default", "brief", "detail"];
 const SET_GRADE = ["", "大一", "大二", "大三", "大四", "研究生"];
 /* 读出来的一律先归一。存储是同源可写的，旧版本、别的页面、手工改过的值都可能进来：
@@ -2876,6 +2924,7 @@ function loadSet(){
   Object.keys(SET_DEF).forEach(function(k){
     o[k] = (typeof s[k] === "string") ? s[k] : SET_DEF[k];
   });
+  if(o.share !== "on") o.share = "off";
   if(SET_STYLE.indexOf(o.style) < 0) o.style = "default";
   if(["normal", "large"].indexOf(o.font) < 0) o.font = "normal";
   if(SET_GRADE.indexOf(o.grade) < 0) o.grade = "";
@@ -2900,7 +2949,7 @@ function syncPills(id, val){
   const kids = box.children || [];
   for(let i = 0; i < kids.length; i++){
     const k = kids[i];
-    if(k.classList) k.classList.toggle("on", !!(k.dataset && k.dataset.v === val));
+    if(k.classList) { const selected=!!(k.dataset && k.dataset.v === val); k.classList.toggle("on", selected); k.setAttribute("aria-pressed",String(selected)); }
   }
 }
 function renderSet(){
@@ -2910,6 +2959,7 @@ function renderSet(){
   if(g) g.value = s.goal;
   if(gr) gr.value = s.grade;
   if(sc) sc.value = s.scene;
+  const share=$("setShare"); if(share) share.checked=s.share === "on";
   syncPills("setStyle", s.style);
   syncPills("setFont", s.font);
 }
@@ -2943,18 +2993,20 @@ function setScene(v){
   if(!saveSet({scene: s})){ toast("本机存储异常，设置没能保存"); return; }
   toast(s ? ("碰一碰后直接进「" + sceneName(s) + "」") : "碰一碰后回到首页");
 }
-/* 档案与风格**不拼进 query，而是作为一条额外的 history 轮次送出**。三条理由：
-   ① 拼进 query 就会被云函数那道内容闸（looksLikeEssayRequest）连坐：用户自己写的
-      学习目标里若正好带「报告」这类词，和前缀里的措辞凑齐一"写"一"报告"，一次
-      完全正常的提问会被 403 拒掉，而用户根本看不出跟自己填的档案有关；
-   ② 走 history 的那一段在云函数里是先折进 user 角色再包进「过往对话」的，
-      那道闸只查 query、不查 history；
-   ③ 挂在数组**末尾**，而云函数 buildText 是从后往前累加预算的——预算再紧也裁不到它
-      （放在最前面才会被裁：它按"更早的轮次"处理）。
-   代价是模型会把这句读成"用户此前说过的话"。所以措辞写成第三人称的括注
-   （「提问者的学习档案」「回答风格要求」），让它一眼看出这是随问题一起给的背景。 */
+/* 用户明确打开附带背景后，档案与风格走独立 background 字段；
+   服务端限制 500 字符，不挤占历史预算，也不是系统权限的指令。 */
+function setShare(on){
+  if(!saveSet({share:on ? "on":"off"})){ toast("本机存储异常，设置没能保存"); renderSet(); return; }
+  toast(on ? "后续提问将附带学习背景与风格" : "后续提问不附带学习背景与风格");
+}
+function clearProfile(){
+  if(!window.confirm("清空本机学习档案和回答风格，并关闭附带背景？已发送的对话不会因此撤回。")) return;
+  if(!saveSet({major:"",grade:"",goal:"",style:"default",share:"off"})){ toast("本机存储异常，未能清空"); return; }
+  renderSet(); toast("学习背景已清空，附带背景已关闭");
+}
 function ctxRound(){
   const s = loadSet();
+  if(s.share !== "on") return "";
   const who = [s.grade, s.major].filter(Boolean).join("");
   const bits = [];
   if(who || s.goal){
@@ -2980,6 +3032,7 @@ function activateCard(el){
   if(el.dataset.scene) openChat(el.dataset.scene);
   else if(el.id === "recentCard") showLib();
 }
+document.addEventListener("keydown",trapCalFocus);
 document.getElementById("sceneList").addEventListener("click",e=>{
   const card=e.target.closest(".scene-card"); if(card) openChat(card.dataset.scene);
 });
@@ -3050,10 +3103,16 @@ function rvToday(offsetDays){
   return d.getFullYear() + "-" + m + "-" + day;
 }
 function loadRv(){
-  const a = store.get(RV_KEY, []);
-  return Array.isArray(a) ? a.filter(x => x && typeof x === "object" && x.q && x.a) : [];
+  const a=store.get(RV_KEY,[]);
+  if(!Array.isArray(a)) return [];
+  return a.filter(x=>x && typeof x.q === "string" && x.q.trim() && typeof x.a === "string" && x.a.trim())
+    .map((x,i)=>Object.assign({},x,{id:String(x.id || "legacy-"+i),q:x.q.slice(0,120),a:x.a.slice(0,240),
+      box:Math.max(1,Math.min(5,Number(x.box)||1)),due:typeof x.due === "string" ? x.due:""}));
 }
-function saveRv(list){ return store.set(RV_KEY, list.slice(0, RV_MAX)); }
+function saveRv(list){
+  if(!Array.isArray(list) || list.length > RV_MAX) return false;
+  return store.set(RV_KEY, list);
+}
 /* 到期的判定用**字符串比较**而不是转 Date：YYYY-MM-DD 是定宽零填充的，
    字典序即时间序，省掉一次解析，也避开本地时区把「今天零点」算成昨天。 */
 function rvDueList(){
@@ -3076,6 +3135,7 @@ function renderReviewBadge(){
 }
 
 function showReview(){
+  $("rvHead").textContent="今日回顾";
   rvDeck = rvDueList(); rvIdx = 0; rvFlipped = false;
   show("screen-review");
   rvRender();
@@ -3145,9 +3205,45 @@ function rvGrade(ok){
     list[i].box = ok ? box : 1;
     list[i].due = rvToday(days);
     // 落盘失败要说出来：评分结果是用户攒出来的，静默丢掉比报错更糟
-    if(!saveRv(list)) toast("本机存储异常，这次评分没能保存");
+    if(!saveRv(list)){ toast("本机存储异常，这次评分没能保存，请重试"); return; }
   }
   rvIdx++; rvFlipped = false; rvRender(); renderReviewBadge();
+}
+
+function rvManage(){
+  rvDeck=null; rvIdx=0; rvFlipped=false; show("screen-review");
+  const list=loadRv(); $("rvHead").textContent="管理复习卡";
+  $("rvCount").textContent=list.length+" / "+RV_MAX+" 张";
+  $("rvBody").innerHTML=list.length ? list.map(function(c,i){
+    return '<div class="lib-item"><div class="rv-q">'+esc(c.q)+'</div><div class="rv-a">'+mdLite(c.a)
+      +'</div><p class="set-hint">到期：'+esc(c.due || "今天")+'</p><div class="pills">'
+      +'<button class="pill" onclick="rvEdit('+i+')">编辑</button><button class="pill" onclick="rvDelete('+i+')">删除</button></div></div>';
+  }).join("") : '<div class="empty">还没有复习卡，去学习库抽一张。</div>';
+  const p=$("rvPills"); p.hidden=false;
+  p.innerHTML='<button class="pill" onclick="showReview()">复习到期卡</button>'
+    +(list.length ? '<button class="pill" onclick="rvClear()">清空复习卡</button>':"");
+}
+function rvDelete(i){
+  const list=loadRv(); if(!list[i]) return;
+  if(!window.confirm("删除这张复习卡及其复习进度？\n"+list[i].q)) return;
+  list.splice(i,1);
+  if(!saveRv(list)){ toast("删除失败，本机存储异常"); return; }
+  rvManage(); renderReviewBadge();
+}
+function rvEdit(i){
+  const list=loadRv(); if(!list[i]) return;
+  const q=window.prompt("编辑问题（最多 120 字）",list[i].q); if(q===null) return;
+  const a=window.prompt("编辑要点（最多 240 字）",list[i].a); if(a===null) return;
+  if(!q.trim() || !a.trim()){ toast("问题和要点不能为空"); return; }
+  if(q.trim().length>120 || a.trim().length>240){ toast("内容超过字数限制，请精简后重试"); return; }
+  Object.assign(list[i],{q:q.trim(),a:a.trim(),box:1,due:rvToday()});
+  if(!saveRv(list)){ toast("修改失败，本机存储异常"); return; }
+  rvManage(); renderReviewBadge(); toast("已修改，今天重新复习");
+}
+function rvClear(){
+  if(!window.confirm("清空全部复习卡和复习进度？此操作无法恢复。")) return;
+  if(!saveRv([])){ toast("清空失败，本机存储异常"); return; }
+  rvManage(); renderReviewBadge();
 }
 
 /* 抽卡：把一条笔记喂给星火，换一张问答卡回来。
@@ -3160,46 +3256,41 @@ function rvParseCard(txt){
   return {q: q.trim().slice(0, 120), a: a.trim().slice(0, 240)};
 }
 async function rvAskSpark(note){
-  const prompt = '请把下面这段学习笔记抽成 1 张复习问答卡。严格只输出两行，不要任何别的内容：\n'
-    + 'Q: <一个能单独读懂的具体问题>\n'
-    + 'A: <要点，不超过 80 字>\n\n'
-    + '笔记：\n' + note;
-  const r = await fetchWithTimeout(CONFIG.apiProxy, {
-    method: "POST",
-    headers: {"Content-Type": "application/json"},
-    body: asciiJSON({scene: "ask", query: prompt, history: []})
-  }, CONFIG.timeoutMs);
-  const d = await r.json();
-  if(!d || typeof d.reply !== "string" || !d.reply.trim()) throw new Error("empty");
-  return d.reply;
+  const prompt='请把下面这段学习笔记抽成 1 张复习问答卡。严格只输出两行，不要任何别的内容：\n'
+    +'Q: <一个能单独读懂的具体问题>\nA: <要点，不超过 80 字>\n\n笔记：\n'+note;
+  const r=await fetchWithTimeout(CONFIG.apiProxy,{method:"POST",headers:{"Content-Type":"application/json"},
+    body:asciiJSON({scene:"ask",query:prompt,history:[]})},CONFIG.timeoutMs);
+  try{
+    const d=await r.json();
+    if(!r.ok) throw new Error(d && typeof d.reply === "string" ? d.reply : "AI 服务暂时不可用，请稍后再试");
+    if(!d || typeof d.reply !== "string" || !d.reply.trim()) throw new Error("AI 没有返回内容，请重试");
+    return d.reply;
+  }finally{ if(r.releaseTimeout) r.releaseTimeout(); }
 }
 async function rvMakeCard(btn){
   if(!CONFIG.apiProxy){ toast("未配置 AI 服务地址，无法生成复习卡"); return; }
-  const i = Number(btn.getAttribute("data-lib"));
-  const lib = loadLib();                     // 与 showLib 同一套归一，否则索引错位取错条
-  if(!(i >= 0 && i < lib.length)){ toast("这条笔记已经不存在，刷新后再试"); return; }
-  const old = btn.textContent;
-  btn.disabled = true; btn.textContent = "正在生成…";
+  const i=Number(btn.getAttribute("data-lib")), lib=loadLib();
+  if(!(i>=0 && i<lib.length)){ toast("这条笔记已不存在，请重新打开学习库"); return; }
+  const before=loadRv();
+  if(before.length>=RV_MAX){ toast("复习卡已达 "+RV_MAX+" 张，请先到管理复习卡删除部分卡片",4000); return; }
+  const note=String(lib[i].content || "").slice(0,RV_ASK_MAX), source=(lib[i].scene || "")+"|"+note;
+  if(before.some(x=>x.source===source)){ toast("这条笔记已有复习卡，可在管理复习卡中修改"); return; }
+  const old=btn.textContent; let success=false;
+  btn.disabled=true; btn.textContent="正在生成…";
   try{
-    const note = String(lib[i].content || "").slice(0, RV_ASK_MAX);
-    const card = rvParseCard(await rvAskSpark(note));
-    if(!card){ toast("没能解析出问答卡，换一条试试"); return; }
-    const list = loadRv();
-    // 同一来源不重复插：连点两次只会刷成一张，不会堆出两张一模一样的
-    if(!list.some(x => x.q === card.q && x.scene === lib[i].scene)){
-      list.push({id: Date.now() + "-" + Math.random().toString(36).slice(2, 7),
-                 q: card.q, a: card.a, scene: lib[i].scene || "",
-                 due: rvToday(1), box: 1});
-      if(!saveRv(list)){ toast("本机存储空间不足，卡片没能保存"); return; }
+    const card=rvParseCard(await rvAskSpark(note));
+    if(!card) throw new Error("没能解析出问答卡，请重试本条笔记");
+    const list=loadRv();
+    if(list.length>=RV_MAX) throw new Error("复习卡已满，请先管理卡片");
+    if(!list.some(x=>x.source===source || (x.q===card.q && x.scene===lib[i].scene))){
+      list.push({id:Date.now()+"-"+Math.random().toString(36).slice(2,9),q:card.q,a:card.a,
+        scene:lib[i].scene || "",source:source,due:rvToday(1),box:1});
+      if(!saveRv(list)) throw new Error("本机存储空间不足，卡片没能保存，请重试");
     }
-    btn.textContent = "✓ 已生成复习卡";
-    toast("已加入今日回顾 · 明天再见它一次");
-    renderReviewBadge();
-  }catch(e){
-    // 失败不误解成"已生成"：把按钮还回去，让用户能原样再试一次
-    btn.disabled = false; btn.textContent = old;
-    toast("没能连上 AI，稍后重试");
-  }
+    success=true; btn.textContent="✓ 已生成复习卡";
+    toast("复习卡已保存，明天到期；可在管理复习卡中查看"); renderReviewBadge();
+  }catch(e){ toast(e && e.message || "没能连上 AI，请稍后重试",4000); }
+  finally{ if(!success){ btn.disabled=false; btn.textContent=old; } }
 }
 (function init(){
   try{
