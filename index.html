@@ -1283,7 +1283,7 @@
         <p class="set-hint">只在打开的网址没有带场景参数时生效；垫面 NFC 标签里已经写死了场景的，仍然按标签走。</p>
       </div>
       <p class="set-hint">请遵守学术诚信。关键词提醒不能保证识别所有代写请求；AI 内容仍需核实，作业请独立完成。</p>
-      <p class="set-foot">星智碰 · AI 学习搭档　H5 原型 v5.1 · 2026-10-21<br>显示设置与记录保存在本机浏览器。提问内容与相关对话会发送给代理服务和讯飞星火；抽复习卡会发送所选笔记的前 300 字。学习背景仅在开启附带背景时发送。清除浏览器数据可能丢失本机记录。</p>
+      <p class="set-foot">星智碰 · AI 学习搭档　H5 原型 v5.2 · 2026-10-21<br>显示设置与记录保存在本机浏览器。提问内容与相关对话会发送给代理服务和讯飞星火；抽复习卡会发送所选笔记的前 300 字。学习背景仅在开启附带背景时发送。清除浏览器数据可能丢失本机记录。</p>
     </div>
   </section>
 
@@ -2254,7 +2254,8 @@ function planParse(text){
       section=day ? {day:day,time:time} : seqMark ? {seq:+seqMark[1],last:+(seqMark[2]||seqMark[1]),time:time,label:rangeSection ? body : ""}:null;
       continue;
     }
-    if(!head && !li && !seq) continue;
+    const weekHead = /^\s*周[一二三四五六日天]\s*[：:]/.test(body);
+    if(!head && !li && !seq && !weekHead) continue;
     if(seq){ section=null; seqs.push(...seq); continue; }
     for(const item of calSessions(body)){
       const t=item.hhmm ? item : (section && section.time);
