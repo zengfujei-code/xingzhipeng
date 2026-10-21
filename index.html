@@ -30,16 +30,16 @@
   :root{
     color-scheme:light;              
      
-    --hair-acc:#5AC8FA;
-    --ink:#1D1D1F; --sub:#515154; --faint:#66666B;    
-     
-    --card:rgba(255,255,255,.72); --card-2:rgba(255,255,255,.90);
-    --line:rgba(0,0,0,.09); --line-2:rgba(0,0,0,.18);
-    --hair:rgba(255,255,255,.95);    
+    --hair-acc:#7FC4FF;
+    /* 文字与描边全部换成首页那套深蓝黑 + 蓝调 */
+    --ink:#081B40; --sub:#4E617D; --faint:#6B7E97;
+    --card:rgba(255,255,255,.82); --card-2:rgba(255,255,255,.95);
+    --line:rgba(18,107,242,.10); --line-2:rgba(18,107,242,.20);
+    --hair:rgba(255,255,255,.92);
 
-    --r-xl:30px; --r-lg:26px; --r-md:19px; --r-sm:13px; --r-pill:999px;
+    --r-xl:26px; --r-lg:22px; --r-md:18px; --r-sm:12px; --r-pill:999px;
 
-    --c-plan:#0071E3; --c-homework:#1E8A4A; --c-ask:#8A34B8;
+    --c-plan:#126BF2; --c-homework:#12A45A; --c-ask:#7B3FE4;
 
     --t-display:24px;    
     --t-title:18px;      
@@ -50,13 +50,13 @@
      
     --t-input:16px;
 
-    --sh-1:0 1px 2px rgba(0,0,0,.06);
-    --sh-2:0 14px 30px -14px rgba(0,0,0,.18);
-    --sh-3:0 22px 48px -24px rgba(0,0,0,.16);
-    --glow:0 14px 30px -18px rgba(0,113,227,.26);
+    --sh-1:0 1px 2px rgba(18,60,120,.06);
+    --sh-2:0 14px 30px -14px rgba(20,70,140,.22);
+    --sh-3:0 22px 48px -24px rgba(20,70,140,.18);
+    --glow:0 14px 30px -18px rgba(18,107,242,.30);
 
-    --acc:#0071E3;                   
-    --acc-dk:#0066CC;                
+    --acc:#126BF2;
+    --acc-dk:#0B4FD1;
     --spring:cubic-bezier(.34,1.42,.5,1);    
 
     --ease:cubic-bezier(.32,.72,0,1);
@@ -884,6 +884,122 @@
       background:#fff;box-shadow:0 40px 90px -50px rgba(16,36,60,.45),0 0 0 1px rgba(16,36,60,.07)}
     .chat-head .mini,.chat-head .lib-btn{min-height:40px}
   }
+
+  /* ===== 全站统一：与首页同一套底色 / 顶栏 / 输入条 / 卡片 ===== */
+  #screen-chat,#screen-lib,#screen-review,#screen-settings{background:
+      radial-gradient(78% 40% at 78% 4%, rgba(45,168,251,.16) 0%, rgba(45,168,251,0) 62%),
+      radial-gradient(66% 34% at 6% 20%, rgba(126,180,255,.18) 0%, rgba(126,180,255,0) 60%),
+      linear-gradient(178deg,#F7FBFF 0%,#EEF6FF 46%,#E9F2FE 100%)}
+  .chat-head{background:rgba(255,255,255,.88);border:1px solid rgba(18,107,242,.10);
+    border-radius:20px;padding:7px 9px 7px 8px;gap:8px;
+    box-shadow:0 14px 30px -24px rgba(20,70,140,.5),inset 0 1px 0 #fff}
+  .back{width:40px;height:40px;background:#fff;border-color:rgba(18,107,242,.14);
+    color:#1677F2;font-size:20px;font-weight:600}
+  .back:active{background:#F1F7FF}
+  .chat-head h2{font-size:18.5px;font-weight:800;color:#081B40}
+  .chat-head .lib-btn{background:#fff;border-color:rgba(18,107,242,.16);color:#1E4E8C;font-weight:700}
+  .chat-head .mini{background:rgba(255,255,255,.72);border-color:rgba(18,107,242,.12);
+    color:#4E617D;font-weight:600}
+  .input-bar{border-color:rgba(18,107,242,.14);
+    box-shadow:0 18px 40px -24px rgba(20,70,140,.30),0 10px 24px -18px rgba(18,107,242,.22),inset 0 1px 0 #fff}
+  .input-bar input{font-size:15px;color:#081B40}
+  .input-bar input::placeholder{color:#8FA0B3}
+  .quick{padding:6px 16px 8px;align-items:center;gap:7px}
+  .quick button{background:#fff;border:1px solid rgba(18,107,242,.14);color:#1E4E8C;font-weight:600;
+    box-shadow:0 8px 18px -16px rgba(20,70,140,.6)}
+  /* 设置页：标题降一档、表单换成白底蓝描边 */
+  .set-group h3{font-size:17px;font-weight:800;color:#081B40;letter-spacing:-.01em}
+  .set-row>span{font-size:14px;color:#4E617D}
+  .set-row .set-input{height:42px;padding:0 12px;border-radius:12px;background:#fff;
+    border:1px solid rgba(18,107,242,.14);color:#081B40;
+    box-shadow:inset 0 1px 2px rgba(18,60,120,.04)}
+  .set-row .set-input:focus{outline:none;border-color:#8CBEFF;box-shadow:0 0 0 3px rgba(18,107,242,.12)}
+  .set-row input[type="checkbox"]{width:24px;height:24px;border-radius:7px;accent-color:#1677F2}
+  .lib-foot .rv-btn{background:#fff;border:1px solid rgba(18,107,242,.18);color:#1E4E8C;
+    font-weight:600;border-radius:999px;min-height:34px;padding:0 12px}
+  .lib-foot .rv-btn:active{background:#EFF6FF}
+  .lib-item{background:rgba(255,255,255,.95);border-color:rgba(18,107,242,.10)}
+  /* 复习卡：压高度、内容居中 */
+  .rv-face{min-height:176px;border-radius:22px;border-color:rgba(18,107,242,.10)}
+  .rv-face .rv-q{font-size:19px;line-height:1.45}
+  .rv-face .rv-k{font-size:11.5px;letter-spacing:.02em;color:#6B7E97}
+  /* 空对话引导：图标收小，避免占满屏 */
+  .msg-wrap > .msg.sys:only-child::before{width:64px;height:64px;border-radius:21px;margin-bottom:14px;
+    background-size:34px 34px,100% 100%}
+  .msg-wrap > .msg.sys:only-child{font-size:14px;line-height:1.8;color:#6B7E97;margin:auto 0}
+
+  /* ===== 三个二级页：参考图版空状态 / 玻璃导航 / 大胶囊输入 ===== */
+  #screen-chat,#screen-lib,#screen-review,#screen-settings{
+    background:
+      radial-gradient(62% 34% at 50% -6%, rgba(255,255,255,.95) 0%, rgba(255,255,255,0) 62%),
+      radial-gradient(46% 26% at 6% 26%, rgba(186,218,255,.55) 0%, rgba(186,218,255,0) 68%),
+      radial-gradient(52% 30% at 96% 34%, rgba(178,214,255,.50) 0%, rgba(178,214,255,0) 70%),
+      radial-gradient(60% 30% at 24% 82%, rgba(196,224,255,.45) 0%, rgba(196,224,255,0) 72%),
+      linear-gradient(178deg,#EFF7FF 0%,#E4F0FF 46%,#DDEBFF 100%)}
+  .chat-head{background:rgba(255,255,255,.80);border:1px solid rgba(255,255,255,.92);
+    border-radius:30px;padding:8px 10px;min-height:58px;gap:9px;
+    -webkit-backdrop-filter:blur(18px) saturate(170%);backdrop-filter:blur(18px) saturate(170%);
+    box-shadow:0 16px 34px -24px rgba(30,80,150,.45),inset 0 1px 0 rgba(255,255,255,.95)}
+  .back{width:42px;height:42px;background:#fff;border:1px solid rgba(255,255,255,.95);
+    color:#1E4E8C;font-size:21px;font-weight:700;
+    box-shadow:0 8px 16px -10px rgba(30,80,150,.45)}
+  .chat-head h2{font-size:20px;font-weight:800;color:#0C2148;letter-spacing:-.012em}
+  .chat-head h2::before{width:8px;height:8px;margin-top:-4px}
+  .chat-head .mini,.chat-head .lib-btn{min-height:38px;padding:0 14px;
+    background:rgba(255,255,255,.92);border:1px solid rgba(18,107,242,.10);
+    color:#3B5680;font-size:13px;font-weight:700;
+    box-shadow:0 8px 16px -12px rgba(30,80,150,.35)}
+  .chat-head .lib-btn{color:#1E4E8C}
+  /* 输入条：大胶囊 + 蓝色渐变圆钮 */
+  .input-bar{margin:0 12px 10px;padding:7px 7px 7px 16px;min-height:60px;
+    border-radius:32px;border:1px solid rgba(255,255,255,.95);
+    background:rgba(255,255,255,.86);
+    box-shadow:0 20px 40px -26px rgba(30,80,150,.42),inset 0 1px 0 #fff}
+  .input-bar input{font-size:15.5px;color:#0C2148;height:46px}
+  .input-bar input::placeholder{color:#93A6BF}
+  .send{width:48px;height:48px;border-radius:50%;
+    background:linear-gradient(160deg,#3E9BFB,#126BF2 62%,#0B54C8);
+    box-shadow:0 12px 22px -12px rgba(18,107,242,.85),inset 0 1px 0 rgba(255,255,255,.4)}
+  .quick{padding:6px 16px 9px;align-items:center;gap:8px}
+  .quick button{display:inline-flex;align-items:center;gap:4px;min-height:36px;padding:0 8px;
+    background:rgba(255,255,255,.95);border:1px solid rgba(255,255,255,.98);
+    border-radius:999px;color:#2C4A72;font-size:11px;font-weight:600;
+    box-shadow:0 10px 20px -16px rgba(30,80,150,.55),inset 0 1px 0 #fff}
+  .quick button svg{width:14px;height:14px;flex:none;color:#1677F2}
+  .quick button:active{background:#F2F8FF}
+
+  /* 空状态 */
+  #chatEmpty{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;
+    justify-content:center;text-align:center;
+    padding:calc(var(--sat) + 78px) 16px calc(var(--sab) + 8px)}
+  .msg-wrap[hidden]{display:none!important}
+  #chatEmpty[hidden]{display:none!important}
+  .ce-art{position:relative;width:min(74%,248px);aspect-ratio:1/.9;display:grid;place-items:center;
+    margin-bottom:2px}
+  .ce-ring{position:absolute;left:50%;top:56%;width:88%;height:30%;transform:translateX(-50%) rotate(-7deg);
+    border:2px solid rgba(150,198,248,.5);border-radius:50%;
+    clip-path:inset(0 0 52% 0)}
+  .ce-ped{position:absolute;left:50%;bottom:12%;width:78%;height:15%;transform:translateX(-50%);
+    border-radius:50%;
+    background:radial-gradient(ellipse at 50% 38%,#FFFFFF 0%,rgba(255,255,255,.82) 46%,rgba(214,232,255,0) 74%);
+    box-shadow:0 22px 34px -20px rgba(70,130,210,.40)}
+  .ce-art img{position:relative;z-index:2;width:86%;height:auto;
+    mix-blend-mode:multiply;
+    -webkit-mask-image:radial-gradient(ellipse 66% 62% at 50% 48%,#000 56%,rgba(0,0,0,0) 88%);
+    mask-image:radial-gradient(ellipse 66% 62% at 50% 48%,#000 56%,rgba(0,0,0,0) 88%)}
+  .ce-sp{position:absolute;z-index:3;background:#fff;border-radius:2px;transform:rotate(45deg);
+    box-shadow:0 0 8px 2px rgba(255,255,255,.95),0 0 18px 6px rgba(120,180,255,.55)}
+  .ce-sp.a{left:10%;top:26%;width:10px;height:10px}
+  .ce-sp.b{right:9%;top:12%;width:13px;height:13px}
+  .ce-sp.c{left:22%;bottom:20%;width:8px;height:8px;opacity:.85}
+  .ce-tx{margin:0;max-width:308px;font-size:14.5px;line-height:1.9;color:#41597A;font-weight:500}
+  .ce-tx b{color:#1677F2;font-weight:800}
+  #chatEmpty[data-scene="homework"] .ce-tx b{color:#12A45A}
+  #chatEmpty[data-scene="ask"] .ce-tx b{color:#7B3FE4}
+  @media (max-height:700px){
+    .ce-art{width:min(58%,190px)}
+    .ce-tx{font-size:13.5px;line-height:1.8}
+  }
 </style>
 <script>
 /* 星智碰 · 评审导览的纯逻辑层。
@@ -1606,7 +1722,16 @@
       <button class="lib-btn" onclick="showLib()">学习库</button>
     </div>
     
-    <div class="msg-wrap" id="msgWrap" role="log" aria-live="polite" aria-relevant="additions"></div>
+      <div id="chatEmpty" hidden>
+        <div class="ce-art" aria-hidden="true">
+          <span class="ce-ring"></span>
+          <span class="ce-ped"></span>
+          <img id="ceImg" alt="" decoding="async">
+          <i class="ce-sp a"></i><i class="ce-sp b"></i><i class="ce-sp c"></i>
+        </div>
+        <p class="ce-tx" id="ceTx"></p>
+      </div>
+    <div class="msg-wrap" id="msgWrap" role="log" aria-live="polite" aria-relevant="additions" hidden></div>
     <div class="quick" id="quickBar"></div>
     <div class="input-bar">
       
@@ -1951,15 +2076,21 @@ function openChat(scene, noPush){
   $("msgWrap").innerHTML = "";
   $("quickBar").innerHTML = "";
 
+  const qIco = {
+    plan: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.4" y="5" width="17.2" height="15.4" rx="4"/><path d="M3.4 10h17.2M8 2.8v3.6M16 2.8v3.6"/></svg>',
+    homework: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.6"/><path d="M8 12.3l2.8 2.8 5.2-6"/></svg>',
+    ask: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.4 11.4c0 4.2-3.7 7.6-8.3 7.6-1.2 0-2.4-.24-3.4-.68L4.5 20l1.3-3.4C4.6 15.5 3.8 13.6 3.8 11.4c0-4.2 3.7-7.6 8.3-7.6s8.3 3.4 8.3 7.6Z"/></svg>'
+  };
   sc.quick.forEach(function(q){
     const s = document.createElement("button");
     s.type = "button";
-    s.textContent = q;
+    s.innerHTML = (qIco[scene] || "") + '<span></span>';
+    s.querySelector("span").textContent = q;
     s.onclick = function(){ quickAsk(q); };
     $("quickBar").appendChild(s);
   });
 
-  addNotice(sc.hint);
+  wsEmpty(scene, sc.hint);
 
   const hist = loadHist(scene).slice(-HIST_MAX);
   if(hist.length){
@@ -2008,8 +2139,27 @@ function actsHTML(savable){
     html += '<button type="button" class="save-btn cal-btn" onclick="openCalSheet(this)">📅 加入日历</button>';
   return html;
 }
+function wsEmpty(scene, hint){
+  const box = $("chatEmpty"); if(!box) return;
+  box.dataset.scene = scene;
+  const art = document.querySelector('#screen-home .scene-card[data-scene="' + scene + '"] .art');
+  const img = $("ceImg");
+  if(img && art){ img.src = art.getAttribute("src") || art.src; }
+  const tx = $("ceTx");
+  if(tx){
+    const t = String(hint || "").replace(/^\s*可以这样开始\s*[:：]\s*/, "");
+    tx.innerHTML = "<b>可以这样开始：</b>" + esc(t);
+  }
+  box.hidden = false;
+  const w = $("msgWrap"); if(w) w.hidden = true;
+}
+function wsEmptyHide(){
+  const b = $("chatEmpty"); if(b) b.hidden = true;
+  const w = $("msgWrap"); if(w) w.hidden = false;
+}
 function addMsg(role, text, opts){
   opts = opts || {};
+  if(role === "me") wsEmptyHide();
   const wrap = $("msgWrap");
   const div = document.createElement("div");
   div.className = "msg " + role;
