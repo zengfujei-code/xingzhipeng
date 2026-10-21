@@ -1037,6 +1037,168 @@
     .pb-actions button{padding:11px 16px;min-height:44px}
   }
 
+
+/* ===== 首页改版（2026-10-21 按设计稿） ===== */
+#screen-home{
+  background:
+    radial-gradient(120% 55% at 82% 2%, #DCEBFF 0%, rgba(220,235,255,0) 62%),
+    radial-gradient(90% 45% at 4% 18%, #EAF4FF 0%, rgba(234,244,255,0) 64%),
+    linear-gradient(180deg,#F3F9FF 0%,#FDFEFF 42%,#F6FAFF 100%);
+  color:#12294A;
+}
+#screen-home .hp-scroll{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;
+  -webkit-overflow-scrolling:touch;
+  padding:calc(var(--sat) + 12px) 16px calc(var(--sab) + 22px);}
+
+.hp-top{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.hp-logo{width:38px;height:38px;border-radius:12px;flex:none;display:grid;place-items:center;
+  background:linear-gradient(150deg,#4E97FF,#0B57D0);color:#fff;font-weight:800;font-size:19px;
+  box-shadow:0 10px 20px -10px rgba(11,87,208,.75)}
+.hp-brand-txt{min-width:0}
+.hp-brand-txt b{display:block;font-size:15.5px;font-weight:800;letter-spacing:-.01em;color:#0F2340;line-height:1.25}
+.hp-brand-txt span{display:block;font-size:10.5px;color:#8298B0;margin-top:2px}
+.hp-acts{margin-left:auto;display:flex;gap:7px;flex:none}
+.hp-round{position:relative;width:38px;height:38px;border-radius:50%;border:1px solid rgba(15,35,64,.08);
+  background:rgba(255,255,255,.9);display:grid;place-items:center;color:#33557F;
+  box-shadow:0 6px 14px -10px rgba(16,36,60,.45)}
+.hp-round::after{content:"";position:absolute;inset:-4px;border-radius:50%}
+.hp-round svg{width:18px;height:18px}
+.hp-round:active{transform:scale(.94)}
+
+.hp-hero{position:relative;display:block;padding-top:6px}
+.hp-hero-text{padding-right:102px}
+.hp-h1{margin:0;font-size:27px;line-height:1.24;font-weight:800;letter-spacing:-.02em;
+  background:linear-gradient(118deg,#0A3C8C 6%,#1B63DC 58%,#2E8BFF 96%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  -webkit-text-fill-color:transparent}
+.hp-swoosh{display:block;margin:2px 0 0 2px;width:104px;height:10px;color:#5C9BFF;opacity:.55}
+.hp-lead{margin:8px 0 0;font-size:12.5px;line-height:1.75;color:#5E7590;letter-spacing:.01em}
+.hp-lead i{font-style:normal;color:#F2B33D}
+.hp-cta{margin-top:12px;max-width:226px;
+  display:inline-flex;align-items:center;gap:10px;height:50px;padding:0 20px 0 7px;border:0;border-radius:999px;
+  color:#fff;font-size:15.5px;font-weight:700;letter-spacing:.01em;
+  background:linear-gradient(138deg,#4E97FF 0%,#1367E8 52%,#0B57D0 100%);
+  box-shadow:0 16px 30px -16px rgba(11,92,224,.9),inset 0 1px 0 rgba(255,255,255,.38)}
+.hp-cta:active{transform:scale(.97)}
+.hp-play{width:36px;height:36px;border-radius:50%;flex:none;display:grid;place-items:center;
+  background:rgba(255,255,255,.22);box-shadow:inset 0 0 0 1px rgba(255,255,255,.25)}
+.hp-play svg{width:14px;height:14px;margin-left:2px}
+.hp-cta-go{font-size:17px;opacity:.85;margin-left:-2px}
+
+.hp-mascot{position:absolute;right:-4px;top:26px;width:112px;height:122px;margin:0;pointer-events:none}
+.hp-bubble{position:absolute;right:0;top:-4px;
+  padding:5px 9px;border-radius:12px 12px 4px 12px;background:#fff;white-space:nowrap;
+  font-size:9.5px;line-height:1.45;color:#41618A;font-weight:600;
+  box-shadow:0 10px 20px -12px rgba(16,60,120,.5),0 0 0 1px rgba(46,125,255,.08)}
+
+.hp-today{margin-top:14px;padding:11px 12px 10px;border-radius:22px;background:#fff;
+  border:1px solid rgba(15,64,140,.07);
+  box-shadow:0 20px 40px -32px rgba(16,60,120,.55),0 1px 0 rgba(255,255,255,.9) inset}
+.hp-sec-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:11px}
+.hp-sec-head h2{margin:0;font-size:15px;font-weight:800;color:#12294A;display:flex;align-items:center;gap:7px}
+.hp-ic{width:22px;height:22px;border-radius:7px;display:grid;place-items:center;color:#fff;
+  background:linear-gradient(140deg,#4E97FF,#0B57D0)}
+.hp-ic svg{width:12px;height:12px}
+.hp-more{border:0;background:none;color:#93A6BA;font-size:11.5px;padding:8px 2px;min-height:32px}
+.hp-today-body{display:flex;align-items:center;gap:11px;padding-bottom:26px}
+.hp-ring{position:relative;width:88px;height:88px;flex:none}
+.hp-ring svg{width:88px;height:88px;transform:rotate(-90deg)}
+.hp-ring .num{position:absolute;inset:0;display:grid;place-content:center;text-align:center;line-height:1.1}
+.hp-ring b{font-size:24px;font-weight:800;color:#0F3E8C;letter-spacing:-.02em}
+.hp-ring i{font-style:normal;display:block;font-size:9.5px;color:#8298B0;margin-top:2px}
+.hp-ring em{position:absolute;left:-6px;right:-6px;bottom:-15px;font-style:normal;font-size:8.5px;color:#A2B4C6;text-align:center}
+.hp-due{list-style:none;margin:0;padding:0;flex:1;min-width:0;display:grid;gap:7px;grid-template-columns:minmax(0,1fr)}
+.hp-due li{min-width:0;overflow:hidden;display:flex;align-items:center;gap:8px;padding:8px 9px;border-radius:14px;
+  background:#F6FAFF;border:1px solid rgba(46,125,255,.08);min-height:46px;cursor:pointer}
+.hp-due li:active{background:#EDF5FF}
+.hp-due .ic{width:26px;height:26px;border-radius:9px;flex:none;display:grid;place-items:center;color:#fff}
+.hp-due .ic svg{width:13px;height:13px}
+.hp-due .tx{min-width:0;flex:1}
+.hp-due b{display:block;font-size:11.5px;font-weight:700;color:#1B3352;line-height:1.35;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hp-due span{display:block;font-size:9.5px;color:#94A8BC;margin-top:2px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hp-due .go{width:22px;height:22px;border-radius:50%;flex:none;display:grid;place-items:center;
+  background:#E7F0FE;color:#1B63DC;font-size:12px}
+.hp-empty{padding:12px 10px;border-radius:14px;background:#F6FAFF;border:1px dashed rgba(46,125,255,.25);
+  font-size:11px;line-height:1.7;color:#7C90A8;text-align:center}
+.hp-empty b{display:block;color:#1B3352;font-size:12px;margin-bottom:2px}
+.hp-today-foot{margin-top:10px;padding-top:9px;border-top:1px dashed rgba(15,64,140,.1);
+  display:flex;align-items:center;justify-content:space-between}
+.hp-lib{border:0;background:none;padding:6px 0;min-height:36px;font-size:11.5px;color:#5E7590}
+.hp-lib b{color:#1B63DC;font-weight:800}
+
+.hp-scenes{margin-top:10px;display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+#screen-home .scene-card{position:relative;display:flex;flex-direction:column;min-height:176px;
+  padding:11px 9px 11px;border-radius:19px;background:#fff;border:1px solid rgba(15,64,140,.07);
+  overflow:hidden;gap:3px;
+  box-shadow:0 16px 30px -28px rgba(16,60,120,.6)}
+#screen-home .scene-card::before,#screen-home .scene-card::after{display:none}
+#screen-home .scene-card:active{transform:scale(.96)}
+#screen-home .scene-card .scene-ico{width:27px;height:27px;border-radius:9px;display:grid;place-items:center;
+  color:#fff;flex:none}
+#screen-home .scene-card .scene-ico svg{width:15px;height:15px}
+#screen-home .scene-card.s1 .scene-ico{background:linear-gradient(140deg,#5AA0FF,#1466E0);
+  box-shadow:0 8px 14px -9px rgba(20,102,224,.85)}
+#screen-home .scene-card.s2 .scene-ico{background:linear-gradient(140deg,#43CE96,#17A46C);
+  box-shadow:0 8px 14px -9px rgba(23,164,108,.85)}
+#screen-home .scene-card.s3 .scene-ico{background:linear-gradient(140deg,#A98CFB,#7A4DE8);
+  box-shadow:0 8px 14px -9px rgba(122,77,232,.85)}
+#screen-home .scene-card .scene-text{display:flex;flex-direction:column;gap:2px;min-width:0;padding-top:3px}
+#screen-home .scene-card h2{font-size:12.5px;font-weight:800;color:#12294A;letter-spacing:-.01em;margin:0}
+#screen-home .scene-card p{font-size:10px;line-height:1.5;color:#8298B0;margin:0;text-wrap:pretty}
+#screen-home .scene-card .scene-eg{font-size:8.5px;line-height:1.4;color:#A6B7C8;font-style:normal;margin-top:auto;
+  padding-top:5px;border-top:1px dashed rgba(15,64,140,.08);display:block;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#screen-home .scene-card .go{position:absolute;top:11px;right:8px;width:18px;height:18px;border:none;
+  border-radius:50%;background:none;color:#B7C7D8;font-size:15px;line-height:1;
+  display:grid;place-items:center;box-shadow:none}
+#screen-home .scene-card .art{display:block;width:36px;height:36px;margin:4px 0 1px auto;flex:none;pointer-events:none}
+
+#screen-home .entry-slot{display:flex;margin-top:8px}
+#screen-home .pb-entry{margin:0!important;width:100%;text-align:left;padding:9px 12px!important;
+  font-size:11.5px!important;font-weight:600;color:#5E7590;letter-spacing:.01em;
+  background:rgba(255,255,255,.75)!important;border:1px dashed rgba(46,125,255,.28)!important;
+  border-radius:14px!important;min-height:44px}
+
+.hp-nfc{position:relative;margin-top:12px;display:flex;align-items:center;gap:10px;
+  padding:12px 12px 12px 10px;border-radius:20px;overflow:hidden;
+  background:linear-gradient(120deg,#E9F3FF 0%,#DCEBFF 58%,#E7F0FF 100%);
+  border:1px solid rgba(46,125,255,.16)}
+.hp-nfc::after{content:"";position:absolute;right:-30px;top:-30px;width:120px;height:120px;border-radius:50%;
+  background:radial-gradient(circle,rgba(255,255,255,.85),rgba(255,255,255,0) 70%)}
+.hp-nfc .wave{width:34px;height:34px;border-radius:50%;flex:none;display:grid;place-items:center;
+  background:linear-gradient(140deg,#4E97FF,#0B57D0);color:#fff;box-shadow:0 10px 18px -10px rgba(11,87,208,.9)}
+.hp-nfc .wave svg{width:17px;height:17px}
+.hp-nfc .tx{min-width:0;position:relative;z-index:1}
+.hp-nfc .tx b{display:block;font-size:12.5px;font-weight:800;color:#12294A}
+.hp-nfc .tx span{display:block;font-size:10px;color:#6C86A2;margin-top:2px}
+.hp-nfc .hint{position:relative;z-index:1;margin-left:auto;text-align:right;font-size:9.5px;
+  line-height:1.5;color:#7FA0C6;font-weight:600;flex:none}
+#screen-home .status-badge{display:inline-flex;align-items:center;gap:5px;margin-top:7px;
+  padding:3px 8px 3px 6px;border-radius:999px;font-size:9px;font-weight:600;
+  color:#1B7A4B;background:rgba(46,196,133,.14);border:1px solid rgba(46,196,133,.28);
+  white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+#screen-home .status-badge::before{content:"";width:5px;height:5px;border-radius:50%;background:#22B573;flex:none}
+#screen-home .status-badge.err{color:#A6321F;background:rgba(226,75,74,.12);border-color:rgba(226,75,74,.3)}
+#screen-home .status-badge.err::before{background:#E24B4A}
+
+.hp-quote{margin:14px 0 0;text-align:center;font-size:10.5px;line-height:1.7;color:#9BADC0}
+.hp-quote b{font-weight:800;color:#7F96AC}
+.hp-foot{margin-top:12px;display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap}
+.hp-foot .review-link{font-size:10.5px;color:#8FA3B8;background:none;border:0;padding:8px 4px;min-height:36px}
+.hp-foot .review-link:active{color:#1B63DC}
+
+@media (max-width:359px){
+  .hp-h1{font-size:23px}
+  .hp-hero{grid-template-columns:1fr 104px}
+  .hp-mascot{width:100px;height:108px}
+  .hp-due b{font-size:11px}
+}
+@media (min-width:520px){
+  #screen-home .hp-scroll{max-width:520px;margin:0 auto}
+}
+
 </style>
 </head>
 <body>
@@ -1137,69 +1299,158 @@
 <div id="app">
 
   <section class="screen active" id="screen-home">
-    <div class="home-head">
-      <div class="masthead">
-        <div class="logo">星</div>
-        <div class="mast-text">
-          <h1 class="brand-title">星智碰 · AI 学习搭档</h1>
-          <p class="slogan">触碰唤醒星火　阅览 AI 智慧</p>
+    <div class="hp-scroll" id="sceneList">
+
+      <header class="hp-top">
+        <span class="hp-logo" aria-hidden="true">星</span>
+        <div class="hp-brand-txt">
+          <b>星智碰 · AI 学习搭档</b>
+          <span>你的 AI 学习空间</span>
         </div>
-        
-        <button class="gear" id="gearBtn" onclick="showSet()" aria-label="设置" title="设置"><svg stroke-width="2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.6 7.2h9.2M19.2 7.2h1.2M3.6 16.8h1.2M11.2 16.8h9.2"/><circle cx="16" cy="7.2" r="2.4"/><circle cx="8" cy="16.8" r="2.4"/></svg></button>
-      </div>
-    </div>
-    <div class="scene-list" id="sceneList">
-      <div class="scene-card s1" data-scene="plan" role="button" tabindex="0">
-        <div class="scene-ico"><svg stroke-width="2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4.6" width="18" height="16.4" rx="4.2"/><path d="M3 9.6h18"/><path d="M8 2.6v3.6M16 2.6v3.6"/></svg></div>
-        <div class="scene-text">
+        <div class="hp-acts">
+          <button class="hp-round" id="gearBtn" onclick="showSet()" aria-label="设置" title="设置">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.6 7.2h9.2M19.2 7.2h1.2M3.6 16.8h1.2M11.2 16.8h9.2"/><circle cx="16" cy="7.2" r="2.4"/><circle cx="8" cy="16.8" r="2.4"/></svg>
+          </button>
+          <button class="hp-round" onclick="showLib()" aria-label="我的学习库" title="我的学习库">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.4 5.2h5.2a2.6 2.6 0 0 1 2.4 2.5 2.6 2.6 0 0 1 2.4-2.5h5.2v13.4h-5.2a2.4 2.4 0 0 0-2.4 2.3 2.4 2.4 0 0 0-2.4-2.3H4.4z"/></svg>
+          </button>
+        </div>
+      </header>
+
+      <section class="hp-hero" aria-labelledby="hpH1">
+        <div class="hp-hero-text">
+        <h1 class="hp-h1" id="hpH1">今天想学什么？</h1>
+        <svg class="hp-swoosh" viewBox="0 0 132 12" fill="none" aria-hidden="true">
+          <path d="M2 8.4C22 3.2 44 1.8 66 2.6c22 .8 44 3 64 5.6" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"/>
+        </svg>
+        <p class="hp-lead">我在这里，陪你一起<br>把每一个目标变成现实 <i aria-hidden="true">✦</i></p>
+        </div>
+
+        <div class="hp-bubble" aria-hidden="true">好奇的你，<br>一直很棒！</div>
+        <svg class="hp-mascot" viewBox="0 0 120 132" fill="none" aria-label="星智碰机器人" role="img">
+          <defs>
+            <linearGradient id="mgBody" x1="30" y1="16" x2="96" y2="118" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#F4FAFF"/><stop offset=".55" stop-color="#DCEBFF"/><stop offset="1" stop-color="#C6DEFF"/>
+            </linearGradient>
+            <linearGradient id="mgFace" x1="34" y1="24" x2="88" y2="74" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#17335C"/><stop offset="1" stop-color="#0B2545"/>
+            </linearGradient>
+          </defs>
+          <ellipse cx="62" cy="124" rx="30" ry="5" fill="#BBD6FA" opacity=".45"/>
+          <path d="M60 8v10" stroke="#7FA8DC" stroke-width="2.4" stroke-linecap="round"/>
+          <circle cx="60" cy="7" r="4.2" fill="#38B6FF"/>
+          <circle cx="60" cy="7" r="7" fill="#38B6FF" opacity=".22"/>
+          <rect x="26" y="18" width="68" height="58" rx="24" fill="url(#mgBody)" stroke="#8FB6E8" stroke-width="1.6"/>
+          <rect x="35" y="30" width="50" height="34" rx="15" fill="url(#mgFace)"/>
+          <rect x="44" y="40" width="9" height="13" rx="4.5" fill="#5FD0FF"/>
+          <rect x="68" y="40" width="9" height="13" rx="4.5" fill="#5FD0FF"/>
+          <path d="M53 58c3.2 2.6 10.8 2.6 14 0" stroke="#7FC6F5" stroke-width="2.2" stroke-linecap="round"/>
+          <rect x="42" y="78" width="36" height="30" rx="13" fill="url(#mgBody)" stroke="#8FB6E8" stroke-width="1.6"/>
+          <path d="M28 88c0-6 4-9 9-9" stroke="#8FB6E8" stroke-width="1.6" stroke-linecap="round"/>
+          <path d="M92 88c0-6-4-9-9-9" stroke="#8FB6E8" stroke-width="1.6" stroke-linecap="round"/>
+          <circle cx="26" cy="93" r="6" fill="#EAF4FF" stroke="#8FB6E8" stroke-width="1.4"/>
+          <circle cx="94" cy="93" r="6" fill="#EAF4FF" stroke="#8FB6E8" stroke-width="1.4"/>
+          <path d="M36 96h48a4 4 0 0 1 3.8 5.2l-3 9.6a5 5 0 0 1-4.8 3.5H40a5 5 0 0 1-4.8-3.5l-3-9.6A4 4 0 0 1 36 96z" fill="#FFFFFF" stroke="#5B93DA" stroke-width="1.6"/>
+          <path d="M60 96v18" stroke="#A9C8EB" stroke-width="1.4"/>
+          <path d="M44 104h10M44 109h10M68 104h10M68 109h10" stroke="#B9D3EE" stroke-width="1.6" stroke-linecap="round"/>
+        </svg>
+
+        <button type="button" class="hp-cta" onclick="startToday()">
+          <span class="hp-play" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.4v13.2l10-6.6z"/></svg></span>
+          开始今天的学习
+          <span class="hp-cta-go" aria-hidden="true">›</span>
+        </button>
+      </section>
+
+      <section class="hp-today" aria-labelledby="hpTodayH">
+        <div class="hp-sec-head">
+          <h2 id="hpTodayH">
+            <span class="hp-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 9v10M10 5v14M16 11v8M22 7v12"/></svg></span>
+            今日回顾
+          </h2>
+          <button class="hp-more" type="button" onclick="showReview()">全部 ›</button>
+        </div>
+        <div class="hp-today-body">
+          <div class="hp-ring">
+            <svg viewBox="0 0 88 88" aria-hidden="true">
+              <circle cx="44" cy="44" r="35" fill="none" stroke="#E8F0FA" stroke-width="9"/>
+              <circle id="hpRingArc" cx="44" cy="44" r="35" fill="none" stroke="url(#hpRingG)" stroke-width="9"
+                stroke-linecap="round" stroke-dasharray="220" stroke-dashoffset="220"/>
+              <defs>
+                <linearGradient id="hpRingG" x1="10" y1="10" x2="78" y2="78" gradientUnits="userSpaceOnUse">
+                  <stop stop-color="#69A9FF"/><stop offset="1" stop-color="#0B57D0"/>
+                </linearGradient>
+              </defs>
+            </svg>
+            <span class="num"><b id="hpDue">0</b><i>条待回顾</i></span>
+            <em>巩固让知识更牢固</em>
+          </div>
+          <ul class="hp-due" id="hpDueList"></ul>
+        </div>
+        <div class="hp-today-foot">
+          <button class="hp-lib" type="button" onclick="showLib()">学习库 <b id="hpLibN">0</b> 条已保存 ›</button>
+          <button class="hp-lib" type="button" onclick="showReview()">管理复习卡 ›</button>
+        </div>
+      </section>
+
+      <section class="hp-scenes" aria-label="三个学习场景">
+        <div class="scene-card s1" data-scene="plan" role="button" tabindex="0">
+          <div class="scene-ico" aria-hidden="true"><svg stroke-width="2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.6" width="18" height="16.4" rx="4.2"/><path d="M3 9.6h18"/><path d="M8 2.6v3.6M16 2.6v3.6"/></svg></div>
           <h2>学习计划</h2>
-          <p>把目标和时间拆成每天的任务，核对后导出日历</p>
-          <em class="scene-eg">例：30 天从零学 C 语言</em>
+          <p>拆成每日任务<br>AI 排好进度</p>
+          <svg class="art" viewBox="0 0 44 44" fill="none" aria-hidden="true">
+            <rect x="5" y="9" width="34" height="28" rx="8" fill="#EAF3FF" stroke="#9CC1F2" stroke-width="1.3"/>
+            <path d="M5 16h34" stroke="#9CC1F2" stroke-width="1.3"/>
+            <path d="M13 6.4v5M31 6.4v5" stroke="#5B93DA" stroke-width="2" stroke-linecap="round"/>
+            <text x="22" y="31" text-anchor="middle" font-size="12.5" font-weight="700" fill="#2E7DFF" font-family="system-ui">30</text>
+          </svg>
+          <em class="scene-eg">例：30 天学 C 语言</em>
+          <div class="go" aria-hidden="true">›</div>
         </div>
-        <div class="go">›</div>
-      </div>
-      <div class="scene-card s2" data-scene="homework" role="button" tabindex="0">
-        <div class="scene-ico"><svg stroke-width="2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9.2"/><path d="M7.9 12.4l2.9 2.9 5.4-6.2"/></svg></div>
-        <div class="scene-text">
+        <div class="scene-card s2" data-scene="homework" role="button" tabindex="0">
+          <div class="scene-ico" aria-hidden="true"><svg stroke-width="2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.2"/><path d="M7.9 12.4l2.9 2.9 5.4-6.2"/></svg></div>
           <h2>作业管家</h2>
-          <p>说清截止时间和可用时间，拆出步骤与优先级</p>
-          <em class="scene-eg">例：今晚 21:00 交 6 道练习</em>
+          <p>按截止排步骤<br>给出时间预算</p>
+          <svg class="art" viewBox="0 0 44 44" fill="none" aria-hidden="true">
+            <rect x="10" y="6" width="24" height="28" rx="6" fill="#E9F8F1" stroke="#8FD3B4" stroke-width="1.3"/>
+            <path d="M16 14h12M16 20h12M16 26h7" stroke="#8FD3B4" stroke-width="1.8" stroke-linecap="round"/>
+            <circle cx="32" cy="31" r="6.4" fill="#22B573"/>
+            <path d="M28.8 31.2l2.2 2.2 3.6-4.2" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <em class="scene-eg">例：今晚交 6 道题</em>
+          <div class="go" aria-hidden="true">›</div>
         </div>
-        <div class="go">›</div>
-      </div>
-      <div class="scene-card s3" data-scene="ask" role="button" tabindex="0">
-        <div class="scene-ico"><svg stroke-width="2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.6 11.5c0 4.3-3.8 7.8-8.6 7.8-1.3 0-2.5-.25-3.6-.72L4.2 20.1l1.35-3.5c-1.3-1.35-2.05-3.1-2.05-5.1 0-4.3 3.85-7.8 8.5-7.8 4.8 0 8.6 3.5 8.6 7.8z"/></svg></div>
-        <div class="scene-text">
+        <div class="scene-card s3" data-scene="ask" role="button" tabindex="0">
+          <div class="scene-ico" aria-hidden="true"><svg stroke-width="2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 11.5c0 4.3-3.8 7.8-8.6 7.8-1.3 0-2.5-.25-3.6-.72L4.2 20.1l1.35-3.5c-1.3-1.35-2.05-3.1-2.05-5.1 0-4.3 3.85-7.8 8.5-7.8 4.8 0 8.6 3.5 8.6 7.8z"/></svg></div>
           <h2>随问随答</h2>
-          <p>把疑点讲明白，值得留下的回答存进学习库</p>
-          <em class="scene-eg">例：递归和循环的区别</em>
+          <p>把疑点讲清<br>好回答存进库</p>
+          <svg class="art" viewBox="0 0 44 44" fill="none" aria-hidden="true">
+            <rect x="4" y="10" width="23" height="15" rx="6.5" fill="#F1ECFE" stroke="#B9A4F5" stroke-width="1.3"/>
+            <rect x="17" y="20" width="22" height="14" rx="6" fill="#8B5CF6"/>
+            <text x="28" y="30.6" text-anchor="middle" font-size="10" font-weight="700" fill="#fff" font-family="system-ui">?</text>
+          </svg>
+          <em class="scene-eg">例：递归 vs 循环</em>
+          <div class="go" aria-hidden="true">›</div>
         </div>
-        <div class="go">›</div>
-      </div>
+      </section>
 
       <div class="entry-slot" id="planEntrySlot"></div>
 
-      <div class="rv-card" id="rvCard" role="button" tabindex="0" onclick="showReview()" hidden>
-        <span class="rv-ico"><svg stroke-width="2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.2a8.8 8.8 0 1 0 8.8 8.8"/><path d="M12 7.4v4.8l3.4 2"/><path d="M4.6 19.4 6 15.2"/></svg></span>
-        <span class="rv-main"><b id="rvTitle">今日回顾</b><span id="rvSub"></span></span>
-        <span class="rv-go">›</span>
-      </div>
-      
-      <div class="recent" id="recentCard" role="button" tabindex="0" onclick="showLib()">
-        <span class="tag" id="recentTag">学习库</span>
-        <span class="recent-txt" id="recentTxt"></span>
-        <span class="recent-go">›</span>
-      </div>
-    </div>
+      <section class="hp-nfc" aria-label="鼠标垫入口">
+        <span class="wave" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M8.4 7.6a6.6 6.6 0 0 1 0 8.8"/><path d="M12.1 4.6a11 11 0 0 1 0 14.8"/><path d="M15.8 1.6a15.4 15.4 0 0 1 0 20.8"/></svg></span>
+        <div class="tx">
+          <b>碰一碰鼠标垫右上角</b>
+          <span>免安装直达，无需下载 App</span>
+          <span class="status-badge" id="modeBadge">已接入讯飞星火智能体</span>
+        </div>
+        <span class="hint" aria-hidden="true">一碰，<br>立即进入学习！</span>
+      </section>
 
-    <div class="nfc-hint">
-      <div class="nfc-ripple"><svg stroke-width="2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8.4 7.6a6.6 6.6 0 0 1 0 8.8"/><path d="M12.1 4.6a11 11 0 0 1 0 14.8"/><path d="M15.8 1.6a15.4 15.4 0 0 1 0 20.8"/></svg></div>
-      <div><b>碰一碰鼠标垫右上角</b><span>免安装直达，无需下载 App</span></div>
-    </div>
-    <div class="home-foot">
-      <span class="status-badge" id="modeBadge">尚未对话 · 首次提问时连接讯飞星火</span>
-      <span class="school">NFC × AI 学习辅助应用 · 原型体验</span>
-      <button type="button" class="review-link" onclick="gdEnter()" aria-label="打开评审导览">评审导览</button>
+      <p class="hp-quote"><b>“</b> 持续的小小努力，会让你看见大大的自己。<b>”</b></p>
+      <div class="hp-foot">
+        <button type="button" class="review-link" onclick="gdEnter()" aria-label="打开评审导览">评审导览</button>
+      </div>
+
     </div>
   </section>
 
@@ -1283,7 +1534,7 @@
         <p class="set-hint">只在打开的网址没有带场景参数时生效；垫面 NFC 标签里已经写死了场景的，仍然按标签走。</p>
       </div>
       <p class="set-hint">请遵守学术诚信。关键词提醒不能保证识别所有代写请求；AI 内容仍需核实，作业请独立完成。</p>
-      <p class="set-foot">星智碰 · AI 学习搭档　H5 原型 v5.2 · 2026-10-21<br>显示设置与记录保存在本机浏览器。提问内容与相关对话会发送给代理服务和讯飞星火；抽复习卡会发送所选笔记的前 300 字。学习背景仅在开启附带背景时发送。清除浏览器数据可能丢失本机记录。</p>
+      <p class="set-foot">星智碰 · AI 学习搭档　H5 原型 v5.3 · 2026-10-21<br>显示设置与记录保存在本机浏览器。提问内容与相关对话会发送给代理服务和讯飞星火；抽复习卡会发送所选笔记的前 300 字。学习背景仅在开启附带背景时发送。清除浏览器数据可能丢失本机记录。</p>
     </div>
   </section>
 
@@ -2023,6 +2274,7 @@ function loadLib(){
 }
 
 function renderRecent(){
+  renderToday();
   const el = $("recentCard"); if(!el) return;
   const tag = $("recentTag"), txt = $("recentTxt");
   renderReviewBadge();
@@ -2796,15 +3048,43 @@ function rvDueList(){
 }
 function rvCount(list){ return (list || rvDueList()).length; }
 
-function renderReviewBadge(){
-  const card = $("rvCard"); if(!card) return;
+function hpEsc(v){
+  return String(v == null ? "" : v).replace(/[&<>"]/g, function(c){
+    return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c];
+  });
+}
+function startToday(){
+  if(rvDueList().length){ showReview(); return; }
+  openChat("plan");
+}
+function renderToday(){
+  const num = $("hpDue"), list = $("hpDueList"), arc = $("hpRingArc"), libN = $("hpLibN");
+  if(!num || !list) return;
   const due = rvDueList(), n = due.length;
-  card.hidden = !n;
-  if(!n) return;
-  const t = $("rvTitle"), s = $("rvSub");
-  if(t) t.textContent = "今日回顾 · " + n + " 条";
-  if(s) s.textContent = n === 1 ? "1 张问答卡到期，1 分钟过一遍"
-                                : "按遗忘曲线排的，先做最近的几张";
+  num.textContent = n;
+  if(arc){
+    const C = 2 * Math.PI * 35, ratio = Math.max(0, Math.min(1, n / 6));
+    arc.setAttribute("stroke-dasharray", C.toFixed(1));
+    arc.setAttribute("stroke-dashoffset", (C * (1 - ratio)).toFixed(1));
+  }
+  if(libN) libN.textContent = loadLib().length;
+  if(!n){
+    list.innerHTML = '<li class="hp-empty" style="display:block;width:100%"><b>今天没有到期卡</b>生成复习卡后，到期会出现在这里</li>';
+    return;
+  }
+  const open = 'onclick="showReview()" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();showReview()}"';
+  list.innerHTML = due.slice(0, 2).map(function(c){
+    const meta = (c.due ? "到期 " + c.due : "今天到期") + " · 第 " + c.box + " 盒" + (c.scene ? " · " + c.scene : "");
+    return '<li role="button" tabindex="0" ' + open + '>'
+      + '<span class="ic" style="background:linear-gradient(140deg,#A98CFB,#7A4DE8)">'
+      + '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><rect x="3.4" y="5.4" width="17.2" height="13.2" rx="3.4"/><path d="M3.4 10h17.2"/></svg></span>'
+      + '<span class="tx"><b>' + hpEsc(c.q).slice(0, 26) + '</b><span>' + hpEsc(meta) + '</span></span>'
+      + '<span class="go" aria-hidden="true">›</span></li>';
+  }).join("");
+}
+
+function renderReviewBadge(){
+  renderToday();
 }
 
 function showReview(){
