@@ -1017,6 +1017,27 @@
 .pb-dialog{box-sizing:border-box;width:min(600px,calc(100vw - 24px));max-height:calc(100dvh - 32px);padding:22px;border:1px solid #dce4ed;border-radius:24px;color:#183249;background:#fbfdff;box-shadow:0 24px 80px #19375033;overflow:auto;font-family:inherit}.pb-dialog::backdrop{background:#152c4859;backdrop-filter:blur(5px)}.pb-head{display:flex;align-items:center;justify-content:space-between;gap:12px}.pb-head h2{font-size:21px;margin:0}.pb-head small{font-size:13px;color:#64758b;white-space:nowrap}.pb-head button{font-size:26px;border:0;background:transparent;color:#64758b;cursor:pointer}.pb-intro,.pb-help{font-size:13px;line-height:1.75;color:#64758b}.pb-dialog label{display:block;font-size:14px;font-weight:600}.pb-dialog textarea,.pb-dialog input{box-sizing:border-box;display:block;width:100%;margin:8px 0 14px;padding:11px 12px;border:1px solid #d5e0ec;border-radius:13px;background:white;color:#16324b;font:inherit}.pb-dialog textarea{resize:vertical}.pb-fields{display:grid;grid-template-columns:1fr 1.1fr 1fr;gap:12px}.pb-status{padding:12px;border-radius:14px;background:#edf5ff;color:#20599a;font-size:14px;line-height:1.6}.pb-dialog progress{width:100%;height:11px;accent-color:#0879ed}.pb-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}.pb-actions button,.pb-entry{padding:10px 15px;border:1px solid #d4e0ed;border-radius:999px;background:white;color:#1668bc;font:inherit;font-size:14px;cursor:pointer}.pb-actions .pb-primary{background:#0879ed;border-color:#0879ed;color:white}.pb-actions button:disabled{opacity:.55;cursor:wait}.pb-entry{display:block;margin:12px auto}.pb-dialog pre{font-size:12px;line-height:1.7;white-space:pre-wrap;overflow-wrap:anywhere;max-height:200px;overflow:auto}.pb-dialog [hidden]{display:none!important}.pb-dialog :focus-visible,.pb-entry:focus-visible{outline:3px solid #80baff;outline-offset:3px}@media(max-width:380px){.pb-dialog{padding:16px}.pb-fields{grid-template-columns:1fr 1fr}.pb-fields label:last-child{grid-column:1/-1}}
 
 </style>
+<style>
+  /* 完整计划弹窗：iOS 原生时间控件撑宽三列网格，改为两列 + 时间独占一行 */
+  .pb-dialog{margin:auto}
+  .pb-fields{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .pb-fields>label{min-width:0}
+  .pb-fields input{width:100%;min-width:0}
+  @media (max-width:560px){
+    .pb-dialog{width:calc(100vw - 20px);padding:16px;border-radius:20px;
+      max-height:calc(90vh - 20px);max-height:calc(100dvh - 20px)}
+    .pb-dialog textarea,.pb-dialog input{font-size:16px}
+    .pb-fields{grid-template-columns:1fr 1fr;gap:10px}
+    .pb-fields>label:nth-child(1){order:1}
+    .pb-fields>label:nth-child(3){order:2}
+    .pb-fields>label:nth-child(2){order:3;grid-column:1/-1}
+    .pb-fields>label:last-child{grid-column:auto}
+    .pb-head h2{font-size:19px}
+    .pb-intro,.pb-help{font-size:12.5px;line-height:1.65}
+    .pb-actions button{padding:11px 16px;min-height:44px}
+  }
+
+</style>
 </head>
 <body>
 <div id="guideRoot" hidden>
@@ -1262,7 +1283,7 @@
         <p class="set-hint">只在打开的网址没有带场景参数时生效；垫面 NFC 标签里已经写死了场景的，仍然按标签走。</p>
       </div>
       <p class="set-hint">请遵守学术诚信。关键词提醒不能保证识别所有代写请求；AI 内容仍需核实，作业请独立完成。</p>
-      <p class="set-foot">星智碰 · AI 学习搭档　H5 原型 v4<br>显示设置与记录保存在本机浏览器。提问内容与相关对话会发送给代理服务和讯飞星火；抽复习卡会发送所选笔记的前 300 字。学习背景仅在开启附带背景时发送。清除浏览器数据可能丢失本机记录。</p>
+      <p class="set-foot">星智碰 · AI 学习搭档　H5 原型 v5.1 · 2026-10-21<br>显示设置与记录保存在本机浏览器。提问内容与相关对话会发送给代理服务和讯飞星火；抽复习卡会发送所选笔记的前 300 字。学习背景仅在开启附带背景时发送。清除浏览器数据可能丢失本机记录。</p>
     </div>
   </section>
 
@@ -3040,7 +3061,7 @@ root.PlanBatchUI={install:function(host){
   let running=false,cancelRequested=false;
   const status=t=>{by('pbStatus').textContent=t;};
   function cancel(){if(running){cancelRequested=true;status('已请求取消后续批次。当前请求可能继续，到结束后停止；不会发布本次完整计划。');}}
-  function open(prefill){if(!running){by('pbView').hidden=true;if(prefill&&typeof prefill.goal==='string'){by('pbGoal').value=prefill.goal;by('pbDays').value=prefill.days;by('pbStart').value=prefill.start;by('pbMinutes').value=prefill.minutes;status('已读取提问中的目标与时间，请确认后生成。原问题仍保留在输入框中。');}}if(!dialog.open)dialog.showModal();if(!running)by('pbGoal').focus();}
+  function open(prefill){if(!running){by('pbView').hidden=true;if(prefill&&typeof prefill.goal==='string'){by('pbGoal').value=prefill.goal;by('pbDays').value=prefill.days;by('pbStart').value=prefill.start;by('pbMinutes').value=prefill.minutes;status('已读取提问中的目标与时间，请确认后生成。原问题仍保留在输入框中。');}}if(!dialog.open)dialog.showModal();dialog.scrollTop=0;if(!running)by('pbGoal').focus({preventScroll:true});}
   function entry(parent,label){if(!parent||parent.querySelector('.pb-entry'))return;const b=document.createElement('button');b.type='button';b.className='pb-entry';b.textContent=label;b.onclick=open;parent.appendChild(b);}
   entry(by('planEntrySlot')||by('screen-home'),'需要 1–30 天的完整计划？分批生成并校验 ›');
   const toolbar=by('quickBar');
