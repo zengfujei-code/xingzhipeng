@@ -334,18 +334,14 @@
     transition:transform .18s var(--ease),background .2s var(--ease)}
   .back:active{transform:scale(.94);background:rgba(0,0,0,.07)}
    
-  .chat-head h2{position:relative;padding-left:15px;font-size:var(--t-title);font-weight:700;
+  .chat-head h2{position:relative;font-size:var(--t-title);font-weight:700;
     letter-spacing:-.005em;flex:1;min-width:0;
     overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-   
-  .chat-head h2::before{content:"";position:absolute;left:0;top:50%;margin-top:-3.5px;
-    width:7px;height:7px;border-radius:50%;background:var(--acc);
-    box-shadow:0 0 0 3px rgba(0,113,227,.18)}
-   
-  .chat-head h2.c-plan::before{background:var(--c-plan);box-shadow:0 0 0 3px rgba(0,113,227,.18)}
-  .chat-head h2.c-homework::before{background:var(--c-homework);box-shadow:0 0 0 3px rgba(30,138,74,.18)}
-  .chat-head h2.c-ask::before{background:var(--c-ask);box-shadow:0 0 0 3px rgba(138,52,184,.18)}
-   
+
+  /* 标题左侧场景色圆点已按用户要求移除（所有页面） */
+  .chat-head h2::before{display:none}
+  .chat-head h2.c-plan::before,.chat-head h2.c-homework::before,.chat-head h2.c-ask::before{display:none}
+
   #screen-lib .chat-head h2::before{display:none}
   .chat-head .lib-btn{border:1px solid var(--line);background:var(--card);border-radius:var(--r-pill);font-size:var(--t-small);
     font-weight:600;color:#48484A;padding:7px 12px;cursor:pointer;flex:none;white-space:nowrap;box-shadow:var(--sh-1);
@@ -389,6 +385,11 @@
   .md-code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
     font-size:.92em;padding:1px 5px;border-radius:6px;
     background:rgba(0,113,227,.09);color:#0B5BB5;white-space:nowrap}
+  /* LaTeX 公式（KaTeX）：行内随文流、块级居中，长公式横向滚动不撑破布局 */
+  .kmath{display:inline-block;max-width:100%;overflow-x:auto;vertical-align:middle;padding:1px 0}
+  .kmath.kmath-block{display:block;text-align:center;margin:7px 0;padding:3px 2px}
+  .kmath .katex{font-size:1.04em}
+  .kmath .katex-display{margin:0}
   .msg.ai .md-p.md-gap{margin-top:10px}      
   .msg.ai .md-h{margin:12px 0 0;font-size:var(--t-lead);font-weight:700;color:var(--ink);
     letter-spacing:.005em;line-height:1.5}
@@ -1236,7 +1237,6 @@
     color:#1E4E8C;font-size:21px;font-weight:700;
     box-shadow:0 8px 16px -10px rgba(30,80,150,.45)}
   .chat-head h2{font-size:20px;font-weight:800;color:#0C2148;letter-spacing:-.012em}
-  .chat-head h2::before{width:8px;height:8px;margin-top:-4px}
   .chat-head .mini,.chat-head .lib-btn{min-height:38px;padding:0 14px;
     background:rgba(255,255,255,.92);border:1px solid rgba(18,107,242,.10);
     color:#3B5680;font-size:13px;font-weight:700;
@@ -2662,6 +2662,59 @@ function mdInline(s){
   return s.replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>")
           .replace(/`([^`]+)`/g, '<code class="md-code">$1</code>');
 }
+/* ---- 数学公式（LaTeX）：先保护代码段，再把公式替换为占位符交给 mdLite 原样输出，
+        渲染后由 KaTeX（CDN 懒加载）把占位符替换为排版公式；加载失败静默回退原文 ---- */
+let kMathMap=null, kKatexLoading=false;
+function kMathTokenize(text){
+  kMathMap={};
+  const code=[];
+  let t=String(text).replace(/```[\s\S]*?```|`[^`\n]+`/g,function(m){ code.push(m); return "%%MCode"+(code.length-1)+"%%"; });
+  const tok=function(tex,block){ const k="%%MK"+Object.keys(kMathMap).length+"%%"; kMathMap[k]={tex:tex,block:block}; return k; };
+  t=t.replace(/\\\[([\s\S]+?)\\\]/g,function(_,m){ return tok(m.trim(),true); })
+     .replace(/\$\$([\s\S]+?)\$\$/g,function(_,m){ return tok(m.trim(),true); })
+     .replace(/\\\(([\s\S]+?)\\\)/g,function(_,m){ return tok(m.trim(),false); })
+     .replace(/\$([^\s$][^$\n]*?)\$/g,function(_,m){ return tok(m.trim(),false); });
+  t=t.replace(/%%MCode(\d+)%%/g,function(_,i){ return code[+i]; });
+  return t;
+}
+function kMathHydrate(root){
+  if(!root||!kMathMap) return;
+  const html=root.innerHTML;
+  if(html.indexOf("%%MK")<0) return;
+  root.innerHTML=html.replace(/%%MK(\d+)%%/g,function(_,i){
+    const it=kMathMap["%%MK"+i+"%%"]; if(!it) return "";
+    const cls=it.block?"kmath kmath-block":"kmath";
+    return '<span class="'+cls+'" data-tex="'+esc(it.tex)+'">'+esc(it.tex)+'</span>';
+  });
+  kMathPaint(root);
+}
+function kMathPaint(root){
+  if(typeof window.katex==="undefined"){ kKatexLoad(); return; }
+  root.querySelectorAll(".kmath[data-tex]").forEach(function(sp){
+    if(sp._kx) return; sp._kx=1;
+    try{ window.katex.render(sp.getAttribute("data-tex"), sp,
+      {throwOnError:false, displayMode:sp.classList.contains("kmath-block")}); }
+    catch(e){ /* 保留原文 */ }
+  });
+}
+function kKatexLoad(){
+  if(kKatexLoading||typeof window.katex!=="undefined") { if(typeof window.katex!=="undefined") document.querySelectorAll(".msg.ai .kmath[data-tex]").forEach(kMathPaintOne); return; }
+  kKatexLoading=true;
+  const css=document.createElement("link"); css.rel="stylesheet";
+  css.href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css";
+  document.head.appendChild(css);
+  const s=document.createElement("script");
+  s.src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js";
+  s.onload=function(){ kKatexLoading=false;
+    document.querySelectorAll(".msg.ai .kmath[data-tex]").forEach(kMathPaintOne); };
+  s.onerror=function(){ kKatexLoading=false; };
+  document.head.appendChild(s);
+}
+function kMathPaintOne(sp){
+  if(sp._kx) return; sp._kx=1;
+  try{ window.katex.render(sp.getAttribute("data-tex"), sp,
+    {throwOnError:false, displayMode:sp.classList.contains("kmath-block")}); }catch(e){}
+}
 function mdLite(text){
   const lines = esc(text).split("\n");
   const out = [];
@@ -2889,10 +2942,11 @@ function addMsg(role, text, opts){
 
   div._text = String(text==null?"":text);
 
-  let html = opts.raw ? div._text : (role === "ai" ? mdLite(div._text) : esc(div._text));
+  let html = opts.raw ? div._text : (role === "ai" ? mdLite(kMathTokenize(div._text)) : esc(div._text));
 
   div._acts = actsHTML(opts.savable);
   div.innerHTML = html + div._acts;
+  if(role === "ai" && !opts.raw) kMathHydrate(div);
   wrap.appendChild(div); wrap.scrollTop = wrap.scrollHeight;
   return div;
 }
@@ -2912,7 +2966,8 @@ function fillStreamMsg(div, text, savable){
   if(!div || !div.isConnected) return;
   div._text = String(text==null?"":text);
   if(savable) div._acts = actsHTML(true);
-  div.innerHTML = mdLite(div._text) + (div._acts || "");
+  div.innerHTML = mdLite(kMathTokenize(div._text)) + (div._acts || "");
+  kMathHydrate(div);
   const wrap = $("msgWrap"); if(wrap) wrap.scrollTop = wrap.scrollHeight;
 }
 
@@ -2920,7 +2975,8 @@ function typeIn(div, fullText){
   if(!div) return;
 
   const paint = function(t){
-    div.innerHTML = mdLite(t) + (div._acts || "");
+    div.innerHTML = mdLite(kMathTokenize(t)) + (div._acts || "");
+    kMathHydrate(div);
     const wrap = $("msgWrap"); if(wrap) wrap.scrollTop = wrap.scrollHeight;
   };
 
@@ -4360,17 +4416,79 @@ function pomoDoneNext(kind){
 
 /* ---- 任务联动 ---- */
 let pomoPendingTask=null;
+/* 从「学习计划」最近一次 AI 回答提取任务条目：复用 planParse 结构化解析，取前 8 条 */
+function pomoPlanTasks(){
+  const h=store.get("hist_plan",[]);
+  for(let i=h.length-1;i>=0;i--){
+    const a=h[i]&&h[i].a; if(!a) continue;
+    const p=planParse(a);
+    if(!p.events||!p.events.length) continue;
+    const out=[]; const seen={};
+    for(const ev of p.events){
+      let name=String(ev.text||"").replace(/[#*`>|_]/g,"").replace(/\s+/g," ").trim();
+      if(!name) continue;
+      name=name.replace(/\s*\d{1,2}:\d{2}(?:\s*[-–~至]\s*\d{1,2}:\d{2})?\s*$/,"").trim(); /* 去掉时间段尾巴 */
+      if(!name) continue;
+      if(p.mode==="seq"&&ev.seq) name="第"+ev.seq+"天 · "+name;
+      else if(p.mode==="week"&&ev.day) name="周"+"日一二三四五六"[ev.day%7]+" · "+name;
+      name=name.slice(0,20);
+      if(seen[name]) continue; seen[name]=1; out.push(name);
+      if(out.length>=8) break;
+    }
+    if(out.length) return out;
+  }
+  return [];
+}
+/* 从「作业管家」最近一次 AI 回答提取步骤/清单行 */
+function pomoHwTasks(){
+  const h=store.get("hist_homework",[]);
+  for(let i=h.length-1;i>=0;i--){
+    const a=h[i]&&h[i].a; if(!a) continue;
+    const out=[]; const seen={};
+    for(const line of String(a).split("\n")){
+      const li=line.match(/^\s{0,3}(?:[-*•][ \t]*|(?:\d+)[.、)]\s*|[①-⑳]\s*)(\S.*)$/);
+      if(!li) continue;
+      let name=li[1].replace(/\*\*/g,"").replace(/`/g,"").replace(/[#>|_]/g,"").replace(/\s+/g," ").trim().slice(0,20);
+      if(!name) continue;
+      if(seen[name]) continue; seen[name]=1; out.push(name);
+      if(out.length>=8) break;
+    }
+    if(out.length) return out;
+  }
+  return [];
+}
+function pomoTaskGroup(title,items,type){
+  if(!items||!items.length) return "";
+  return '<p class="ps-cap">'+esc(title)+'</p>'
+    +items.map(function(name,i){
+      return '<button type="button" class="ps-item" data-t="'+type+'" data-i="'+i+'"><b>'+hpEsc(name)+'</b><span>来源：'+esc(title)+'</span></button>';
+    }).join("");
+}
 function pomoOpenTasks(){
   const list=$("pomoTaskList"); if(!list) return;
   const lib=loadLib().slice(-10).reverse();
-  list.innerHTML = lib.length
-    ? lib.map(function(x,i){
-        const name=String(x.content||"").replace(/[#*`>|_]/g,"").replace(/\s+/g," ").trim().slice(0,20)||"学习库笔记";
-        return '<button type="button" class="ps-item" data-i="'+i+'"><b>'+hpEsc(name)+'</b><span>来源：学习库 · '+(x.t||"").slice(0,10)+'</span></button>';
-      }).join("")
-    : '<p class="ps-empty">学习库还是空的；可在上方输入临时任务，或先去对话里保存内容。</p>';
+  const libItems=lib.map(function(x,i){
+    const name=String(x.content||"").replace(/[#*`>|_]/g,"").replace(/\s+/g," ").trim().slice(0,20)||"学习库笔记";
+    return {name:name,meta:"学习库 · "+(x.t||"").slice(0,10)};
+  });
+  let h="";
+  h+=pomoTaskGroup("来自学习计划",pomoPlanTasks(),"plan");
+  h+=pomoTaskGroup("来自作业管家",pomoHwTasks(),"hw");
+  if(libItems.length){
+    h+='<p class="ps-cap">来自学习库</p>'
+      +libItems.map(function(x,i){
+        return '<button type="button" class="ps-item" data-t="lib" data-i="'+i+'"><b>'+hpEsc(x.name)+'</b><span>来源：'+esc(x.meta)+'</span></button>';
+      }).join("");
+  }
+  if(!h) h='<p class="ps-empty">暂无可选任务：可在对话里生成学习计划或作业拆解，或保存内容到学习库；也可在上方输入临时任务。</p>';
+  list.innerHTML=h;
   list.querySelectorAll(".ps-item").forEach(function(btn){
-    btn.onclick=function(){ pomoSetTask({type:"lib",name:btn.querySelector("b").textContent}); };
+    btn.onclick=function(){
+      const t=btn.dataset.t, i=+btn.dataset.i;
+      if(t==="plan") pomoSetTask({type:"plan",name:btn.querySelector("b").textContent});
+      else if(t==="hw") pomoSetTask({type:"hw",name:btn.querySelector("b").textContent});
+      else pomoSetTask({type:"lib",name:btn.querySelector("b").textContent});
+    };
   });
   pomoOpenSheet("pomoTaskSheet");
 }
