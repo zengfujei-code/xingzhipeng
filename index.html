@@ -764,6 +764,19 @@
     animation-duration:.001ms !important;animation-iteration-count:1 !important;
     transition-duration:.001ms !important}
 
+  /* 备份恢复预览 */
+  #bkSheet .bk-prev{margin:2px 0 4px}
+  #bkSheet .bk-when{margin:0 0 10px;font-size:var(--t-small);color:var(--sub);line-height:1.5}
+  #bkSheet .bk-rows{border:1px solid rgba(18,107,242,.10);border-radius:var(--r-sm);
+    background:rgba(246,250,255,.9);padding:4px 10px}
+  #bkSheet .bk-row{display:flex;align-items:center;justify-content:space-between;gap:10px;
+    padding:7px 0;border-bottom:1px solid rgba(18,107,242,.07);font-size:var(--t-small)}
+  #bkSheet .bk-row:last-child{border-bottom:0}
+  #bkSheet .bk-row span{color:var(--sub)}
+  #bkSheet .bk-row b{color:var(--ink);font-weight:700;text-align:right}
+  #bkSheet .bk-sum{margin:10px 0 2px;font-size:var(--t-small);color:var(--sub);line-height:1.6}
+  #bkSheet .bk-sum b{color:var(--ink)}
+
   /* 小字号档（与既有 fs-large 对称） */
   html.fs-small{
     --t-display:22px; --t-title:17px; --t-lead:15px;
@@ -3477,12 +3490,22 @@
         <p class="set-hint" id="setDataSize">本机占用统计中…</p>
       </div>
       <div class="set-group">
-        <h3>已有的导出能力</h3>
-        <p class="set-hint">学习计划可在计划页导出 .ics 日历文件；专注记录可在番茄钟「今日专注记录」页导出 JSON；知识地图可导出 PNG 图片。以上导出都在对应功能页内操作。</p>
+        <h3>备份与恢复</h3>
+        <p class="set-hint">导出一个 JSON 文件，包含本机全部学习数据；恢复时只合并不覆盖，重复记录会被跳过，冲突按更新时间判断，不会清空现有数据。</p>
+        <div class="pills">
+          <button class="pill" type="button" onclick="bkExport()">导出全部学习数据</button>
+          <button class="pill" type="button" onclick="bkPick()">从备份恢复</button>
+        </div>
+        <input type="file" id="bkFile" accept="application/json,.json" hidden onchange="bkFileChosen(this)">
+        <p class="set-hint" id="bkHint">建议先导出一份当前备份，再做恢复操作。</p>
+      </div>
+      <div class="set-group">
+        <h3>其他导出入口</h3>
+        <p class="set-hint">学习计划可在计划页导出 .ics 日历；专注记录可在番茄钟「今日专注记录」页导出 JSON；知识地图可导出 PNG 图片。</p>
       </div>
       <div class="set-group">
         <h3>清理前请注意</h3>
-        <p class="set-hint">清理浏览器数据、换设备或无痕模式都会让本机记录消失，且目前没有云端备份可恢复。清理前建议先用上面的导出功能留存重要内容。</p>
+        <p class="set-hint">清理浏览器数据、换设备或无痕模式都会让本机记录消失。清理前请先导出备份，恢复时用上面的「从备份恢复」。</p>
       </div>
       <div class="set-group">
         <h3>数据会发给谁</h3>
@@ -3490,6 +3513,21 @@
       </div>
     </div>
   </section>
+
+  <!-- 备份恢复确认弹层 -->
+  <div class="sheet" id="bkSheet" aria-hidden="true" inert onclick="bkBackdrop(event,this)">
+    <div class="sheet-card" role="dialog" aria-modal="true" aria-labelledby="bkTitle" tabindex="-1">
+      <div class="sheet-head">
+        <h3 id="bkTitle">确认恢复备份</h3>
+        <button type="button" class="sheet-close" onclick="bkClose()" aria-label="关闭">×</button>
+      </div>
+      <div class="bk-prev" id="bkPreview"></div>
+      <div class="pills">
+        <button class="pill" type="button" onclick="bkClose()">取消</button>
+        <button class="pill on" type="button" id="bkGo" onclick="bkApply()">确认合并导入</button>
+      </div>
+    </div>
+  </div>
 
   <!-- 设置 · 关于 -->
   <section class="screen" id="screen-set-about">
@@ -4127,6 +4165,13 @@ function addNotice(text, retry){
 
 function fetchWithTimeout(url, opts, ms){
   const limit = ms || CONFIG.timeoutMs;
+  /* 前端请求体兜底：业务实际 <10KB，超过 64KB 直接拦截（云函数另有 256KB 上限）。
+     这不是身份认证，只是防止异常长文本/误构造请求把额度打满。 */
+  const body = (opts && typeof opts.body === "string") ? opts.body : "";
+  if(body.length > 65536){
+    const e = new Error("请求内容过大（超过 64KB），已在前端拦截"); e.name = "PayloadTooLarge";
+    return Promise.reject(e);
+  }
   const ctl = typeof AbortController !== "undefined" ? new AbortController() : null;
   let tid, released = false;
   const release = function(){ if(!released){ released = true; clearTimeout(tid); } };
@@ -4152,6 +4197,25 @@ function fetchWithTimeout(url, opts, ms){
 function asciiJSON(o){
   return JSON.stringify(o).replace(/[\u007f-\uffff]/g,
     c=>"\\u"+c.charCodeAt(0).toString(16).padStart(4,"0"));
+}
+
+/* 前端 AI 调用节流（只防连点/重复消耗，不构成鉴权）：
+   同一 key 在窗口内只放行一次；额度与安全边界仍在服务端。 */
+const aiCool = {};
+function aiThrottled(key, ms){
+  const now = Date.now();
+  if(aiCool[key] && now - aiCool[key] < ms) return true;
+  aiCool[key] = now;
+  return false;
+}
+/* 网络层错误统一为用户可读文案，避免把内网地址/端口/底层堆栈暴露到界面 */
+function aiErrText(e){
+  const name = String((e && e.name) || "");
+  const msg = String((e && e.message) || "");
+  if(name === "TimeoutError" || /timeout/i.test(msg)) return "AI 响应超时，请稍后重试";
+  if(name === "PayloadTooLarge") return "请求内容过大，已取消发送";
+  if(name === "AbortError") return "请求已取消";
+  return "没能连上 AI 服务，请检查网络后重试";
 }
 
 let warmFired = false;
@@ -5830,6 +5894,318 @@ function goSetPage(id){
   if(id === "screen-set-data") renderSetData();
   show(id);
 }
+
+/* ================= 全量学习数据备份与恢复 =================
+   导出：白名单业务键 → {app,kind,version,exportedAt,counts,data} 标准 JSON
+   导入：校验 → 预览 → 内存合并去重 → 快照 → 写入 → 读回校验（失败回滚）
+   合并规则：有 id 按 id；番茄钟按 sid||id；无 id 的学习库/复习卡/历史按内容指纹
+   上限沿用现有策略：任务/计划/导图保留最新（头部），学习库/复习卡裁最旧（尾部），
+   专注记录用 pomoSaveRecList（保留 focusPending） */
+const BK_APP="xingzhipeng", BK_KIND="learning-data-backup", BK_VER=1, BK_MAX_BYTES=20*1024*1024;
+const BK_KEYS=["library","rv","xzMaps","xzMapCur","xzTasks","xzPlans","xzPomo","xzPomoSet","settings","hist_plan","hist_homework","hist_ask"];
+let bkPending=null;
+
+function bkRaw(k){
+  try{ const s=localStorage.getItem(k); return s?JSON.parse(s):null; }catch(e){ return null; }
+}
+function bkCounts(){
+  const c={};
+  BK_KEYS.forEach(function(k){
+    const v=bkRaw(k);
+    if(Array.isArray(v)) c[k]=v.length;
+    else if(v && typeof v==="object") c[k]=1;
+  });
+  return c;
+}
+function bkExport(){
+  try{
+    const data={};
+    BK_KEYS.forEach(function(k){ const v=bkRaw(k); if(v!==null) data[k]=v; });
+    const obj={app:BK_APP,kind:BK_KIND,version:BK_VER,
+      exportedAt:new Date().toISOString(),counts:bkCounts(),data:data};
+    const json=JSON.stringify(obj);
+    if(json.length*2>BK_MAX_BYTES){ toast("本机数据超过 20MB，无法导出；可先清理学习库里的大图片",4200); return; }
+    const blob=new Blob([json],{type:"application/json"});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement("a");
+    a.href=url; a.download="xingzhipeng-backup-"+rvToday()+".json";
+    document.body.appendChild(a); a.click();
+    setTimeout(function(){ URL.revokeObjectURL(url); a.remove(); },600);
+    const kb=Math.max(1,Math.round(json.length*2/1024));
+    toast("已导出备份（约 "+kb+" KB）",2800);
+    const hint=$("bkHint"); if(hint) hint.textContent="上次导出：刚刚，约 "+kb+" KB。";
+  }catch(e){
+    toast("导出失败："+((e&&e.message)||"本机存储异常")+"；未生成文件",4200);
+  }
+}
+function bkPick(){
+  const f=$("bkFile"); if(!f) return;
+  f.value=""; f.click();
+}
+function bkValidate(obj){
+  if(!obj || typeof obj!=="object" || Array.isArray(obj)) return "这不是有效的备份文件";
+  if(obj.app!==BK_APP || obj.kind!==BK_KIND) return "备份标识不匹配，可能不是星智碰导出的文件";
+  if(!Number.isInteger(obj.version)) return "备份缺少版本号，已拒绝";
+  if(obj.version!==BK_VER) return "不支持的备份版本 v"+obj.version+"（当前支持 v"+BK_VER+"）";
+  if(!obj.data || typeof obj.data!=="object" || Array.isArray(obj.data)) return "备份数据结构异常";
+  const lim={xzTasks:6000,xzPlans:800,xzPomo:9000,library:2000,rv:2000,xzMaps:400,
+    hist_plan:200,hist_homework:200,hist_ask:200};
+  for(const k in lim){
+    const v=obj.data[k];
+    if(v===undefined) continue;
+    if(!Array.isArray(v)) return "备份中 "+k+" 结构异常";
+    if(v.length>lim[k]) return "备份中 "+k+" 数量异常（"+v.length+"），已拒绝";
+  }
+  return "";
+}
+function bkFingerprint(prefix,parts){
+  return prefix+":"+parts.map(function(x){ return String(x==null?"":x); }).join("\u0001").slice(0,240);
+}
+/* 纯内存合并：不写存储。返回 {data, stat:{add,dup,conf,rows:[{name,add,dup,conf}]}} */
+function bkPlanMerge(d){
+  const out={}, rows=[];
+  const addRow=function(name,a,dup,conf){ rows.push({name:name,add:a,dup:dup,conf:conf}); };
+
+  /* --- 计划（先合并，供任务关联校验） --- */
+  const curPlans=xzPlans(), planMap={}, planOrder=[];
+  curPlans.forEach(function(p){ planMap[p.id]=p; planOrder.push(p.id); });
+  let pa=0,pd=0,pc=0;
+  (d.xzPlans||[]).forEach(function(raw){
+    if(!raw || typeof raw!=="object" || !raw.id) return;
+    const p=xzNormPlan(raw); if(!p.name) return;
+    const ex=planMap[p.id];
+    if(!ex){ planMap[p.id]=p; planOrder.push(p.id); pa++; }
+    else if((p.updatedAt||0)>(ex.updatedAt||0)){ planMap[p.id]=p; pc++; }
+    else pd++;
+  });
+  let plans=planOrder.map(function(id){ return planMap[id]; });
+  while(plans.length>XZ_PLAN_MAX) plans.pop(); /* 保留现有（头部）优先 */
+  const planIds={}; plans.forEach(function(p){ planIds[p.id]=1; });
+
+  /* --- 任务 --- */
+  const curTasks=xzTasks(), taskMap={}, taskOrder=[];
+  curTasks.forEach(function(t){ taskMap[t.id]=t; taskOrder.push(t.id); });
+  let ta=0,td=0,tc=0;
+  (d.xzTasks||[]).forEach(function(raw){
+    if(!raw || typeof raw!=="object" || !raw.id) return;
+    const t=xzNormTask(raw); if(!t.title) return;
+    if(t.planId && !planIds[t.planId]) t.planId=""; /* 计划不存在则不建立孤立关联 */
+    const ex=taskMap[t.id];
+    if(!ex){ taskMap[t.id]=t; taskOrder.push(t.id); ta++; }
+    else if((t.updatedAt||0)>(ex.updatedAt||0)){ taskMap[t.id]=t; tc++; }
+    else td++;
+  });
+  let tasks=taskOrder.map(function(id){ return taskMap[id]; });
+  /* 任务顺序为新在前（xzTaskPut 用 unshift）：超限删尾部最旧，绝不能删头部最新 */
+  while(tasks.length>XZ_TASK_MAX) tasks.pop();
+  const taskIds={}; tasks.forEach(function(t){ taskIds[t.id]=1; });
+  plans.forEach(function(p){
+    (p.days||[]).forEach(function(day){
+      day.taskIds=(day.taskIds||[]).filter(function(id){ return !!taskIds[id]; });
+    });
+    p.days=(p.days||[]).filter(function(day){ return day && day.taskIds && day.taskIds.length; });
+  });
+
+  /* --- 专注记录（sid||id 去重，保留 focusPending） --- */
+  const curPomo=pomoLoadRec(), pomoSeen={}, pomoList=curPomo.slice();
+  curPomo.forEach(function(r){ const k=r.sid||r.id; if(k) pomoSeen[k]=1; });
+  let ma=0,md=0;
+  (d.xzPomo||[]).forEach(function(raw){
+    if(!raw || typeof raw!=="object" || !(Number(raw.m)>0)) return;
+    const k=raw.sid||raw.id; if(!k || pomoSeen[k]){ md++; return; }
+    pomoSeen[k]=1; pomoList.push(raw); ma++;
+  });
+
+  /* --- 学习库（有 id 按 id，无 id 按内容指纹） --- */
+  const curLib=(bkRaw("library")||[]).filter(function(x){ return x && typeof x==="object"; });
+  const libSeen={}, libList=curLib.slice();
+  curLib.forEach(function(x){ libSeen[x.id?("i:"+x.id):bkFingerprint("c",[x.scene,x.content])]=1; });
+  let la=0,ld=0;
+  (d.library||[]).forEach(function(x){
+    if(!x || typeof x!=="object") return;
+    const k=x.id?("i:"+x.id):bkFingerprint("c",[x.scene,x.content]);
+    if(libSeen[k]){ ld++; return; }
+    libSeen[k]=1; libList.push(x); la++;
+  });
+  while(libList.length>LIB_MAX) libList.pop();
+
+  /* --- 复习卡（id 或 q+a 指纹） --- */
+  const curRv=(bkRaw("rv")||[]).filter(function(x){ return x && typeof x.q==="string"; });
+  const rvSeen={}, rvList=curRv.slice();
+  curRv.forEach(function(x){ rvSeen[x.id?("i:"+x.id):bkFingerprint("qa",[x.q,x.a])]=1; });
+  let ra=0,rd=0;
+  (d.rv||[]).forEach(function(x){
+    if(!x || typeof x.q!=="string" || !x.q.trim() || typeof x.a!=="string" || !x.a.trim()) return;
+    const k=x.id?("i:"+x.id):bkFingerprint("qa",[x.q,x.a]);
+    if(rvSeen[k]){ rd++; return; }
+    rvSeen[k]=1; rvList.push(x); ra++;
+  });
+  while(rvList.length>RV_MAX) rvList.pop();
+
+  /* --- 知识地图（id 去重，冲突取 updated 新者） --- */
+  const curMaps=kmLoadList(), mapSeen={}, mapList=curMaps.slice();
+  curMaps.forEach(function(m){ mapSeen[m.id]=1; });
+  let ka=0,kd=0,kc=0;
+  (d.xzMaps||[]).forEach(function(m){
+    if(!m || typeof m!=="object" || !m.id || !m.root) return;
+    if(mapSeen[m.id]){ kd++; return; }
+    mapSeen[m.id]=1; mapList.push(m); ka++;
+  });
+  while(mapList.length>KM_MAPS_MAX) mapList.pop();
+
+  /* --- 单对象：当前值优先，只补缺失键 --- */
+  const curSet=bkRaw("settings")||{};
+  const mergedSettings=Object.assign({}, (d.settings&&typeof d.settings==="object")?d.settings:{}, curSet);
+  const curPomoSet=bkRaw("xzPomoSet")||{};
+  const mergedPomoSet=Object.assign({}, (d.xzPomoSet&&typeof d.xzPomoSet==="object")?d.xzPomoSet:{}, curPomoSet);
+
+  /* --- 当前导图：当前已存在则不覆盖 --- */
+  const curMapCur=kmCurLoad();
+  const mergedMapCur=curMapCur||((d.xzMapCur&&d.xzMapCur.root)?d.xzMapCur:null);
+
+  /* --- 对话历史（q+a 指纹，保留最近 12 条） --- */
+  const histOut={};
+  ["hist_plan","hist_homework","hist_ask"].forEach(function(k){
+    const cur=(bkRaw(k)||[]).filter(function(x){ return x && typeof x.q==="string"; });
+    const seen={}; const list=cur.slice();
+    cur.forEach(function(x){ seen[bkFingerprint("qa",[x.q,x.a])]=1; });
+    let a=0,dup=0;
+    (d[k]||[]).forEach(function(x){
+      if(!x || typeof x.q!=="string") return;
+      const fp=bkFingerprint("qa",[x.q,x.a]);
+      if(seen[fp]){ dup++; return; }
+      seen[fp]=1; list.push(x); a++;
+    });
+    histOut[k]=list.slice(-HIST_MAX);
+    addRow(k===("hist_plan")?"计划对话":k===("hist_homework")?"作业对话":"问答历史",a,dup,0);
+  });
+
+  out.xzTasks=tasks; out.xzPlans=plans; out.xzPomo=pomoList;
+  out.library=libList; out.rv=rvList; out.xzMaps=mapList;
+  out.settings=mergedSettings; out.xzPomoSet=mergedPomoSet;
+  out.xzMapCur=mergedMapCur;
+  out.hist_plan=histOut.hist_plan; out.hist_homework=histOut.hist_homework; out.hist_ask=histOut.hist_ask;
+
+  addRow("学习计划",pa,pd,pc);
+  addRow("任务",ta,td,tc);
+  addRow("专注记录",ma,md,0);
+  addRow("学习库",la,ld,0);
+  addRow("复习卡",ra,rd,0);
+  addRow("知识地图",ka,kd,kc);
+
+  const stat={add:pa+ta+ma+la+ra+ka, dup:pd+td+md+ld+rd+kd, conf:pc+tc+kc, rows:rows};
+  return {data:out, stat:stat};
+}
+function bkPreviewHTML(payload, stat){
+  const when=(function(){
+    try{ return new Date(payload.exportedAt).toLocaleString("zh-CN"); }catch(e){ return "未知时间"; }
+  })();
+  let h='<p class="bk-when">备份导出于 '+esc(when)+' · 格式 v'+esc(String(payload.version))+'</p>';
+  h+='<div class="bk-rows">';
+  stat.rows.forEach(function(r){
+    if(!r.add && !r.dup && !r.conf) return;
+    const parts=[];
+    if(r.add) parts.push("新增 "+r.add);
+    if(r.conf) parts.push("覆盖 "+r.conf);
+    if(r.dup) parts.push("跳过重复 "+r.dup);
+    h+='<div class="bk-row"><span>'+esc(r.name)+'</span><b>'+esc(parts.join(" · "))+'</b></div>';
+  });
+  h+='</div>';
+  h+='<p class="bk-sum">合计：新增 <b>'+stat.add+'</b> 条，覆盖较新 <b>'+stat.conf+'</b> 条，跳过重复 <b>'+stat.dup+'</b> 条；现有数据不会被清空。</p>';
+  return h;
+}
+function bkFileChosen(inp){
+  const f=inp && inp.files && inp.files[0];
+  if(!f) return;
+  if(f.size>BK_MAX_BYTES){ toast("文件超过 20MB，已拒绝读取；请确认是否为星智碰备份",4200); return; }
+  const fr=new FileReader();
+  fr.onload=function(){
+    let obj=null;
+    try{ obj=JSON.parse(String(fr.result||"")); }
+    catch(e){ toast("文件不是有效 JSON，未做任何修改",4000); return; }
+    const err=bkValidate(obj);
+    if(err){ toast(err+"；未做任何修改",4600); return; }
+    let merged=null;
+    try{ merged=bkPlanMerge(obj.data); }
+    catch(e){ toast("备份内容无法合并："+((e&&e.message)||"未知错误")+"；未做任何修改",4600); return; }
+    bkPending={payload:obj, merge:merged};
+    const pv=$("bkPreview"); if(pv) pv.innerHTML=bkPreviewHTML(obj, merged.stat);
+    pomoOpenSheet("bkSheet");
+  };
+  fr.onerror=function(){ toast("文件读取失败，未做任何修改",3600); };
+  fr.readAsText(f);
+}
+function bkClose(){ bkPending=null; pomoCloseSheet("bkSheet"); }
+function bkBackdrop(e,el){ if(e && e.target===el) bkClose(); }
+function bkVerify(exp){
+  const t=xzTasks(), p=xzPlans(), r=pomoLoadRec();
+  if(t.length!==exp.xzTasks.length) return "任务数量校验不一致";
+  if(p.length!==exp.xzPlans.length) return "计划数量校验不一致";
+  if(r.length!==exp.xzPomo.length) return "专注记录数量校验不一致";
+  const pset={}; p.forEach(function(x){ pset[x.id]=1; });
+  for(let i=0;i<t.length;i++){
+    if(t[i].planId && !pset[t[i].planId]) return "任务与计划关联校验不一致";
+  }
+  const sid={};
+  for(let i=0;i<r.length;i++){
+    const k=r[i].sid||r[i].id;
+    if(k){ if(sid[k]) return "专注记录存在重复会话"; sid[k]=1; }
+  }
+  if((bkRaw("library")||[]).length!==exp.library.length) return "学习库数量校验不一致";
+  const curCur=kmCurLoad(), expCur=exp.xzMapCur;
+  if((!!curCur)!==(!!expCur)) return "当前导图校验不一致";
+  return "";
+}
+function bkApply(){
+  if(!bkPending){ toast("没有待导入的备份"); return; }
+  const m=bkPending.merge.data, stat=bkPending.merge.stat;
+  const snap={};
+  BK_KEYS.forEach(function(k){ snap[k]=localStorage.getItem(k); });
+  const rollback=function(){
+    let ok=true;
+    BK_KEYS.forEach(function(k){
+      try{
+        if(snap[k]===null) localStorage.removeItem(k);
+        else localStorage.setItem(k,snap[k]);
+      }catch(e){ ok=false; }
+    });
+    return ok;
+  };
+  let step="任务与计划";
+  try{
+    if(!xzCommitTaskPlans(m.xzTasks, m.xzPlans)) throw new Error("任务与计划写入失败");
+    step="专注记录";
+    if(!pomoSaveRecList(m.xzPomo)) throw new Error("专注记录写入失败");
+    step="学习库";
+    if(!store.set("library", m.library)) throw new Error("学习库写入失败");
+    step="复习卡";
+    if(!store.set("rv", m.rv)) throw new Error("复习卡写入失败");
+    step="知识地图";
+    if(!store.set("xzMaps", m.xzMaps)) throw new Error("知识地图写入失败");
+    if(m.xzMapCur){ if(!store.set("xzMapCur", m.xzMapCur)) throw new Error("当前导图写入失败"); }
+    step="设置";
+    if(!store.set("settings", m.settings)) throw new Error("设置写入失败");
+    if(!store.set("xzPomoSet", m.xzPomoSet)) throw new Error("番茄钟设置写入失败");
+    step="对话历史";
+    ["hist_plan","hist_homework","hist_ask"].forEach(function(k){
+      if(!store.set(k, m[k])) throw new Error("对话历史写入失败");
+    });
+    step="读回校验";
+    const bad=bkVerify(m);
+    if(bad) throw new Error(bad);
+
+    const msg="导入完成：新增 "+stat.add+" 条，覆盖较新 "+stat.conf+" 条，跳过重复 "+stat.dup+" 条";
+    bkPending=null; pomoCloseSheet("bkSheet");
+    renderSetData();
+    if(typeof renderRecent==="function") renderRecent();
+    toast(msg, 4200);
+  }catch(e){
+    const ok=rollback();
+    bkPending=null; pomoCloseSheet("bkSheet");
+    toast("导入失败（"+step+"）："+((e&&e.message)||"未知错误")+"；"
+      +(ok?"已恢复到导入前状态":"恢复不完整，请用之前导出的备份恢复"), 6000);
+  }
+}
 /* 数据与隐私：按 localStorage 实际文本长度估算占用（UTF-16 → 字符数×2），只读不改 */
 function renderSetData(){
   const el = $("setDataSize"); if(!el) return;
@@ -7231,8 +7607,9 @@ function pomoSuggestRefresh(){
 }
 function pomoAiAnother(){
   pomoSuggestRefresh();
-  /* AI 接口可用时后台刷新：失败静默保留本地建议 */
-  if(CONFIG.apiProxy){
+  /* AI 接口可用时后台刷新：失败静默保留本地建议。
+     节流 3 秒：连点只换本地建议，不重复请求，避免额度被连点打满。 */
+  if(CONFIG.apiProxy && !aiThrottled("pomo-ai", 3000)){
     const c=pomoContext();
     const q="你是学习专注助手。用不超过 50 字给一条具体、可执行的专注建议。"
       +"当前任务："+(c.task||"未选择")+"；今日完整专注 "+c.st.n+" 次、"+c.st.min+" 分钟；"
@@ -7333,8 +7710,11 @@ function kmShareText(){ return "《"+kmCur.title+"》· 知识地图（星智碰
 /* ---- AI 服务层：统一走 CONFIG.apiProxy（讯飞星火），JSON 输出+结构校验 ---- */
 function kmAiOn(){ return !!CONFIG.apiProxy; }
 async function kmAsk(prompt,ms){
-  const r=await fetchWithTimeout(CONFIG.apiProxy,{method:"POST",headers:{"Content-Type":"application/json"},
-    body:asciiJSON({scene:"ask",query:prompt,history:[]})},ms||CONFIG.timeoutMs);
+  let r;
+  try{
+    r = await fetchWithTimeout(CONFIG.apiProxy,{method:"POST",headers:{"Content-Type":"application/json"},
+      body:asciiJSON({scene:"ask",query:prompt,history:[]})},ms||CONFIG.timeoutMs);
+  }catch(e){ throw new Error(aiErrText(e)); }
   try{
     let d=null; try{ d=await r.json(); }catch(e){ d=null; }
     const reply=(d&&typeof d.reply==="string")?d.reply.trim():"";
@@ -7649,7 +8029,11 @@ function kmGenStop(){
   kmBusy=false; kmGenCtl=null;
   kmShowCreate();
 }
-function kmGenRetry(){ if(kmLastSrc) kmRunGen(kmLastSrc,kmLastOpts,kmWasRegen); else kmShowCreate(); }
+function kmGenRetry(){
+  /* 连点「重试」会重复触发整轮生成，加 2 秒节流（正常单次重试不受影响） */
+  if(aiThrottled("km-retry", 2000)){ toast("生成请求刚刚发出，请稍候再试"); return; }
+  if(kmLastSrc) kmRunGen(kmLastSrc,kmLastOpts,kmWasRegen); else kmShowCreate();
+}
 
 /* ---- 视图与渲染 ---- */
 const KM_X=[0,238,448,634];
@@ -8568,7 +8952,8 @@ async function rvAskSpark(note){
   const prompt='请把下面这段学习笔记抽成 1 张复习问答卡。严格只输出两行，不要任何别的内容：\n'
     +'Q: <一个能单独读懂的具体问题>\nA: <要点，不超过 80 字>\n\n笔记：\n'+note;
   const r=await fetchWithTimeout(CONFIG.apiProxy,{method:"POST",headers:{"Content-Type":"application/json"},
-    body:asciiJSON({scene:"ask",query:prompt,history:[]})},CONFIG.timeoutMs);
+    body:asciiJSON({scene:"ask",query:prompt,history:[]})},CONFIG.timeoutMs)
+    .catch(function(e){ throw new Error(aiErrText(e)); });
   try{
     const d=await r.json();
     if(!r.ok) throw new Error(d && typeof d.reply === "string" ? d.reply : "AI 服务暂时不可用，请稍后再试");
@@ -9151,7 +9536,8 @@ root.PlanBatchUI={install:function(host){
   globalThis.planBatchDialog=PlanBatchUI.install({
     url:()=>CONFIG.apiProxy,
     timeoutMs:()=>CONFIG.timeoutMs,
-    fetch:(url,options,ms)=>fetchWithTimeout(url,options,ms),
+    fetch:(url,options,ms)=>fetchWithTimeout(url,options,ms)
+      .catch(function(e){ throw new Error(aiErrText(e)); }),
     readSSE:(body,partial)=>readSSE(body,partial),
     asciiJSON:body=>asciiJSON(body),
     parse:text=>planParse(text),
