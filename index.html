@@ -2082,14 +2082,14 @@
   /* AI 知识地图页（新版样式见上方「AI 知识地图」区块） */
 
   /* 手机：核心工具改成整行大卡（插画左置），图标与标题都能放大 */
+  /* 手机：三列并排（不做横向滑动），靠内外边距与字号适配窄屏 */
   @media (max-width:479px){
-    .hp-scenes{grid-template-columns:1fr;gap:8px}
-    #screen-home .scene-card{display:grid;grid-template-columns:82px minmax(0,1fr);align-items:center;
-      gap:13px;height:98px;padding:9px 12px 9px 9px;border-radius:var(--h-r-sm)}
-    #screen-home .scene-card .art{width:82px;height:82px;flex:none}
-    .sc-row{margin-top:0;gap:10px}
-    #screen-home .scene-card h2{font-size:17px}
-    .sc-go{width:26px;height:26px;font-size:14px}
+    .hp-scenes{gap:8px}
+    #screen-home .scene-card{height:134px;padding:9px 9px 10px;border-radius:18px}
+    #screen-home .scene-card .art{flex:1;width:100%;height:auto;min-height:0}
+    .sc-row{margin-top:7px;gap:5px}
+    #screen-home .scene-card h2{font-size:13.5px}
+    .sc-go{width:20px;height:20px;font-size:11.5px}
   }
   @media (max-width:400px){
     .hp-hero{padding:16px 13px 15px}
@@ -2097,9 +2097,9 @@
     .hp-hero-text{padding-right:134px}
     .hp-hero-art{width:126px}
     .hp-mascot{width:120px}
-    #screen-home .scene-card{grid-template-columns:78px minmax(0,1fr);gap:12px;height:94px}
-    #screen-home .scene-card .art{width:78px;height:78px}
-    #screen-home .scene-card h2{font-size:16.5px}
+    #screen-home .scene-card{height:130px;padding:8px 8px 9px}
+    #screen-home .scene-card h2{font-size:13px}
+    .sc-go{width:19px;height:19px;font-size:11px}
   }
   @media (max-width:359px){
     .hp-h1{font-size:22px}
@@ -2119,7 +2119,11 @@
     .hp-brand-txt span{font-size:10px}
     .hp-cta{font-size:14px;padding:0 6px 0 14px;height:46px}
     .hp-cta-go{width:23px;height:23px;font-size:13px}
-    #screen-home .scene-card{height:92px}
+    .hp-scenes{gap:7px}
+    #screen-home .scene-card{height:124px;padding:7px 7px 8px;border-radius:16px}
+    #screen-home .scene-card h2{font-size:12.5px}
+    .sc-row{margin-top:6px;gap:4px}
+    .sc-go{width:18px;height:18px;font-size:10.5px}
   }
   @media (min-width:480px){
     .hp-duo .duo-card{min-height:118px}
