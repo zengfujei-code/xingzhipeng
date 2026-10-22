@@ -726,6 +726,74 @@
   .sheet{background:rgba(2,12,20,.52);-webkit-backdrop-filter:blur(5px);backdrop-filter:blur(5px)}
   .sheet.show{display:block}
 
+  /* ===== 作业管家 / 我的计划（任务实体） ===== */
+  #screen-hw,#screen-plans,#screen-plan{background:linear-gradient(178deg,#FDFEFF 0%,#F6FAFF 52%,#EFF6FF 100%)}
+  #screen-hw .chat-head,#screen-plans .chat-head,#screen-plan .chat-head{
+    position:relative;top:auto;left:auto;right:auto;z-index:5;
+    margin:calc(var(--sat) + 10px) 12px 0;border-radius:20px;min-height:52px;padding:6px 10px;
+    background:rgba(255,255,255,.85);box-shadow:var(--sh-1)}
+  .xz-wrap{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;
+    padding:10px 14px calc(var(--sab) + 24px);display:flex;flex-direction:column;gap:10px}
+  .xz-wrap>*{flex:0 0 auto}
+  .xz-filters{display:flex;gap:4px;background:rgba(18,107,242,.07);border:1px solid rgba(18,107,242,.10);border-radius:14px;padding:4px}
+  .xz-filters button{flex:1;min-height:38px;border:0;border-radius:10px;background:transparent;font-size:12.5px;font-weight:600;color:#4E617D;cursor:pointer;font-family:inherit}
+  .xz-filters button.on{background:#fff;color:#0B4FD1;box-shadow:0 2px 8px rgba(18,60,120,.10)}
+  .xz-list{display:flex;flex-direction:column;gap:9px}
+  .xz-item{position:relative;display:flex;align-items:flex-start;gap:10px;padding:12px 12px 12px 11px;
+    border-radius:18px;background:rgba(255,255,255,.92);border:1px solid rgba(18,107,242,.10);box-shadow:var(--sh-1)}
+  .xz-item.done{opacity:.68}
+  .xz-check{flex:0 0 auto;width:26px;height:26px;margin-top:1px;border-radius:50%;
+    border:1.8px solid rgba(18,107,242,.30);background:#fff;color:transparent;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;padding:0;min-height:0}
+  .xz-check svg{width:14px;height:14px}
+  .xz-item.done .xz-check{background:#12A45A;border-color:#12A45A;color:#fff}
+  .xz-main{flex:1;min-width:0;text-align:left;background:none;border:0;padding:0;font-family:inherit;cursor:pointer;
+    display:flex;flex-direction:column;gap:5px}
+  .xz-main b{font-size:14px;font-weight:700;color:#12294A;line-height:1.42;overflow-wrap:anywhere}
+  .xz-item.done .xz-main b{text-decoration:line-through;color:#7E90A8}
+  .xz-main small{font-size:11.5px;color:#7E90A8;line-height:1.5;overflow-wrap:anywhere}
+  .xz-meta{display:flex;flex-wrap:wrap;gap:5px}
+  .xz-meta i{font-style:normal;font-size:10.5px;font-weight:600;padding:2px 7px;border-radius:999px;
+    background:rgba(18,107,242,.07);color:#4E617D;line-height:1.5;white-space:nowrap}
+  .xz-meta i.p-high{background:rgba(229,72,77,.10);color:#B3261E}
+  .xz-meta i.p-medium{background:rgba(240,138,44,.12);color:#9A5B12}
+  .xz-meta i.p-low{background:rgba(18,164,90,.10);color:#0E7A43}
+  .xz-meta i.xz-due.late{background:rgba(229,72,77,.12);color:#B3261E}
+  .xz-meta i.xz-focus{background:rgba(123,63,228,.10);color:#5B2EA8}
+  .xz-del{flex:0 0 auto;width:28px;height:28px;border:0;border-radius:50%;background:rgba(0,0,0,.04);
+    color:#8C9AAF;font-size:17px;line-height:1;cursor:pointer;min-height:0}
+  .xz-go{flex:0 0 auto;align-self:center;border:1px solid rgba(18,107,242,.22);background:rgba(18,107,242,.07);
+    color:#0B4FD1;font-size:11.5px;font-weight:700;border-radius:999px;padding:6px 12px;cursor:pointer;font-family:inherit;min-height:34px}
+  .xz-empty{padding:34px 16px;text-align:center;font-size:12.5px;line-height:1.75;color:#7E90A8;border-radius:18px;
+    background:rgba(255,255,255,.7);border:1px dashed rgba(18,107,242,.16)}
+  .xz-plan{display:flex;flex-direction:column;gap:8px;text-align:left;padding:14px;border-radius:18px;
+    background:rgba(255,255,255,.92);border:1px solid rgba(18,107,242,.10);box-shadow:var(--sh-1);
+    cursor:pointer;font-family:inherit}
+  .xz-plan b{font-size:14.5px;font-weight:800;color:#12294A;overflow-wrap:anywhere}
+  .xz-plan small{font-size:11px;color:#7E90A8}
+  .xz-bar{display:block;height:7px;border-radius:999px;background:rgba(18,107,242,.12);overflow:hidden}
+  .xz-bar i{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,#126BF2,#3EA0FF)}
+  .xz-bar.big{height:9px}
+  .xz-plan-head{display:flex;flex-direction:column;gap:9px;padding:14px;border-radius:18px;
+    background:rgba(255,255,255,.92);border:1px solid rgba(18,107,242,.10);box-shadow:var(--sh-1)}
+  .xz-plan-sub{margin:0;font-size:12px;color:#4E617D;line-height:1.6}
+  .xz-plan-acts{display:flex;flex-wrap:wrap;gap:6px}
+  .xz-day{display:flex;flex-direction:column;gap:8px}
+  .xz-day h3{margin:8px 2px 0;font-size:12px;font-weight:700;color:#5A6B80;letter-spacing:.02em}
+  .xz-lb{display:block;margin:12px 0 6px;font-size:12px;font-weight:700;color:#4E617D}
+  .xz-in{width:100%;box-sizing:border-box;font-family:inherit;font-size:16px;color:#12294A;
+    padding:11px 12px;border-radius:12px;border:1px solid rgba(18,107,242,.20);background:#fff;min-height:44px}
+  .xz-in.sm{font-size:15px;padding:8px 9px;min-height:40px}
+  textarea.xz-in{resize:vertical;line-height:1.5}
+  .xz-row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .xz-tip{margin:10px 0 0;font-size:11.5px;line-height:1.6;color:#7E90A8}
+  .xz-foot{display:flex;gap:8px;margin-top:16px}
+  .xz-foot .pill{flex:1;min-height:46px;justify-content:center}
+  .xz-draft{display:flex;flex-direction:column;gap:9px;max-height:46vh;overflow-y:auto;margin-top:10px}
+  .xz-draft-row{display:flex;flex-direction:column;gap:7px;padding:10px;border-radius:14px;
+    background:#F7FAFF;border:1px solid rgba(18,107,242,.12)}
+  .xz-draft-meta{display:grid;grid-template-columns:74px 1fr 1.15fr;gap:6px}
+
   /* ===== AI 知识地图（创建 / 导图 / 历史 三页同一设计系统） ===== */
   #screen-kmap,#screen-kmap-view,#screen-kmap-hist{
     background:radial-gradient(56% 30% at 88% 0%,rgba(45,168,251,.10) 0%,rgba(45,168,251,0) 70%),
@@ -2157,6 +2225,7 @@
       <button class="back" onclick="goHome()" aria-label="返回首页">‹</button>
       <h2 id="chatTitle">对话</h2>
       <button class="mini" onclick="clearChat()" aria-label="清空本场景对话" title="清空本场景对话">清空</button>
+      <button class="lib-btn" id="chatExtra" onclick="chatExtraGo()" hidden></button>
       <button class="lib-btn" onclick="showLib()">学习库</button>
     </div>
     
@@ -2197,6 +2266,41 @@
     <div class="rv-list" id="rvBody"></div>
     
     <div class="pills" id="rvPills" hidden></div>
+  </section>
+
+  <section class="screen" id="screen-hw">
+    <div class="chat-head">
+      <button class="back" onclick="goHome()" aria-label="返回首页">‹</button>
+      <h2>作业管家</h2>
+      <span class="lib-count" id="hwCount"></span>
+      <button class="lib-btn" onclick="hwEditSheet('')">＋ 新建</button>
+    </div>
+    <div class="xz-wrap">
+      <div class="xz-filters" id="hwFilters" role="tablist" aria-label="任务分类">
+        <button type="button" role="tab" data-f="todo" class="on" onclick="hwFilter('todo')">待完成</button>
+        <button type="button" role="tab" data-f="over" onclick="hwFilter('over')">逾期</button>
+        <button type="button" role="tab" data-f="done" onclick="hwFilter('done')">已完成</button>
+      </div>
+      <div class="xz-list" id="hwList"></div>
+    </div>
+  </section>
+
+  <section class="screen" id="screen-plans">
+    <div class="chat-head">
+      <button class="back" onclick="goHome()" aria-label="返回首页">‹</button>
+      <h2>我的计划</h2>
+      <span class="lib-count" id="plansCount"></span>
+    </div>
+    <div class="xz-wrap"><div class="xz-list" id="plansList"></div></div>
+  </section>
+
+  <section class="screen" id="screen-plan">
+    <div class="chat-head">
+      <button class="back" onclick="showPlans()" aria-label="返回我的计划">‹</button>
+      <h2 id="planHead">计划详情</h2>
+      <span class="lib-count" id="planPct"></span>
+    </div>
+    <div class="xz-wrap"><div class="xz-list" id="planBody"></div></div>
   </section>
 
   <section class="screen" id="screen-pomo">
@@ -2848,6 +2952,12 @@ function openChat(scene, noPush){
 
   $("chatTitle").textContent = sc.name;
   $("chatTitle").className = sc.cls;
+  const extra=$("chatExtra");
+  if(extra){
+    if(scene==="homework"){ extra.textContent="我的作业"; extra.hidden=false; extra.dataset.go="hw"; }
+    else if(scene==="plan"){ extra.textContent="我的计划"; extra.hidden=false; extra.dataset.go="plans"; }
+    else { extra.hidden=true; extra.dataset.go=""; }
+  }
   stopAllNoticeTicks();
   $("msgWrap").innerHTML = "";
   $("quickBar").innerHTML = "";
@@ -2913,7 +3023,17 @@ function actsHTML(savable){
 
   if(curScene === "plan")
     html += '<button type="button" class="save-btn cal-btn" onclick="openCalSheet(this)">📅 加入日历</button>';
+  if(curScene === "homework")
+    html += '<button type="button" class="save-btn" onclick="hwDraftFromMsg(this)">🗂 拆成任务</button>';
+  if(curScene === "plan")
+    html += '<button type="button" class="save-btn" onclick="planSaveFromChat(this)">📌 保存为我的计划</button>';
   return html;
+}
+function chatExtraGo(){
+  const el=$("chatExtra"); if(!el) return;
+  const g=el.dataset.go;
+  if(g==="hw") showHw();
+  else if(g==="plans") showPlans();
 }
 function wsEmpty(scene, hint){
   const box = $("chatEmpty"); if(!box) return;
@@ -4173,6 +4293,533 @@ function renderToday(){
 }
 renderReviewBadge();
 
+/* ===== 任务实体与学习计划（结构化持久化；作业管家 / 我的计划 / 番茄钟共用同一份任务） ===== */
+const XZ_TASK_KEY="xzTasks", XZ_PLAN_KEY="xzPlans";
+const XZ_TASK_MAX=500, XZ_PLAN_MAX=30;
+const XZ_PRI_NAME={high:"高",medium:"中",low:"低"};
+let hwFilterV="todo", hwDraft=[], hwEditId="", planCurId="";
+
+function xzId(p){ return p+Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
+function xzToday(){ return rvToday(0); }
+function xzAddDays(ymd,n){
+  const d=new Date(ymd+"T00:00:00"); d.setDate(d.getDate()+n);
+  return d.getFullYear()+"-"+pad2(d.getMonth()+1)+"-"+pad2(d.getDate());
+}
+function xzDiffDays(a,b){
+  const A=new Date(a+"T00:00:00"), B=new Date(b+"T00:00:00");
+  return Math.round((A-B)/86400000);
+}
+function xzIsDate(s){ return typeof s==="string" && /^\d{4}-\d{2}-\d{2}$/.test(s); }
+function xzCut(s,n){ return String(s==null?"":s).replace(/\s+/g," ").trim().slice(0,n); }
+
+/* ---- 任务存储（作业管家与计划任务共用，避免同一任务存两份导致重复计数） ---- */
+function xzNormTask(x){
+  return {
+    id:String(x.id),
+    title:xcTitle(x.title),
+    description:String(x.description==null?"":x.description).slice(0,500),
+    deadline:xzIsDate(x.deadline)?x.deadline:"",
+    priority:(x.priority==="high"||x.priority==="low")?x.priority:"medium",
+    estimatedMinutes:Math.max(0,Math.min(600,Math.round(Number(x.estimatedMinutes)||0))),
+    status:(x.status==="done"||x.status==="doing"||x.status==="cancelled")?x.status:"todo",
+    actualFocusSeconds:Math.max(0,Math.round(Number(x.actualFocusSeconds)||0)),
+    planId:typeof x.planId==="string"?x.planId:"",
+    date:xzIsDate(x.date)?x.date:"",
+    source:(x.source==="homework"||x.source==="plan")?x.source:"manual",
+    createdAt:Number(x.createdAt)||Date.now(),
+    updatedAt:Number(x.updatedAt)||Date.now()
+  };
+}
+function xcTitle(v){ return String(v==null?"":v).replace(/\s+/g," ").trim().slice(0,80); }
+function xzTasks(){
+  const a=store.get(XZ_TASK_KEY,[]);
+  if(!Array.isArray(a)) return [];
+  return a.filter(x=>x && typeof x.id==="string" && typeof x.title==="string").map(xzNormTask);
+}
+function xzTaskSaveAll(list){
+  while(list.length>XZ_TASK_MAX) list.shift();
+  return store.set(XZ_TASK_KEY,list);
+}
+function xzTaskGet(id){
+  const a=xzTasks();
+  for(let i=0;i<a.length;i++) if(a[i].id===id) return a[i];
+  return null;
+}
+function xzTaskPut(t){
+  const a=xzTasks(); const i=a.findIndex(x=>x.id===t.id);
+  t.updatedAt=Date.now();
+  if(i>=0) a[i]=t; else a.unshift(t);
+  return xzTaskSaveAll(a);
+}
+function xzTaskDel(id){
+  const a=xzTasks().filter(x=>x.id!==id);
+  return xzTaskSaveAll(a);
+}
+/* 只由「专注模式」的会话调用；同一会话由 sid 幂等保护 */
+function xzTaskFocusAdd(id,sec){
+  if(!id || !(sec>0)) return false;
+  const a=xzTasks(); const t=a.find(x=>x.id===id);
+  if(!t) return false;
+  t.actualFocusSeconds=Math.max(0,t.actualFocusSeconds)+Math.round(sec);
+  t.updatedAt=Date.now();
+  return xzTaskSaveAll(a);
+}
+function xzTaskOverdue(t){
+  return !!t.deadline && t.status!=="done" && t.status!=="cancelled" && t.deadline < xzToday();
+}
+function xzDueText(t){
+  if(!t.deadline) return "";
+  const d=xzDiffDays(t.deadline,xzToday());
+  if(t.status==="done") return t.deadline.slice(5)+" 截止";
+  if(d<0) return "逾期 "+(-d)+" 天";
+  if(d===0) return "今天截止";
+  if(d===1) return "明天截止";
+  if(d<=6) return d+" 天后截止";
+  return t.deadline.slice(5)+" 截止";
+}
+function xzFmtFocus(sec){
+  sec=Math.max(0,Math.round(sec||0));
+  if(sec<60) return sec?sec+" 秒":"—";
+  const m=Math.round(sec/60);
+  if(m<60) return m+" 分钟";
+  return Math.floor(m/60)+" 小时 "+(m%60)+" 分";
+}
+
+/* ---- 计划存储 ---- */
+function xzNormPlan(x){
+  const days=Array.isArray(x.days)?x.days.filter(d=>d && xzIsDate(d.date)).map(d=>({
+    date:d.date,
+    taskIds:Array.isArray(d.taskIds)?d.taskIds.filter(t=>typeof t==="string"):[]
+  })):[];
+  return {
+    id:String(x.id),
+    name:xcTitle(x.name)||"未命名计划",
+    start:xzIsDate(x.start)?x.start:xzToday(),
+    dayCount:Math.max(1,Math.min(60,Math.round(Number(x.dayCount)||days.length||7))),
+    perDay:Math.max(1,Math.min(600,Math.round(Number(x.perDay)||45))),
+    level:String(x.level==null?"":x.level).slice(0,30),
+    status:x.status==="archived"?"archived":"active",
+    raw:String(x.raw==null?"":x.raw).slice(0,4000),
+    days:days,
+    createdAt:Number(x.createdAt)||Date.now(),
+    updatedAt:Number(x.updatedAt)||Date.now()
+  };
+}
+function xzPlans(){
+  const a=store.get(XZ_PLAN_KEY,[]);
+  if(!Array.isArray(a)) return [];
+  return a.filter(x=>x && typeof x.id==="string").map(xzNormPlan);
+}
+function xzPlanSaveAll(l){ while(l.length>XZ_PLAN_MAX) l.pop(); return store.set(XZ_PLAN_KEY,l); }
+function xzPlanGet(id){
+  const a=xzPlans();
+  for(let i=0;i<a.length;i++) if(a[i].id===id) return a[i];
+  return null;
+}
+function xzPlanPut(p){
+  const a=xzPlans(); const i=a.findIndex(x=>x.id===p.id);
+  p.updatedAt=Date.now();
+  if(i>=0) a[i]=p; else a.unshift(p);
+  return xzPlanSaveAll(a);
+}
+function xzPlanDel(id){
+  const tasks=xzTasks().filter(t=>t.planId!==id);
+  const a=xzPlans().filter(p=>p.id!==id);
+  if(!xzTaskSaveAll(tasks)) return false;
+  return xzPlanSaveAll(a);
+}
+function xzPlanTasks(planId){
+  return xzTasks().filter(t=>t.planId===planId);
+}
+/* 完成率按真实任务状态计算，与专注次数无关 */
+function xzPlanProgress(p){
+  const ts=xzPlanTasks(p.id).filter(t=>t.status!=="cancelled");
+  const done=ts.filter(t=>t.status==="done").length;
+  return {all:ts.length,done:done,pct:ts.length?Math.round(done/ts.length*100):0};
+}
+
+/* ---- 从 AI 文本提取截止时间（识别不到就留空，界面显示「未设置」） ---- */
+function xzDeadlineFrom(text){
+  const s=String(text==null?"":text);
+  let m=s.match(/(\d{4})\s*[-/年.]\s*(\d{1,2})\s*[-/月.]\s*(\d{1,2})/);
+  if(m) return m[1]+"-"+pad2(+m[2])+"-"+pad2(+m[3]);
+  m=s.match(/(\d{1,2})\s*月\s*(\d{1,2})\s*[日号]/);
+  if(m){ const y=new Date().getFullYear(); return y+"-"+pad2(+m[1])+"-"+pad2(+m[2]); }
+  if(/今天|今日/.test(s)) return xzToday();
+  if(/明天|明日/.test(s)) return xzAddDays(xzToday(),1);
+  if(/后天/.test(s)) return xzAddDays(xzToday(),2);
+  m=s.match(/(?:周|星期|礼拜)\s*([一二三四五六日天])/);
+  if(m){
+    const map={"一":1,"二":2,"三":3,"四":4,"五":5,"六":6,"日":0,"天":0};
+    const target=map[m[1]];
+    const d=new Date(); const cur=d.getDay();
+    let diff=(target-cur+7)%7; if(diff===0) diff=7;
+    return xzAddDays(xzToday(),diff);
+  }
+  return "";
+}
+
+/* ---- AI 作业拆解 → 结构化草稿（先校验再入库，解析失败不污染已有任务） ---- */
+function hwParseTasks(text){
+  const out=[], seen={};
+  const lines=String(text==null?"":text).split(/\r?\n/);
+  lines.forEach(function(line){
+    const raw=line.replace(/\*\*/g,"").replace(/`/g,"").trim();
+    if(!raw) return;
+    if(/^#{1,6}\s/.test(raw)) return;
+    let title="", mins=0, pri="";
+    let m=raw.match(/^\s*(?:[-*•]|(?:\d+)[.、)]|[①-⑳])?\s*(.+?)\s*[|｜]\s*(\d{1,3})\s*(?:分钟|min|m)?\s*(?:[|｜]\s*(高|中|低))?\s*$/i);
+    if(m && String(m[1]).length>=2){ title=m[1]; mins=Math.min(300,parseInt(m[2],10)||0); pri=m[3]||""; }
+    else {
+      const li=raw.match(/^\s*(?:[-*•✅☐□✔]|(?:\d+)[.、)]|[①-⑳])\s*(\S.*)$/);
+      if(!li) return;
+      title=li[1];
+    }
+    title=title.replace(/^\s*[✅☐□✔]\s*/,"").replace(/\s*[|｜]\s*$/,"").trim();
+    if(title.length<2) return;
+    title=title.slice(0,60);
+    if(seen[title]) return; seen[title]=1;
+    out.push({
+      title:title,
+      description:"",
+      estimatedMinutes:mins,
+      priority:pri==="高"?"high":pri==="低"?"low":"medium",
+      deadline:xzDeadlineFrom(raw)
+    });
+  });
+  return out.slice(0,20);
+}
+function hwDraftFromMsg(btn){
+  const msg=btn && btn.closest ? btn.closest(".msg") : null;
+  const text=msg && msg._text ? msg._text : "";
+  const list=hwParseTasks(text);
+  if(!list.length){ toast("没能从这段回答里识别出任务，可以换个说法再试，或手动新建"); return; }
+  hwDraft=list;
+  hwRenderDraft();
+  pomoOpenSheet("hwDraftSheet");
+}
+function hwRenderDraft(){
+  const box=$("hwDraftList"); if(!box) return;
+  box.innerHTML=hwDraft.map(function(t,i){
+    return '<div class="xz-draft-row" data-i="'+i+'">'
+      +'<input class="xz-in" data-k="title" maxlength="60" value="'+hpEsc(t.title)+'" aria-label="任务标题">'
+      +'<div class="xz-draft-meta">'
+      +'<select class="xz-in sm" data-k="priority" aria-label="优先级">'
+        +['high','medium','low'].map(function(p){ return '<option value="'+p+'"'+(t.priority===p?' selected':'')+'>'+XZ_PRI_NAME[p]+'</option>'; }).join("")
+      +'</select>'
+      +'<input class="xz-in sm" type="number" min="0" max="600" inputmode="numeric" data-k="estimatedMinutes" value="'+(t.estimatedMinutes||"")+'" placeholder="分钟" aria-label="预计用时（分钟）">'
+      +'<input class="xz-in sm" type="date" data-k="deadline" value="'+hpEsc(t.deadline||"")+'" aria-label="截止时间">'
+      +'</div></div>';
+  }).join("");
+  box.querySelectorAll(".xz-draft-row").forEach(function(row){
+    const i=+row.dataset.i;
+    row.querySelectorAll("[data-k]").forEach(function(el){
+      el.addEventListener("input",function(){
+        const k=el.dataset.k;
+        if(!hwDraft[i]) return;
+        if(k==="estimatedMinutes") hwDraft[i][k]=Math.max(0,Math.min(600,parseInt(el.value,10)||0));
+        else if(k==="priority") hwDraft[i][k]=el.value;
+        else hwDraft[i][k]=el.value;
+      });
+      el.addEventListener("change",function(){ el.dispatchEvent(new Event("input")); });
+    });
+  });
+}
+function hwSaveDraft(){
+  if(!hwDraft.length){ toast("没有可保存的任务"); return; }
+  const all=xzTasks();
+  const now=Date.now();
+  hwDraft.forEach(function(d,i){
+    const title=xcTitle(d.title);
+    if(title.length<2) return;
+    all.unshift({
+      id:xzId("t"), title:title, description:String(d.description||"").slice(0,500),
+      deadline:xzIsDate(d.deadline)?d.deadline:"",
+      priority:(d.priority==="high"||d.priority==="low")?d.priority:"medium",
+      estimatedMinutes:Math.max(0,Math.min(600,parseInt(d.estimatedMinutes,10)||0)),
+      status:"todo", actualFocusSeconds:0, planId:"", date:"", source:"homework",
+      createdAt:now+i, updatedAt:now+i
+    });
+  });
+  if(!xzTaskSaveAll(all)){ toast("本机存储异常，任务没有保存成功"); return; }
+  hwDraft=[]; hwFilterV="todo";
+  pomoCloseSheet("hwDraftSheet");
+  toast("已保存为任务，可在「作业管家」里勾选完成",3200);
+  if($("screen-hw") && $("screen-hw").classList.contains("active")) hwRender();
+}
+
+/* ---- 作业管家：任务列表 ---- */
+function showHw(){
+  hwRender();
+  show("screen-hw");
+}
+function hwFilter(f){ hwFilterV=f; hwRender(); }
+function hwRender(){
+  const list=$("hwList"); if(!list) return;
+  const all=xzTasks().filter(t=>!t.planId);
+  const todo=all.filter(t=>t.status!=="done" && t.status!=="cancelled");
+  const done=all.filter(t=>t.status==="done");
+  const over=todo.filter(xzTaskOverdue);
+  const rows = hwFilterV==="done" ? done : hwFilterV==="over" ? over : todo;
+  const cnt=$("hwCount"); if(cnt) cnt.textContent=all.length?("待办 "+todo.length+" / 共 "+all.length):"";
+  document.querySelectorAll("#hwFilters button").forEach(function(b){ b.classList.toggle("on",b.dataset.f===hwFilterV); });
+  document.querySelectorAll("#hwFilters button").forEach(function(b){
+    if(b.dataset.f==="over") b.textContent="逾期 "+over.length;
+    else if(b.dataset.f==="done") b.textContent="已完成 "+done.length;
+    else b.textContent="待完成 "+todo.length;
+  });
+  list.innerHTML = rows.length ? rows.map(function(t){
+    const due=xzDueText(t);
+    const late=xzTaskOverdue(t);
+    return '<div class="xz-item'+(t.status==="done"?" done":"")+'" data-id="'+hpEsc(t.id)+'">'
+      +'<button type="button" class="xz-check" onclick="hwToggle(\''+hpEsc(t.id)+'\')" aria-label="'+(t.status==="done"?"标记未完成":"标记完成")+'">'
+        +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.8 12.6l4.4 4.4 9.6-10"/></svg></button>'
+      +'<button type="button" class="xz-main" onclick="hwEditSheet(\''+hpEsc(t.id)+'\')">'
+        +'<b>'+hpEsc(t.title)+'</b>'
+        +'<span class="xz-meta">'
+          +'<i class="xz-pri p-'+t.priority+'">'+XZ_PRI_NAME[t.priority]+'</i>'
+          +(due?'<i class="xz-due'+(late?" late":"")+'">'+hpEsc(due)+'</i>':"")
+          +(t.estimatedMinutes?'<i class="xz-est">预计 '+t.estimatedMinutes+' 分</i>':"")
+          +(t.actualFocusSeconds?'<i class="xz-focus">已专注 '+hpEsc(xzFmtFocus(t.actualFocusSeconds))+'</i>':"")
+        +'</span>'
+        +(t.description?'<small>'+hpEsc(t.description)+'</small>':"")
+      +'</button>'
+      +'<button type="button" class="xz-del" onclick="hwDel(\''+hpEsc(t.id)+'\')" aria-label="删除任务">×</button>'
+      +'</div>';
+  }).join("")
+    : '<div class="xz-empty">'+(all.length?"这个分类里没有任务":"还没有任务<br/>点右上角「＋ 新建」，或在作业管家对话里让 AI 拆解后点「拆成任务」")+'</div>';
+}
+function hwToggle(id){
+  const t=xzTaskGet(id); if(!t) return;
+  t.status = t.status==="done" ? "todo" : "done";
+  if(!xzTaskPut(t)){ toast("本机存储异常，状态没有保存"); return; }
+  hwRender();
+  if(planCurId) planRender();
+}
+function hwDel(id){
+  const t=xzTaskGet(id); if(!t) return;
+  if(!window.confirm("删除任务「"+t.title+"」？\n专注记录会保留在番茄钟历史里。")) return;
+  if(!xzTaskDel(id)){ toast("本机存储异常，删除没有生效"); return; }
+  hwRender(); toast("已删除任务");
+}
+function hwEditSheet(id){
+  hwEditId=id||"";
+  const t=id?xzTaskGet(id):null;
+  if(id && !t){ toast("任务已不存在"); return; }
+  $("hwEditTitle").textContent = t ? "编辑任务" : "新建任务";
+  $("hwTitle").value = t ? t.title : "";
+  $("hwDesc").value = t ? t.description : "";
+  $("hwDue").value = t ? t.deadline : "";
+  $("hwPri").value = t ? t.priority : "medium";
+  $("hwEst").value = t && t.estimatedMinutes ? t.estimatedMinutes : "";
+  const tip=$("hwEditTip"); if(tip){ tip.hidden=true; tip.textContent=""; }
+  pomoOpenSheet("hwEditSheet");
+  setTimeout(function(){ const el=$("hwTitle"); if(el) el.focus({preventScroll:true}); },60);
+}
+function hwSaveEdit(){
+  const title=xcTitle($("hwTitle") && $("hwTitle").value);
+  const tip=$("hwEditTip");
+  if(title.length<2){
+    if(tip){ tip.textContent="任务标题至少 2 个字"; tip.hidden=false; }
+    const el=$("hwTitle"); if(el) el.focus();
+    return;
+  }
+  const base=hwEditId?xzTaskGet(hwEditId):null;
+  const t=base || {
+    id:xzId("t"), title:"", description:"", deadline:"", priority:"medium",
+    estimatedMinutes:0, status:"todo", actualFocusSeconds:0, planId:"", date:"",
+    source:"manual", createdAt:Date.now(), updatedAt:Date.now()
+  };
+  t.title=title;
+  t.description=String($("hwDesc") && $("hwDesc").value || "").trim().slice(0,500);
+  t.deadline=xzIsDate($("hwDue") && $("hwDue").value)?$("hwDue").value:"";
+  t.priority=$("hwPri") && $("hwPri").value || "medium";
+  t.estimatedMinutes=Math.max(0,Math.min(600,parseInt($("hwEst") && $("hwEst").value,10)||0));
+  if(!xzTaskPut(t)){ if(tip){ tip.textContent="本机存储异常，没有保存成功"; tip.hidden=false; } toast("本机存储异常，没有保存成功"); return; }
+  pomoCloseSheet("hwEditSheet");
+  toast(base?"任务已更新":"任务已创建");
+  hwRender();
+  if($("screen-pomo").classList.contains("active")) pomoRender();
+}
+
+/* ---- 我的计划 ---- */
+function showPlans(){
+  const list=$("plansList"); if(!list) return;
+  const ps=xzPlans();
+  const cnt=$("plansCount"); if(cnt) cnt.textContent=ps.length?(ps.length+" 份"):"";
+  list.innerHTML = ps.length ? ps.map(function(p){
+    const pr=xzPlanProgress(p);
+    return '<button type="button" class="xz-plan" onclick="showPlan(\''+hpEsc(p.id)+'\')">'
+      +'<b>'+hpEsc(p.name)+'</b>'
+      +'<span class="xz-meta"><i class="xz-est">'+p.dayCount+' 天</i><i class="xz-est">每天约 '+p.perDay+' 分</i>'
+      +'<i class="xz-focus">已完成 '+pr.done+'/'+pr.all+'</i></span>'
+      +'<span class="xz-bar"><i style="width:'+pr.pct+'%"></i></span>'
+      +'<small>创建于 '+new Date(p.createdAt).toLocaleDateString()+' · 完成 '+pr.pct+'%</small>'
+      +'</button>';
+  }).join("")
+    : '<div class="xz-empty">还没有保存的计划<br/>去「学习计划」对话里让 AI 生成，再点回答下方的「保存为我的计划」</div>';
+  show("screen-plans");
+}
+function showPlan(id){
+  planCurId=id;
+  planRender();
+  show("screen-plan");
+}
+function planRender(){
+  const box=$("planBody"); if(!box) return;
+  const p=planCurId?xzPlanGet(planCurId):null;
+  if(!p){ box.innerHTML='<div class="xz-empty">计划不存在或已被删除</div>'; return; }
+  const h=$("planHead"); if(h) h.textContent=p.name;
+  const pr=xzPlanProgress(p);
+  const pct=$("planPct"); if(pct) pct.textContent=pr.pct+"%";
+  const ts=xzPlanTasks(p.id);
+  const byDate={};
+  ts.forEach(function(t){ const k=t.date||"未排日期"; (byDate[k]=byDate[k]||[]).push(t); });
+  const dates=Object.keys(byDate).sort();
+  const today=xzToday();
+  box.innerHTML =
+    '<div class="xz-plan-head">'
+      +'<span class="xz-bar big"><i style="width:'+pr.pct+'%"></i></span>'
+      +'<p class="xz-plan-sub">共 '+p.dayCount+' 天 · 每天约 '+p.perDay+' 分钟'+(p.level?' · '+hpEsc(p.level):'')+' · 已完成 '+pr.done+'/'+pr.all+' 个任务</p>'
+      +'<div class="xz-plan-acts">'
+        +'<button type="button" class="pill" onclick="planAddTask()">＋ 加任务</button>'
+        +'<button type="button" class="pill" onclick="planICS()">导出 .ics</button>'
+        +'<button type="button" class="pill ghost-danger" onclick="planDel()">删除计划</button>'
+      +'</div>'
+    +'</div>'
+    +dates.map(function(d){
+      const rows=byDate[d];
+      const dn=d==="未排日期"?"未排日期":('第 '+(xzDiffDays(d,p.start)+1)+' 天 · '+d.slice(5)+(d===today?" · 今天":""));
+      return '<section class="xz-day"><h3>'+hpEsc(dn)+'</h3>'+rows.map(function(t){
+        return '<div class="xz-item'+(t.status==="done"?" done":"")+'">'
+          +'<button type="button" class="xz-check" onclick="planToggle(\''+hpEsc(t.id)+'\')" aria-label="'+(t.status==="done"?"标记未完成":"标记完成")+'">'
+            +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.8 12.6l4.4 4.4 9.6-10"/></svg></button>'
+          +'<div class="xz-main"><b>'+hpEsc(t.title)+'</b><span class="xz-meta">'
+            +(t.estimatedMinutes?'<i class="xz-est">预计 '+t.estimatedMinutes+' 分</i>':"")
+            +(t.actualFocusSeconds?'<i class="xz-focus">已专注 '+hpEsc(xzFmtFocus(t.actualFocusSeconds))+'</i>':"")
+          +'</span></div>'
+          +'<button type="button" class="xz-go" onclick="planFocus(\''+hpEsc(t.id)+'\')" aria-label="开始专注">专注</button>'
+        +'</div>';
+      }).join("")+'</section>';
+    }).join("");
+}
+function planToggle(id){
+  const t=xzTaskGet(id); if(!t) return;
+  t.status = t.status==="done" ? "todo" : "done";
+  if(!xzTaskPut(t)){ toast("本机存储异常，状态没有保存"); return; }
+  planRender();
+}
+function planAddTask(){
+  const p=planCurId?xzPlanGet(planCurId):null;
+  if(!p){ toast("计划已不存在"); return; }
+  const title=window.prompt("要加的任务（最多 60 字）","");
+  if(title===null) return;
+  const t=xcTitle(title); if(t.length<2) return;
+  const date=(window.prompt("安排在哪天？格式 YYYY-MM-DD，留空放今天",xzToday())||"").trim();
+  const d=xzIsDate(date)?date:xzToday();
+  const task=xzNormTask({id:xzId("t"),title:t,description:"",deadline:"",priority:"medium",
+    estimatedMinutes:0,status:"todo",actualFocusSeconds:0,planId:p.id,date:d,source:"plan"});
+  if(!xzTaskPut(task)){ toast("本机存储异常，没有保存"); return; }
+  const i=p.days.findIndex(x=>x.date===d);
+  if(i>=0) p.days[i].taskIds.push(task.id); else p.days.push({date:d,taskIds:[task.id]});
+  if(!xzPlanPut(p)){ toast("计划头没有更新，但任务已保存"); }
+  planRender(); toast("已添加任务");
+}
+function planDel(){
+  const p=planCurId?xzPlanGet(planCurId):null;
+  if(!p) return;
+  if(!window.confirm("删除计划「"+p.name+"」？\n计划里的任务和它们的专注记录会一起删除，已完成的专注历史不受影响。")) return;
+  if(!xzPlanDel(p.id)){ toast("本机存储异常，删除没有生效"); return; }
+  planCurId=""; toast("已删除计划"); showPlans();
+}
+function planFocus(id){
+  const t=xzTaskGet(id); if(!t) return;
+  const p=t.planId?xzPlanGet(t.planId):null;
+  pomoSetTask({type:"plan",id:t.id,name:t.title,planId:t.planId||""});
+  showPomo();
+  toast("本次专注目标："+t.title+(p?"（"+p.name+"）":""),2600);
+}
+/* 工作副本 → 计划（复用现有 planParse，不另写一套解析器） */
+function planFromText(text,name){
+  const parsed=planParse(text);
+  const evs=(parsed && parsed.events)||[];
+  if(!evs.length) return null;
+  const start=xzToday();
+  let lastDate=start, weekCursor=start;
+  const dates=evs.map(function(ev,i){
+    if(parsed.mode==="seq" && ev.seq>=1) return xzAddDays(start,ev.seq-1);
+    if(parsed.mode==="week" && ev.day!==undefined){
+      const target=ev.day, d=new Date(); const cur=d.getDay();
+      let diff=(target-cur+7)%7;
+      const cand=xzAddDays(start,diff);
+      if(cand<weekCursor) return xzAddDays(cand,7);
+      weekCursor=cand;
+      return cand;
+    }
+    return lastDate;
+  });
+  const plan=xzNormPlan({id:xzId("p"),name:name||"AI 学习计划",start:start,
+    dayCount:Math.max(1,Math.min(60,new Set(dates).size||1)),perDay:45,level:"",
+    status:"active",raw:String(text).slice(0,4000),days:[],createdAt:Date.now()});
+  const all=xzTasks();
+  const byDate={};
+  evs.forEach(function(ev,i){
+    const date=dates[i]||start;
+    const mins=Math.max(0,Math.min(300,Math.round(Number(ev.mins)||0)));
+    const t=xzNormTask({id:xzId("t"),title:xcTitle(ev.text)||("任务 "+(i+1)),
+      description:"",deadline:"",priority:"medium",estimatedMinutes:mins,status:"todo",
+      actualFocusSeconds:0,planId:plan.id,date:date,source:"plan"});
+    all.unshift(t);
+    (byDate[date]=byDate[date]||[]).push(t.id);
+  });
+  plan.days=Object.keys(byDate).sort().map(function(d){ return {date:d,taskIds:byDate[d]}; });
+  if(!xzTaskSaveAll(all)) return null;
+  if(!xzPlanPut(plan)){ return null; }
+  return plan;
+}
+function planSaveFromChat(){
+  const h=loadHist("plan");
+  let text="";
+  for(let i=h.length-1;i>=0;i--){ const a=h[i]&&h[i].a; if(a && planParse(a).events.length){ text=a; break; } }
+  if(!text){ toast("还没有可保存的计划：先在上面生成一次学习计划"); return; }
+  const name=(window.prompt("给这份计划起个名字", "我的学习计划")||"").trim();
+  if(name===null) return;
+  const p=planFromText(text,name||"我的学习计划");
+  if(!p){ toast("计划解析失败，没有保存"); return; }
+  toast("已保存到「我的计划」",2600);
+  showPlan(p.id);
+}
+/* 导出：沿用 icsEsc / icsFold / saveICS，不另写转义 */
+function planICS(){
+  const p=planCurId?xzPlanGet(planCurId):null;
+  if(!p){ toast("计划不存在"); return; }
+  const ts=xzPlanTasks(p.id).filter(t=>t.status!=="cancelled");
+  if(!ts.length){ toast("这份计划还没有任务"); return; }
+  const now=new Date();
+  const stamp=""+now.getUTCFullYear()+pad2(now.getUTCMonth()+1)+pad2(now.getUTCDate())
+    +"T"+pad2(now.getUTCHours())+pad2(now.getUTCMinutes())+pad2(now.getUTCSeconds())+"Z";
+  const L=["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//星智碰//学习计划//CN","CALSCALE:GREGORIAN","METHOD:PUBLISH","X-WR-CALNAME:星智碰 · "+p.name];
+  let n=0;
+  ts.slice(0,1000).forEach(function(t){
+    const day=xzIsDate(t.date)?t.date:p.start;
+    const mins=Math.max(10,Math.min(300,t.estimatedMinutes||Math.max(10,Math.round(p.perDay/Math.max(1,ts.length)))));
+    const s=new Date(day+"T20:00:00");
+    const e=new Date(s.getTime()+mins*60000);
+    const fmt=function(x){ return ""+x.getFullYear()+pad2(x.getMonth()+1)+pad2(x.getDate())+"T"+pad2(x.getHours())+pad2(x.getMinutes())+"00"; };
+    L.push("BEGIN:VEVENT",
+      "UID:xzp-"+p.id+"-"+t.id+"@xingzhibeng",
+      "DTSTAMP:"+stamp,
+      "DTSTART:"+fmt(s),"DTEND:"+fmt(e),
+      "SUMMARY:"+icsEsc(t.title),
+      "DESCRIPTION:"+icsEsc("星智碰 · AI 学习搭档　"+p.name+"　预计 "+mins+" 分钟"),
+      "STATUS:"+(t.status==="done"?"COMPLETED":"CONFIRMED"));
+    n++;
+  });
+  L.push("END:VCALENDAR");
+  saveICS(L.join("\r\n"),"星智碰-"+p.name.replace(/[\\/:*?"<>|]/g,"")+".ics");
+  toast("已生成日历文件，共 "+n+" 条任务",2800);
+}
+
 /* ===== AI 智能番茄钟（可靠计时 + 本机记录 + 任务联动） ===== */
 const POMO_KEY="xzPomo", POMO_SET_KEY="xzPomoSet", POMO_LIVE_KEY="xzPomoLive";
 const POMO_DEF_SET={focus:25,short:5,long:15,cycle:4,restTip:true,showAi:true,notify:false};
@@ -4187,7 +4834,9 @@ function pomoLoadRec(){
 }
 function pomoSaveRecList(a){ while(a.length>800)a.shift(); return store.set(POMO_KEY,a); }
 function pomoTodayStat(){
-  const t=rvToday(), a=pomoLoadRec().filter(x=>x.d===t);
+  const t=rvToday();
+  /* 休息不进入专注统计；旧记录没有 kind 字段，按专注处理 */
+  const a=pomoLoadRec().filter(x=>x.d===t && (x.kind?x.kind==="focus":true));
   const full=a.filter(x=>x.mode!=="partial").length;
   return {n:full, min:a.reduce((s,x)=>s+Number(x.m||0),0), all:a.length, full:full, partial:a.length-full};
 }
@@ -4222,15 +4871,15 @@ function pomoRender(){
   const modes=$("pomoModes");
   if(modes) modes.querySelectorAll("button").forEach(function(b){ b.classList.toggle("on", b.dataset.m===pomoMode); });
   const row=$("pomoCustomRow"); if(row) row.hidden = pomoMode!=="custom";
+  const tLabel=pomoTaskLabel();
   const tin=$("pomoTaskIn");
   if(tin){
-    if(pomoLive && pomoLive.taskName){ tin.textContent=pomoLive.taskName; tin.hidden=false; }
+    if(tLabel){ tin.textContent=tLabel; tin.hidden=false; }
     else tin.hidden=true;
   }
   const chip=$("pomoTaskChip");
   if(chip){
-    const name=pomoLive && pomoLive.taskName;
-    if(name){ $("pomoTaskName").textContent=name; chip.hidden=false; }
+    if(tLabel){ $("pomoTaskName").textContent=tLabel; chip.hidden=false; }
     else chip.hidden=true;
   }
   const ai=$("pomoAiCard"); if(ai) ai.hidden=!pomoSet.showAi;
@@ -4241,6 +4890,13 @@ function pomoRender(){
   if(n3) n3.textContent=st.all>0 ? Math.round(st.full/st.all*100)+"%" : "—";
 }
 function pomoRun(){ return !!(pomoLive && pomoLive.running); }
+/* 任务被删除后关联失效：仍显示名字，但明确标注，且不再累计时长 */
+function pomoTaskLabel(){
+  if(!pomoLive || !pomoLive.taskName) return "";
+  const id=pomoLive.taskId;
+  if(id && /^t/.test(id) && !xzTaskGet(id)) return pomoLive.taskName+"（任务已删除）";
+  return pomoLive.taskName;
+}
 function pomoLeftSec(){
   if(!pomoLive) return pomoMinsFor(pomoMode)*60;
   if(pomoLive.running) return Math.max(0,(pomoLive.endAt-Date.now())/1000);
@@ -4281,11 +4937,22 @@ function pomoPause(){
 function pomoToggle(){ if(pomoRun()) pomoPause(); else pomoStart(); }
 function pomoWriteRec(mode,mins){
   if(mins<1) return false;
+  const kind=pomoIsFocusMode()?"focus":pomoMode;   /* focus | short | long */
   const a=pomoLoadRec();
-  a.push({id:(pomoLive&&pomoLive.id)||POMO_RID(),d:rvToday(),
+  const sid=(pomoLive&&pomoLive.id)||POMO_RID();
+  /* 幂等：同一会话（sid）只结算一次，刷新恢复 / 快速连点 / 自动结束都绕不过去 */
+  if(a.some(function(x){ return x && (x.sid===sid || x.id===sid); })) return false;
+  const rec={id:sid,sid:sid,d:rvToday(),
     start:pomoHHMM(pomoLive?pomoLive.startedAt:Date.now()-mins*60000),end:pomoHHMM(Date.now()),
-    m:mins,mode:mode,task:pomoLive?pomoLive.taskName||"":""});
-  return pomoSaveRecList(a);
+    m:mins,mode:mode,kind:kind,actualSeconds:Math.round(mins*60),status:"done",
+    task:pomoLive?pomoLive.taskName||"":"",
+    taskId:(pomoLive&&pomoLive.taskId)||"",
+    planId:(pomoLive&&pomoLive.planId)||""};
+  a.push(rec);
+  if(!pomoSaveRecList(a)) return false;
+  /* 只有专注模式才累计到任务；休息绝不写任务时长；也绝不改任务完成状态 */
+  if(kind==="focus" && rec.taskId) xzTaskFocusAdd(rec.taskId, rec.actualSeconds);
+  return true;
 }
 function pomoFinish(){
   if(!pomoLive || pomoLive.done) return;
@@ -4302,13 +4969,15 @@ function pomoFinish(){
   pomoRender();
 }
 function pomoClearLive(){ pomoLive=null; store.set(POMO_LIVE_KEY,null); pomoStopTick(); }
-function pomoAbort(){ /* 提前结束：记录实际时长，不算完整番茄钟 */
+function pomoAbort(){ /* 提前结束：专注模式记录实际时长，休息模式不产生专注记录 */
   if(!pomoLive) return;
   const spent=Math.floor((pomoLive.total-pomoLeftSec())/60);
+  const isFocus=pomoIsFocusMode();
   pomoStopTick();
   let saved=false;
-  if(spent>=1) saved=pomoWriteRec("partial",spent);
+  if(isFocus && spent>=1) saved=pomoWriteRec("partial",spent);
   pomoClearLive(); pomoRender();
+  if(!isFocus){ toast("休息已结束，未计入专注时长"); return; }
   if(saved) toast("已记录提前结束 · 实际专注 "+spent+" 分钟（不计入完整次数）",3200);
   else toast("本次已取消，未保存专注记录");
 }
@@ -4464,26 +5133,59 @@ function pomoTaskGroup(title,items,type){
       return '<button type="button" class="ps-item" data-t="'+type+'" data-i="'+i+'"><b>'+hpEsc(name)+'</b><span>来源：'+esc(title)+'</span></button>';
     }).join("");
 }
+function pomoEntityRow(t,sub){
+  return '<button type="button" class="ps-item" data-tid="'+hpEsc(t.id)+'" data-pid="'+hpEsc(t.planId||"")+'">'
+    +'<b>'+hpEsc(t.title)+'</b><span>'+hpEsc(sub)+'</span></button>';
+}
 function pomoOpenTasks(){
   const list=$("pomoTaskList"); if(!list) return;
+  const all=xzTasks();
+  const hw=all.filter(function(t){ return !t.planId && t.status!=="done" && t.status!=="cancelled"; }).slice(0,8);
+  const planRows=[];
+  xzPlans().filter(function(p){ return p.status==="active"; }).forEach(function(p){
+    all.filter(function(t){ return t.planId===p.id && t.status!=="done" && t.status!=="cancelled"; })
+      .sort(function(a,b){ return String(a.date).localeCompare(String(b.date)); })
+      .slice(0,4).forEach(function(t){ planRows.push({t:t,p:p}); });
+  });
+  let h="";
+  if(hw.length){
+    h+='<p class="ps-cap">我的作业任务</p>'+hw.map(function(t){
+      return pomoEntityRow(t,[xzDueText(t)||"未设截止",
+        t.estimatedMinutes?("预计 "+t.estimatedMinutes+" 分"):"",
+        t.actualFocusSeconds?("已专注 "+xzFmtFocus(t.actualFocusSeconds)):""].filter(Boolean).join(" · "));
+    }).join("");
+  }
+  if(planRows.length){
+    h+='<p class="ps-cap">我的计划任务</p>'+planRows.map(function(r){
+      return pomoEntityRow(r.t,[r.p.name,
+        r.t.date?r.t.date.slice(5):"",
+        r.t.estimatedMinutes?("预计 "+r.t.estimatedMinutes+" 分"):""].filter(Boolean).join(" · "));
+    }).join("");
+  }
+  /* 还没有结构化任务时，退回从对话历史提取（旧数据兼容，不会重复统计） */
+  if(!hw.length && !planRows.length){
+    h+=pomoTaskGroup("来自学习计划",pomoPlanTasks(),"plan");
+    h+=pomoTaskGroup("来自作业管家",pomoHwTasks(),"hw");
+  }
   const lib=loadLib().slice(-10).reverse();
   const libItems=lib.map(function(x,i){
     const name=String(x.content||"").replace(/[#*`>|_]/g,"").replace(/\s+/g," ").trim().slice(0,20)||"学习库笔记";
     return {name:name,meta:"学习库 · "+(x.t||"").slice(0,10)};
   });
-  let h="";
-  h+=pomoTaskGroup("来自学习计划",pomoPlanTasks(),"plan");
-  h+=pomoTaskGroup("来自作业管家",pomoHwTasks(),"hw");
   if(libItems.length){
     h+='<p class="ps-cap">来自学习库</p>'
       +libItems.map(function(x,i){
         return '<button type="button" class="ps-item" data-t="lib" data-i="'+i+'"><b>'+hpEsc(x.name)+'</b><span>来源：'+esc(x.meta)+'</span></button>';
       }).join("");
   }
-  if(!h) h='<p class="ps-empty">暂无可选任务：可在对话里生成学习计划或作业拆解，或保存内容到学习库；也可在上方输入临时任务。</p>';
+  if(!h) h='<p class="ps-empty">暂无可选任务：可点右上角「＋ 新建」写一条作业，或在对话里生成计划后保存到「我的计划」；也可在上方输入临时任务。</p>';
   list.innerHTML=h;
   list.querySelectorAll(".ps-item").forEach(function(btn){
     btn.onclick=function(){
+      if(btn.dataset.tid){
+        pomoSetTask({type:"task",id:btn.dataset.tid,name:btn.querySelector("b").textContent,planId:btn.dataset.pid||""});
+        return;
+      }
       const t=btn.dataset.t, i=+btn.dataset.i;
       if(t==="plan") pomoSetTask({type:"plan",name:btn.querySelector("b").textContent});
       else if(t==="hw") pomoSetTask({type:"hw",name:btn.querySelector("b").textContent});
@@ -4501,14 +5203,22 @@ function pomoAddCustomTask(){
 }
 function pomoSetTask(t){
   pomoPendingTask=t;
-  if(pomoLive && !pomoLive.done){ pomoLive.taskId=t.type+":"+t.name; pomoLive.taskName=t.name; pomoSaveLive(); }
-  else { if(!pomoLive) pomoLive={id:POMO_RID(),mode:pomoMode,mins:pomoMinsFor(pomoMode),total:pomoMinsFor(pomoMode)*60,endAt:0,left:pomoMinsFor(pomoMode)*60,running:false,startedAt:0,done:false,taskId:t.type+":"+t.name,taskName:t.name}; else { pomoLive.taskId=t.type+":"+t.name; pomoLive.taskName=t.name; } pomoSaveLive(); }
+  const id=t.id || (t.type+":"+t.name);
+  const planId=t.planId||"";
+  if(pomoLive && !pomoLive.done){
+    pomoLive.taskId=id; pomoLive.taskName=t.name; pomoLive.planId=planId; pomoSaveLive();
+  }
+  else {
+    if(!pomoLive) pomoLive={id:POMO_RID(),mode:pomoMode,mins:pomoMinsFor(pomoMode),total:pomoMinsFor(pomoMode)*60,endAt:0,left:pomoMinsFor(pomoMode)*60,running:false,startedAt:0,done:false,taskId:id,taskName:t.name,planId:planId};
+    else { pomoLive.taskId=id; pomoLive.taskName=t.name; pomoLive.planId=planId; }
+    pomoSaveLive();
+  }
   pomoCloseSheet("pomoTaskSheet"); pomoRender();
   toast("本次专注目标："+t.name);
 }
 function pomoClearTask(silent){
   pomoPendingTask=null;
-  if(pomoLive){ pomoLive.taskId=null; pomoLive.taskName=null; pomoSaveLive(); }
+  if(pomoLive){ pomoLive.taskId=null; pomoLive.taskName=null; pomoLive.planId=null; pomoSaveLive(); }
   pomoCloseSheet("pomoTaskSheet"); pomoRender();
   if(!silent) toast("已取消关联任务");
 }
@@ -4566,8 +5276,9 @@ function pomoShowHist(){
   const cnt=$("pomoHistN"); if(cnt) cnt.textContent=a.length?("共 "+a.length+" 条"):"";
   list.innerHTML = a.length ? a.map(function(x){
     const kind=x.mode==="partial"?"<i class='tag partial'>提前结束</i>":"<i class='tag full'>完整完成</i>";
+    const kd=x.kind==="short"?"<i class='tag'>短休息</i>":x.kind==="long"?"<i class='tag'>长休息</i>":"";
     return '<div class="ph-item'+(x.mode==="partial"?" partial":"")+'">'
-      +'<div class="ph-d1"><b>'+hpEsc(x.d)+'</b>'+kind+'</div>'
+      +'<div class="ph-d1"><b>'+hpEsc(x.d)+'</b>'+kd+kind+'</div>'
       +'<div class="ph-d2"><span>'+hpEsc(x.start||"--")+' → '+hpEsc(x.end||"--")+'</span><b>'+Number(x.m)+' 分钟</b></div>'
       +(x.task?'<div class="ph-d3">任务：'+hpEsc(x.task)+'</div>':"")
       +'</div>';
@@ -5976,6 +6687,43 @@ async function rvMakeCard(btn){
         <p class="ps-cap">从学习库选择（最近 10 条）</p>
         <div class="ps-list" id="pomoTaskList"></div>
         <button type="button" class="pill ghost-danger ps-lone" onclick="pomoClearTask(true)">暂不关联任务</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="sheet" id="hwEditSheet" aria-hidden="true" inert onclick="calBackdrop(event,this)">
+    <div class="sheet-card" role="dialog" aria-modal="true" aria-labelledby="hwEditTitle" tabindex="-1">
+      <div class="sheet-head"><h3 id="hwEditTitle">新建任务</h3><button type="button" class="sheet-close" onclick="pomoCloseSheet('hwEditSheet')" aria-label="关闭">×</button></div>
+      <div class="ps-body">
+        <label class="xz-lb" for="hwTitle">任务标题</label>
+        <input class="xz-in" id="hwTitle" maxlength="60" placeholder="例如：高数第 12 题">
+        <label class="xz-lb" for="hwDesc">任务说明（可选）</label>
+        <textarea class="xz-in" id="hwDesc" rows="2" maxlength="300" placeholder="写清要求、页码或参考材料"></textarea>
+        <div class="xz-row2">
+          <div><label class="xz-lb" for="hwDue">截止时间</label><input class="xz-in" id="hwDue" type="date"></div>
+          <div><label class="xz-lb" for="hwPri">优先级</label><select class="xz-in" id="hwPri"><option value="high">高</option><option value="medium" selected>中</option><option value="low">低</option></select></div>
+        </div>
+        <label class="xz-lb" for="hwEst">预计用时（分钟）</label>
+        <input class="xz-in" id="hwEst" type="number" min="0" max="600" inputmode="numeric" placeholder="留空表示不预估">
+        <p class="xz-tip" id="hwEditTip" hidden></p>
+        <div class="xz-foot">
+          <button type="button" class="pill" onclick="pomoCloseSheet('hwEditSheet')">取消</button>
+          <button type="button" class="pill primary" onclick="hwSaveEdit()">保存</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sheet" id="hwDraftSheet" aria-hidden="true" inert onclick="calBackdrop(event,this)">
+    <div class="sheet-card" role="dialog" aria-modal="true" aria-labelledby="hwDraftTitle" tabindex="-1">
+      <div class="sheet-head"><h3 id="hwDraftTitle">AI 拆解结果</h3><button type="button" class="sheet-close" onclick="pomoCloseSheet('hwDraftSheet')" aria-label="关闭">×</button></div>
+      <div class="ps-body">
+        <p class="xz-tip">确认后保存为可勾选的任务；保存前可以改标题、用时、优先级和截止时间。</p>
+        <div class="xz-draft" id="hwDraftList"></div>
+        <div class="xz-foot">
+          <button type="button" class="pill" onclick="pomoCloseSheet('hwDraftSheet')">取消</button>
+          <button type="button" class="pill primary" onclick="hwSaveDraft()">全部保存为任务</button>
+        </div>
       </div>
     </div>
   </div>
